@@ -1,0 +1,23 @@
+# Project Wiki Log
+
+Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
+
+## [2026-04-24] bootstrap | initialize project wiki
+
+- Bootstrapped the standard project wiki structure with required maintenance files, the unified plans track, an optional architecture entrypoint, and source-artifact placeholders.
+- Established the local wiki contract so future agents can maintain durable project context without relying on transient chat history.
+
+## [2026-04-24] planning | add stage 01 homepage unit
+
+- Added a second stage-01 unit for the centered `Are You In?` homepage so the current execution slice covers both the stack lock and the smallest visible app surface.
+- Updated the MVP stage summary and stage-01 unit list to reflect the additional ready-now unit.
+
+## [2026-04-24] architecture | lock initial stack decisions
+
+- Recorded the MVP scaffold defaults in `Architecture.md`: Next.js, TypeScript, pnpm, Convex, AI SDK, Tailwind CSS, shadcn/ui, Base UI primitives, Vitest, and Playwright.
+- Confirmed the stack lock is documentation-only and does not install packages, generate files, or change runtime code.
+
+## [2026-04-24] implementation | add centered home page
+
+- Added the minimal Next.js root route for Stage 01 Unit 02 with a single centered `Are You In?` `h1`.
+- Verified the route builds and renders centered at desktop and mobile viewport sizes.
