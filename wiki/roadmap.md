@@ -5,8 +5,8 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 ## MVP Stages
 
 - Stage 01: Hello World And Stack Lock
-- Stage 02: Scaffold And Baseline App
-- Stage 03: Daily Game Entry, Auth, And Player Creation
+- Stage 02: Daily Game Entry And Auth
+- Stage 03: Daily Player Creation
 - Stage 04: Canonical State And Event History
 - Stage 05: First Chat And Natural Language Action Loop
 - Stage 06: Narrative Memory

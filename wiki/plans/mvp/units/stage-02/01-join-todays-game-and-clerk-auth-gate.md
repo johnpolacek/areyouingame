@@ -1,4 +1,4 @@
-# Stage 03, Unit 01: Join Today's Game And Clerk Auth Gate
+# Stage 02, Unit 01: Join Today's Game And Clerk Auth Gate
 
 Create the public entry point for today's daily game and gate actual joining behind Clerk authentication.
 

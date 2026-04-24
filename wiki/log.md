@@ -27,3 +27,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Updated the MVP roadmap around daily persistent game instances, `Join Today's Game`, Clerk-gated joining, one-player-per-user-per-day creation, private chat, and public end-of-day recaps.
 - Added architecture notes for daily game ids, account/player boundaries, event-time handling, surprise YES/NO reveal timing, and recap visibility.
 - Added planned MVP units for daily game auth entry, player creation, first private chat reveal, and daily lifecycle recaps.
+
+## [2026-04-24] planning | split entry auth from player creation
+
+- Repurposed Stage 02 from scaffold overlap into `Daily Game Entry And Auth`, reflecting that Stage 01 already covered the initial runnable scaffold.
+- Narrowed Stage 03 to `Daily Player Creation` so Clerk-gated entry and one-player-per-day profile creation can be planned and implemented independently.
+- Renamed the Stage 02 and Stage 03 plan files and updated the MVP current status so Stage 02 Unit 01 is the next execution unit.

@@ -1,4 +1,4 @@
-# Stage 03, Unit 02: Daily Player Creation Form
+# Stage 03, Unit 01: Daily Player Creation Form
 
 Create the one-per-user-per-day player form that places an authenticated user into today's game.
 
