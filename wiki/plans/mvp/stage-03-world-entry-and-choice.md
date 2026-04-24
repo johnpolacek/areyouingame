@@ -1,37 +1,46 @@
-# Stage 03: World Entry And Choice
+# Stage 03: Daily Game Entry, Auth, And Player Creation
 
 ## Stage Goal
 
-Build the first playable entry path: a public-facing simulation entry surface, the ASI premise, and persisted YES or NO path selection for a player.
+Build the first playable entry path: a public `Join Today's Game` action, Clerk authentication, and one-per-user-per-day player creation before the first private game chat.
 
 ## Current Status
 
-Directional stage stub.
+Planned product-spine stage.
 
 ## Scope
 
-- Include: the stage direction and boundary only.
-- Exclude: decision-complete unit plans until the user asks what to plan next.
+- Include: public daily-game entry, auth gating, account sign-in or creation, today's game resolution, and daily player creation.
+- Exclude: revealing the YES or NO choice before chat, natural-language adjudication, public end-of-day recap generation, and multi-game archive browsing beyond links needed for entry.
 
 ## Units
 
-- No unit plans yet. Add exactly one next decision-complete unit when this stage becomes active.
+- [Stage 03, Unit 01: Join Today's Game And Clerk Auth Gate](units/stage-03/01-join-todays-game-and-clerk-auth-gate.md) - planned.
+- [Stage 03, Unit 02: Daily Player Creation Form](units/stage-03/02-daily-player-creation-form.md) - planned.
 
 ## Acceptance Criteria
 
-- This stage captures a credible next direction without pretending the later execution details are already settled.
-- Later unit plans can be added incrementally without rewriting the roadmap structure.
+- The homepage or entry surface presents `Join Today's Game` publicly.
+- Users who are not signed in are prompted to create an account or sign in through Clerk before joining.
+- Authenticated users can create exactly one player for the current daily game.
+- The player form collects name, age, location, occupation, bio, and what the player is doing at the event moment adjusted to their timezone.
+- The YES or NO choice is not shown during entry or player creation.
+- Once the player exists, the user can proceed into the first private game chat.
 
 ## Verification
 
-- Confirm the stage goal still fits the top-level MVP roadmap.
-- Confirm there are no unit links yet for this stage.
+- Verify public users can see the join action but cannot create a player before Clerk auth.
+- Verify player creation is scoped to the current daily game id.
+- Verify duplicate player creation is blocked for the same authenticated user and daily game.
+- Verify copy explains that the chat is private during the day and end-of-day outcomes become publicly visible.
 
 ## Manual Steps
 
-- Revisit this stage when the user asks what to plan next.
-- Add one decision-complete unit and update the roadmap links when this stage becomes active.
+- Confirm the desired Clerk sign-in methods before implementation.
+- Confirm the first supported location and timezone input behavior before implementation.
 
 ## Assumptions
 
-- This stub was generated during initial plan creation to preserve direction while deferring detailed planning.
+- Daily game ids are based on the global start date.
+- There is one newly opened daily game per global day.
+- Existing daily games persist and remain available after their start day.

@@ -21,3 +21,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Added the minimal Next.js root route for Stage 01 Unit 02 with a single centered `Are You In?` `h1`.
 - Verified the route builds and renders centered at desktop and mobile viewport sizes.
+
+## [2026-04-24] planning | define daily game entry spine
+
+- Updated the MVP roadmap around daily persistent game instances, `Join Today's Game`, Clerk-gated joining, one-player-per-user-per-day creation, private chat, and public end-of-day recaps.
+- Added architecture notes for daily game ids, account/player boundaries, event-time handling, surprise YES/NO reveal timing, and recap visibility.
+- Added planned MVP units for daily game auth entry, player creation, first private chat reveal, and daily lifecycle recaps.

@@ -1,37 +1,42 @@
-# Stage 07: Daily Progression
+# Stage 07: Daily Game Lifecycle And Recaps
 
 ## Stage Goal
 
-Implement the one-real-day to one-in-game-day progression path, including durable snapshots, global changes, and return-player continuity across sessions.
+Implement the global daily game lifecycle: one new persistent game opens per global day, each game receives a start-date id, active games accumulate over time, and end-of-day public recaps preserve shared outcomes.
 
 ## Current Status
 
-Directional stage stub.
+Planned product-spine stage.
 
 ## Scope
 
-- Include: the stage direction and boundary only.
-- Exclude: decision-complete unit plans until the user asks what to plan next.
+- Include: daily game creation, global event timing, active/archive status, end-of-day recap creation, durable summaries, and player continuity across daily games.
+- Exclude: detailed LLM adjudication internals and raw private chat publication.
 
 ## Units
 
-- No unit plans yet. Add exactly one next decision-complete unit when this stage becomes active.
+- [Stage 07, Unit 01: Daily Game Lifecycle And Public Recap](units/stage-07/01-daily-game-lifecycle-and-public-recap.md) - planned.
 
 ## Acceptance Criteria
 
-- This stage captures a credible next direction without pretending the later execution details are already settled.
-- Later unit plans can be added incrementally without rewriting the roadmap structure.
+- The system can identify today's global game by start-date id.
+- A new game opens once per global day while prior games persist.
+- The event time for a daily game can vary by day and is displayed to players in their local timezone.
+- Private daily play produces end-of-day public summary material.
+- Each completed day has a durable recap/archive entry visible to everyone.
 
 ## Verification
 
-- Confirm the stage goal still fits the top-level MVP roadmap.
-- Confirm there are no unit links yet for this stage.
+- Verify the same global date resolves to the same daily game id for every user.
+- Verify a new global day creates or resolves a different daily game id without deleting previous games.
+- Verify recap visibility does not expose private raw chat by default.
 
 ## Manual Steps
 
-- Revisit this stage when the user asks what to plan next.
-- Add one decision-complete unit and update the roadmap links when this stage becomes active.
+- Confirm the global timezone standard before implementation.
+- Confirm the archive browsing surface before implementation.
 
 ## Assumptions
 
-- This stub was generated during initial plan creation to preserve direction while deferring detailed planning.
+- The first implementation may use a fixed global timezone standard even if event times vary randomly by day.
+- End-of-day recap generation may start as manual or deterministic before full automation is added.

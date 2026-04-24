@@ -20,6 +20,22 @@ These are the locked greenfield defaults for the MVP scaffold. They record the e
 - Testing baseline: Vitest for isolated logic and Playwright for running app smoke checks.
 - Source precedence: imported PRD, technical brief, wiki overview, roadmap, then supporting source artifacts.
 
+## Daily Game Model
+
+AreYouIn is organized around daily shared game instances.
+
+- A new game opens each global day and receives a stable id based on its start date.
+- Daily games persist after their start day. On launch day there is one active game; the next day there are two active games; each later day adds one more persistent game.
+- The primary public action is `Join Today's Game`.
+- `Join Today's Game` is visible publicly, but joining is gated by Clerk authentication.
+- Account creation or sign-in happens before player creation.
+- A player is one-per-user-per-day-game.
+- The player creation form collects name, age, location, occupation, bio, and what the player is doing at the time of the event.
+- The event time is global and may vary randomly by day. Player-facing copy should adjust the event moment to the player's timezone when asking what they are doing.
+- The YES or NO choice must not appear in player creation. It is a surprise at the end of the first chat prompt sent to the player.
+- Player chat is private during the day. End-of-day results, summaries, and selected consequences become visible to everyone through the daily recap/archive.
+- Each day should produce a durable recap that summarizes the game and preserves it as part of the growing archive.
+
 ## Durable Architecture Topics
 
 Common topics include:
