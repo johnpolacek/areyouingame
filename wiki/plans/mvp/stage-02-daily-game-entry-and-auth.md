@@ -6,7 +6,7 @@ Build the public entry path for today's daily game and gate actual joining behin
 
 ## Current Status
 
-Planned product-spine stage.
+Completed.
 
 ## Scope
 
@@ -15,7 +15,7 @@ Planned product-spine stage.
 
 ## Units
 
-- [Stage 02, Unit 01: Join Today's Game And Clerk Auth Gate](units/stage-02/01-join-todays-game-and-clerk-auth-gate.md) - planned.
+- [Stage 02, Unit 01: Join Today's Game And Clerk Auth Gate](units/stage-02/01-join-todays-game-and-clerk-auth-gate.md) - completed.
 
 ## Acceptance Criteria
 

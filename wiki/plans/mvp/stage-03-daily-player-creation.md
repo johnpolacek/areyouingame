@@ -6,7 +6,7 @@ Let an authenticated user create exactly one player for today's daily game befor
 
 ## Current Status
 
-Planned product-spine stage.
+Active stage.
 
 ## Scope
 

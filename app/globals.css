@@ -18,7 +18,10 @@ body {
 
 body {
   min-height: 100vh;
-  background: #090a0c;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(180, 226, 255, 0.12), transparent 28rem),
+    radial-gradient(circle at 82% 28%, rgba(255, 223, 166, 0.1), transparent 24rem),
+    linear-gradient(135deg, #07080a 0%, #111318 52%, #07080a 100%);
 }
 
 .home {
@@ -31,8 +34,120 @@ body {
 h1 {
   margin: 0;
   color: #f7f3ea;
-  font-size: clamp(3rem, 12vw, 9rem);
+  font-size: 8rem;
   font-weight: 700;
   line-height: 0.95;
   text-align: center;
+}
+
+a,
+button {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.account-control {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 10;
+}
+
+.entry-panel {
+  display: grid;
+  width: min(100%, 58rem);
+  justify-items: center;
+  gap: 1.35rem;
+  text-align: center;
+}
+
+.entry-panel--compact {
+  width: min(100%, 44rem);
+}
+
+.kicker {
+  margin: 0;
+  color: #aeb7c3;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.premise {
+  max-width: 44rem;
+  margin: 0;
+  color: #d9d3c8;
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 0.45rem;
+}
+
+.primary-action,
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.875rem;
+  border-radius: 0.45rem;
+  padding: 0.8rem 1.05rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary-action {
+  background: #f7f3ea;
+  color: #090a0c;
+  font-weight: 800;
+}
+
+.secondary-action,
+.auth-action button {
+  border: 1px solid rgba(247, 243, 234, 0.24);
+  background: rgba(247, 243, 234, 0.06);
+  color: #f7f3ea;
+  font-weight: 700;
+}
+
+.auth-action {
+  display: inline-flex;
+}
+
+.auth-action button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.875rem;
+  border-radius: 0.45rem;
+  padding: 0.8rem 1.05rem;
+  cursor: pointer;
+}
+
+@media (max-width: 42rem) {
+  .home {
+    place-items: end center;
+    padding: 5rem 1rem 2rem;
+  }
+
+  h1 {
+    font-size: 4.5rem;
+  }
+
+  .actions,
+  .primary-action,
+  .secondary-action,
+  .auth-action,
+  .auth-action button {
+    width: 100%;
+  }
 }

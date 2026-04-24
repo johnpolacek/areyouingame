@@ -2,6 +2,10 @@
 
 Create the public entry point for today's daily game and gate actual joining behind Clerk authentication.
 
+## Current Status
+
+Completed.
+
 ## Product Intent
 
 Anyone can see that today's game exists and choose `Join Today's Game`. If they are not signed in, that action prompts them to create an account or sign in through Clerk. Account identity must exist before any player record is created.

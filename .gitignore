@@ -2,5 +2,10 @@
 node_modules/
 
 *.log
+*.tsbuildinfo
+.DS_Store
 .env*
 !.env.example
+
+# clerk configuration (can include secrets)
+/.clerk/
