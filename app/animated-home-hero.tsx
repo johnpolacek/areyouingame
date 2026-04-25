@@ -73,7 +73,11 @@ export function AnimatedHomeHero() {
       });
       gsap.set(split.words, { display: "inline-block", whiteSpace: "nowrap" });
       gsap.set(split.chars, {
+        color: "rgb(251 191 36)",
         display: "inline-block",
+        opacity: 0,
+        textShadow: "0 22px 50px rgb(0 0 0 / 0.48)",
+        WebkitTextFillColor: "rgb(251 191 36)",
         willChange: "opacity",
       });
 
@@ -82,24 +86,24 @@ export function AnimatedHomeHero() {
         defaults: { ease: "expo.out" },
       });
 
-      tl.from(split.chars, {
-        autoAlpha: 0,
-        clearProps: "visibility,willChange",
-        duration: 0.65,
+      tl.to(split.chars, {
+        opacity: 1,
+        clearProps: "willChange,textShadow",
+        duration: 0.9,
+        ease: "power2.out",
         stagger: {
-          each: 0.09,
+          each: 0.075,
           from: "random",
         },
       })
+        .call(() => split.revert())
         .fromTo(
           subtitleRef.current,
           {
             autoAlpha: 0,
-            letterSpacing: "15px",
           },
           {
             autoAlpha: 1,
-            letterSpacing: "10px",
             duration: 2.4,
             ease: "expo.out",
           },
@@ -108,7 +112,6 @@ export function AnimatedHomeHero() {
         .set(
           subtitleRef.current,
           {
-            clearProps: "letterSpacing",
             textContent: subtitleText,
           },
           ">",
@@ -193,45 +196,45 @@ export function AnimatedHomeHero() {
         width: `${actionsBox.width}px`,
       });
 
-      const oldTitleChars = Array.from(
-        containerRef.current.querySelectorAll("#entry-title span"),
-      );
+      const oldTitleSplit = SplitText.create(titleRef.current, {
+        type: "words",
+        tag: "span",
+      });
       const oldSubtitleSplit = SplitText.create(subtitleRef.current, {
-        type: "words,chars",
+        type: "words",
         tag: "span",
       });
       const authHeadingSplit = SplitText.create(authHeadingRef.current, {
-        type: "words,chars",
+        type: "words",
         tag: "span",
       });
 
       gsap.set(authCopyRef.current, { autoAlpha: 1 });
-      gsap.set([oldSubtitleSplit.words, oldSubtitleSplit.chars], {
+      gsap.set([oldTitleSplit.words, oldSubtitleSplit.words], {
         display: "inline-block",
+        willChange: "opacity, transform",
       });
       gsap.set(oldSubtitleSplit.words, {
         whiteSpace: "nowrap",
       });
-      gsap.set([authHeadingSplit.words, authHeadingSplit.chars], {
+      gsap.set(authHeadingSplit.words, {
         display: "inline-block",
+        willChange: "opacity, transform",
       });
 
       const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
       tl.to(
-        [...oldTitleChars, ...oldSubtitleSplit.chars],
+        [...oldTitleSplit.words, ...oldSubtitleSplit.words],
         {
           autoAlpha: 0,
-          x: () => gsap.utils.random(-260, 260),
-          y: () => gsap.utils.random(-180, 180),
-          z: () => gsap.utils.random(-260, 260),
-          scale: () => gsap.utils.random(0.15, 0.55),
-          rotationX: () => gsap.utils.random(-180, 180),
-          rotationY: () => gsap.utils.random(-220, 220),
-          rotationZ: () => gsap.utils.random(-90, 90),
-          duration: 0.9,
+          x: () => gsap.utils.random(-170, 170),
+          y: () => gsap.utils.random(-92, 92),
+          scale: () => gsap.utils.random(0.48, 0.72),
+          rotation: () => gsap.utils.random(-28, 28),
+          duration: 0.62,
           stagger: {
-            amount: 0.34,
+            amount: 0.18,
             from: "random",
           },
         },
@@ -249,19 +252,14 @@ export function AnimatedHomeHero() {
         .set([titleRef.current, subtitleRef.current], { visibility: "hidden" })
         .set(actionsRef.current, { y: 0 })
         .from(
-          authHeadingSplit.chars,
+          authHeadingSplit.words,
           {
             autoAlpha: 0,
-            x: () => gsap.utils.random(-180, 180),
-            y: () => gsap.utils.random(-120, 120),
-            z: () => gsap.utils.random(-240, 120),
-            scale: 0,
-            rotationX: () => gsap.utils.random(-140, 140),
-            rotationY: () => gsap.utils.random(-160, 160),
-            rotationZ: () => gsap.utils.random(-35, 35),
-            duration: 1.15,
+            y: 24,
+            scale: 0.96,
+            duration: 0.78,
             stagger: {
-              amount: 0.42,
+              amount: 0.18,
               from: "center",
             },
           },
@@ -281,6 +279,7 @@ export function AnimatedHomeHero() {
 
       return () => {
         tl.kill();
+        oldTitleSplit.revert();
         oldSubtitleSplit.revert();
         authHeadingSplit.revert();
       };
@@ -377,14 +376,14 @@ export function AnimatedHomeHero() {
       <h1
         ref={titleRef}
         id="entry-title"
-        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-600/90 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent drop-shadow-2xl [font-kerning:none] [text-rendering:optimizeSpeed]"
+        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-600/90 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] [text-shadow:0_22px_60px_rgb(0_0_0_/_0.55)]"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
         Are You In?
       </h1>
       <p
         ref={subtitleRef}
-        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-amber-500 uppercase drop-shadow-lg sm:text-xl"
+        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-amber-500 uppercase [text-shadow:0_12px_32px_rgb(0_0_0_/_0.52)] sm:text-xl"
         style={{ opacity: 0 }}
       >
         An invitation to the future awaits.
