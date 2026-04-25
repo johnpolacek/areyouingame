@@ -342,12 +342,13 @@ export function AnimatedHomeHero() {
       {showAuthPrompt ? (
         <div
           ref={authCopyRef}
-          className="absolute top-1/2 left-1/2 flex w-full max-w-2xl -translate-x-1/2 -translate-y-[178%] flex-col items-center gap-3 text-center sm:-translate-y-[166%] sm:gap-4"
+          className="absolute top-0 left-1/2 flex w-full max-w-2xl -translate-x-1/2 flex-col items-center gap-3 text-center sm:gap-4"
           style={{ opacity: 0 }}
         >
           <h2
             ref={authHeadingRef}
-            className="max-w-2xl text-3xl leading-none font-semibold text-balance text-amber-400 sm:text-5xl"
+            className="hero-display-title max-w-2xl text-3xl leading-none font-normal text-balance text-amber-400 sm:text-5xl"
+            style={{ fontFamily: displayFontFamily }}
           >
             {authHeadingText}
           </h2>
