@@ -130,14 +130,6 @@ export function AnimatedHomeHero() {
           },
           "-=0.32",
         )
-        .set(
-          subtitleRef.current,
-          {
-            clearProps: "perspective,transform,visibility",
-            textContent: subtitleText,
-          },
-          ">",
-        )
         .fromTo(
           actionsRef.current,
           {
@@ -405,6 +397,7 @@ export function AnimatedHomeHero() {
       </h1>
       <p
         ref={subtitleRef}
+        aria-label={subtitleText}
         className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-amber-500 uppercase sm:text-xl"
         style={{ opacity: 0 }}
       >
