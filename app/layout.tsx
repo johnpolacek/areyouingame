@@ -15,10 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-[linear-gradient(145deg,oklch(0.09_0.012_255)_0%,oklch(0.17_0.016_250)_48%,oklch(0.11_0.01_255)_100%)]">
         <ClerkProvider>
           <Show when="signed-in">
-            <div className="account-control" aria-label="Account">
+            <div
+              className="fixed top-5 right-5 z-10 inline-flex"
+              aria-label="Account"
+            >
               <UserButton />
             </div>
           </Show>
