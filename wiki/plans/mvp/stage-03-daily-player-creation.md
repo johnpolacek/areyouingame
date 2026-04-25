@@ -10,7 +10,7 @@ Active stage.
 
 ## Scope
 
-- Include: daily player creation, profile fields, event-time prompt context, one-player-per-user-per-day enforcement, and routing into chat after creation.
+- Include: daily player creation, profile fields, timezone capture, one-player-per-user-per-day enforcement, and routing into the first game prompt after creation.
 - Exclude: public entry/auth gating, revealing the YES or NO choice before chat, natural-language adjudication, public end-of-day recap generation, and multi-game archive browsing.
 
 ## Units
@@ -20,9 +20,9 @@ Active stage.
 ## Acceptance Criteria
 
 - Authenticated users can create exactly one player for the current daily game.
-- The player form collects name, age, location, occupation, bio, and what the player is doing at the event moment adjusted to their timezone.
+- The player form collects name, age, location, occupation, bio, and enough timezone context to render the shared game start locally.
 - The YES or NO choice is not shown during entry or player creation.
-- Once the player exists, the user can proceed into the first private game chat.
+- Once the player exists, the user proceeds into the first private game prompt asking where they are and what they are doing.
 
 ## Verification
 

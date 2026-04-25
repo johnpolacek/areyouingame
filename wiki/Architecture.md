@@ -30,9 +30,10 @@ AreYouIn is organized around daily shared game instances.
 - `Join Today's Game` is visible publicly, but joining is gated by Clerk authentication.
 - Account creation or sign-in happens before player creation.
 - A player is one-per-user-per-day-game.
-- The player creation form collects name, age, location, occupation, bio, and what the player is doing at the time of the event.
-- The event time is global and may vary randomly by day. Player-facing copy should adjust the event moment to the player's timezone when asking what they are doing.
-- The YES or NO choice must not appear in player creation. It is a surprise at the end of the first chat prompt sent to the player.
+- The player creation form collects name, age, location, occupation, and bio.
+- Each daily game starts at one randomly selected global time of day. That instant is shared by every player, then rendered in each player's local timezone.
+- After character creation, the first game screen uses the player's name, local event time, and player location to ask: `Hi John, it is <game-time-start> at <player-location>. Where are you and what are you doing?`
+- The YES or NO choice must not appear in player creation or in the first location/activity prompt. It is reserved for a later reveal after the player has entered the scene.
 - Player chat is private during the day. End-of-day results, summaries, and selected consequences become visible to everyone through the daily recap/archive.
 - Each day should produce a durable recap that summarizes the game and preserves it as part of the growing archive.
 

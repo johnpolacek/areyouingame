@@ -45,3 +45,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added the first-screen character draft flow for Stage 03: users can enter character details before account creation, then `/join` claims the draft after Clerk auth.
 - Added an authenticated player creation API and a temporary local `.data/players.json` development store that enforces one player per Clerk user id per daily game id.
 - Verified TypeScript, production build, signed-out `/join` Clerk redirect behavior, and unauthorized player API protection.
+
+## [2026-04-25] implementation | replace today placeholder with first prompt
+
+- Updated the post-character `/game/today` surface to match the landing-page aesthetic and begin with the first in-world question.
+- Clarified that each daily game has one shared random start instant rendered in each player's timezone.
+- Moved the first location/activity answer out of character creation and into the opening game prompt.

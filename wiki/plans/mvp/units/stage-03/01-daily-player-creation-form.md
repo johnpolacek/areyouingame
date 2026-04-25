@@ -4,14 +4,14 @@ Create the one-per-user-per-day player form that places an authenticated user in
 
 ## Product Intent
 
-After signing in, the user creates a player specifically for today's daily game. The player captures who they are and what they are doing at the moment of the event, but it does not reveal or ask the YES or NO `Are you in?` choice.
+After signing in, the user creates a player specifically for today's daily game. The player captures who they are and where they are based, but the first in-world location/activity answer is collected after account and character creation.
 
 ## Scope
 
 - Build a player creation form for authenticated users joining today's game.
 - Support the first-screen pre-auth character draft flow: users can enter character details before Clerk account creation, then claim that character after sign-up or sign-in completes.
-- Collect name, age, location, occupation, bio, and what the player is doing at the time of the event.
-- Display the daily event time adjusted to the user's timezone when asking what they are doing.
+- Collect name, age, location, occupation, and bio.
+- Store the user's timezone so the shared daily game start can be rendered locally in the first in-world prompt.
 - Persist the player against the authenticated Clerk user id and today's game id.
 - Enforce one player per user per daily game.
 - Route the user into the first private game chat once the player is created.
@@ -27,8 +27,8 @@ After signing in, the user creates a player specifically for today's daily game.
 ## Acceptance Criteria
 
 - Only authenticated users can submit the form.
-- The form includes fields for name, age, location, occupation, bio, and event-moment activity.
-- The event-moment prompt uses the daily game event time in the user's timezone.
+- The form includes fields for name, age, location, occupation, and bio.
+- The first post-creation game prompt uses the daily game event time in the user's timezone.
 - Submitting creates exactly one player for the authenticated user and daily game.
 - If a player already exists for that user and daily game, the user is routed to chat rather than shown a second creation form.
 - No player creation UI reveals the YES or NO choice.
@@ -37,7 +37,7 @@ After signing in, the user creates a player specifically for today's daily game.
 
 - Pre-auth character data may be stored as a short-lived browser draft until Clerk returns an authenticated user.
 - Store enough timezone or locale context to render the event moment consistently.
-- The player record should preserve the user's event-moment activity as initial narrative context for the first prompt.
+- The player record should preserve timezone and location context for the first prompt.
 - The user account remains separate from the daily player, because a new player can be created for each new daily game.
 
 ## Implementation Notes

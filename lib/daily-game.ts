@@ -29,6 +29,27 @@ export function getTodayGame(now = new Date()): DailyGame {
   };
 }
 
+export function formatGameStartForTimeZone(
+  eventStartsAtIso: string,
+  timeZone: string,
+): string {
+  try {
+    return new Intl.DateTimeFormat("en", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone,
+      timeZoneName: "short",
+    }).format(new Date(eventStartsAtIso));
+  } catch {
+    return new Intl.DateTimeFormat("en", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: "UTC",
+      timeZoneName: "short",
+    }).format(new Date(eventStartsAtIso));
+  }
+}
+
 export async function getTodayGameDestination(
   clerkUserId: string,
   dailyGameId: string,
