@@ -1,6 +1,24 @@
 import type { Metadata } from "next";
+import { Rethink_Sans, Rubik_80s_Fade, Stalinist_One } from "next/font/google";
 import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import "./globals.css";
+
+const rethinkSans = Rethink_Sans({
+  subsets: ["latin"],
+  variable: "--font-rethink-sans",
+});
+
+const stalinist = Stalinist_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-stalinist",
+});
+
+const rubik80sFade = Rubik_80s_Fade({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-rubik-80s-fade",
+});
 
 export const metadata: Metadata = {
   title: "Are You In?",
@@ -15,7 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-[linear-gradient(145deg,oklch(0.09_0.012_255)_0%,oklch(0.17_0.016_250)_48%,oklch(0.11_0.01_255)_100%)]">
+      <body
+        className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950`}
+      >
         <ClerkProvider>
           <Show when="signed-in">
             <div
