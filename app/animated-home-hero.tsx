@@ -10,6 +10,7 @@ gsap.registerPlugin(useGSAP, SplitText);
 
 const subtitleText = "An invitation to the future awaits.";
 const authHeadingText = "Are You In?";
+const authBodyText = "Sign up to create your player character";
 const displayFontFamily =
   "var(--font-rubik-80s-fade), var(--font-rethink-sans), sans-serif";
 
@@ -210,6 +211,7 @@ export function AnimatedHomeHero() {
         !showAuthActions ||
         !containerRef.current ||
         !authCopyRef.current ||
+        !authBodyRef.current ||
         !actionsRef.current
       ) {
         return;
@@ -222,6 +224,31 @@ export function AnimatedHomeHero() {
         ".hero-character-form",
       );
       const signInButton = containerRef.current.querySelector(".hero-sign-in");
+      const authBodySplit = SplitText.create(authBodyRef.current, {
+        type: "words,chars",
+        tag: "span",
+      });
+
+      gsap.set(authBodyRef.current, {
+        opacity: 1,
+        perspective: 800,
+      });
+      gsap.set(authBodySplit.words, {
+        display: "inline-block",
+        whiteSpace: "nowrap",
+      });
+      gsap.set(authBodySplit.chars, {
+        autoAlpha: 0,
+        display: "inline-block",
+        transformOrigin: "50% 50%",
+        willChange: "opacity, transform",
+        x: () => gsap.utils.random(-120, 120),
+        y: () => gsap.utils.random(-64, 64),
+        z: () => gsap.utils.random(-180, 140),
+        rotationX: () => gsap.utils.random(-160, 160),
+        rotationY: () => gsap.utils.random(-160, 160),
+        rotationZ: () => gsap.utils.random(-42, 42),
+      });
       const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
       tl.set(authCopyRef.current, {
@@ -244,6 +271,25 @@ export function AnimatedHomeHero() {
             y: 0,
             duration: 0.48,
           },
+        )
+        .to(
+          authBodySplit.chars,
+          {
+            autoAlpha: 1,
+            clearProps: "willChange",
+            duration: 1.25,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+            x: 0,
+            y: 0,
+            z: 0,
+            stagger: {
+              amount: 0.48,
+              from: "random",
+            },
+          },
+          "-=0.18",
         )
         .fromTo(
           characterForm,
@@ -283,6 +329,7 @@ export function AnimatedHomeHero() {
 
       return () => {
         tl.kill();
+        authBodySplit.revert();
       };
     },
     {
@@ -318,23 +365,24 @@ export function AnimatedHomeHero() {
           ref={authCopyRef}
           className={
             showAuthActions
-              ? "relative flex w-full max-w-2xl flex-col items-center gap-3 text-center sm:gap-8"
+              ? "relative flex w-full max-w-2xl flex-col items-center gap-3 text-center sm:gap-4"
               : "pointer-events-none absolute top-0 left-1/2 flex w-full max-w-2xl -translate-x-1/2 flex-col items-center gap-3 text-center sm:gap-8"
           }
           style={{ opacity: 0 }}
         >
           <h2
             ref={authHeadingRef}
-            className="hero-display-title max-w-2xl text-3xl leading-none font-normal text-balance text-amber-500 sm:text-7xl"
+            className="hero-display-title max-w-2xl text-5xl leading-none font-normal text-balance text-amber-500 sm:text-8xl"
             style={{ fontFamily: displayFontFamily }}
           >
             {authHeadingText}
           </h2>
           <p
             ref={authBodyRef}
-            className="max-w-2xl text-base leading-6 font-medium text-balance text-amber-300 sm:text-lg sm:leading-7"
+            aria-label={authBodyText}
+            className="max-w-2xl text-base leading-6 font-medium text-balance text-amber-100 sm:text-lg sm:leading-7"
           >
-            Sign up to create your player character
+            {authBodyText}
           </p>
         </div>
       ) : null}
