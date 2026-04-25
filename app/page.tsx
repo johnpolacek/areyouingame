@@ -1,7 +1,4 @@
-import Link from "next/link";
-import { Show, SignInButton } from "@clerk/nextjs";
-import { ArrowRightIcon } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { HomeEntryActions } from "./home-entry-actions";
 
 export default function Home() {
   return (
@@ -17,28 +14,10 @@ export default function Home() {
           Are You In?
         </h1>
         <div
-          className="flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row"
+          className="flex w-full justify-center"
           aria-label="Daily game actions"
         >
-          <Link
-            className={buttonVariants({
-              className: "h-11 px-4 text-sm font-semibold sm:px-5",
-            })}
-            href="/join"
-          >
-            Join Today&apos;s Game
-            <ArrowRightIcon data-icon="inline-end" />
-          </Link>
-          <Show when="signed-out">
-            <SignInButton>
-              <Button
-                className="h-11 px-4 text-sm font-semibold sm:px-5"
-                variant="outline"
-              >
-                Sign In
-              </Button>
-            </SignInButton>
-          </Show>
+          <HomeEntryActions />
         </div>
       </section>
     </main>
