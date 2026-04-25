@@ -177,21 +177,9 @@ export function AnimatedHomeHero() {
 
       if (prefersReducedMotion) {
         gsap.set([titleRef.current, subtitleRef.current], { display: "none" });
-        gsap.set(authCopyRef.current, { opacity: 1 });
         setShowAuthActions(true);
         return;
       }
-
-      const sectionBox = containerRef.current.getBoundingClientRect();
-      const actionsBox = actionsRef.current.getBoundingClientRect();
-      const authBodyBox = authBodyRef.current.getBoundingClientRect();
-      const authActionsGap = window.innerWidth >= 640 ? 28 : 24;
-      const authActionsTop =
-        authBodyBox.bottom - sectionBox.top + authActionsGap;
-
-      gsap.set(containerRef.current, {
-        minHeight: `${sectionBox.height}px`,
-      });
 
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
@@ -204,31 +192,7 @@ export function AnimatedHomeHero() {
         0,
       )
         .set([titleRef.current, subtitleRef.current], { display: "none" })
-        .set(actionsRef.current, {
-          bottom: "auto",
-          height: `${actionsBox.height}px`,
-          left: "50%",
-          marginTop: 0,
-          position: "absolute",
-          top: `${authActionsTop}px`,
-          width: `${actionsBox.width}px`,
-          xPercent: -50,
-          y: 0,
-        })
-        .fromTo(
-          authCopyRef.current,
-          {
-            autoAlpha: 0,
-            y: 10,
-          },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.48,
-            ease: "expo.out",
-          },
-        )
-        .call(() => setShowAuthActions(true), undefined, "-=0.12");
+        .call(() => setShowAuthActions(true));
 
       return () => {
         tl.kill();
@@ -242,7 +206,12 @@ export function AnimatedHomeHero() {
 
   useGSAP(
     () => {
-      if (!showAuthActions || !containerRef.current || !actionsRef.current) {
+      if (
+        !showAuthActions ||
+        !containerRef.current ||
+        !authCopyRef.current ||
+        !actionsRef.current
+      ) {
         return;
       }
 
@@ -253,23 +222,29 @@ export function AnimatedHomeHero() {
         ".hero-character-form",
       );
       const signInButton = containerRef.current.querySelector(".hero-sign-in");
-      const sectionBox = containerRef.current.getBoundingClientRect();
-      const authBodyBox = authBodyRef.current?.getBoundingClientRect();
-      const actionsTop = authBodyBox
-        ? authBodyBox.bottom - sectionBox.top + (window.innerWidth >= 640 ? 28 : 24)
-        : undefined;
-
       const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
-      tl.set(actionsRef.current, {
-        autoAlpha: 1,
-        height: "auto",
-        maxWidth: "31rem",
-        top: actionsTop,
-        width: "100%",
-        xPercent: -50,
-        y: 0,
+      tl.set(authCopyRef.current, {
+        autoAlpha: 0,
+        y: 10,
       })
+        .set(actionsRef.current, {
+          autoAlpha: 1,
+          clearProps:
+            "bottom,height,left,marginTop,maxWidth,position,top,transform,width,xPercent,y",
+        })
+        .fromTo(
+          authCopyRef.current,
+          {
+            autoAlpha: 0,
+            y: 10,
+          },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.48,
+          },
+        )
         .fromTo(
           characterForm,
           {
@@ -342,19 +317,23 @@ export function AnimatedHomeHero() {
       {showAuthPrompt ? (
         <div
           ref={authCopyRef}
-          className="absolute top-0 left-1/2 flex w-full max-w-2xl -translate-x-1/2 flex-col items-center gap-3 text-center sm:gap-4"
+          className={
+            showAuthActions
+              ? "relative flex w-full max-w-2xl flex-col items-center gap-3 text-center sm:gap-8"
+              : "pointer-events-none absolute top-0 left-1/2 flex w-full max-w-2xl -translate-x-1/2 flex-col items-center gap-3 text-center sm:gap-8"
+          }
           style={{ opacity: 0 }}
         >
           <h2
             ref={authHeadingRef}
-            className="hero-display-title max-w-2xl text-3xl leading-none font-normal text-balance text-amber-400 sm:text-5xl"
+            className="hero-display-title max-w-2xl text-3xl leading-none font-normal text-balance text-amber-500 sm:text-7xl"
             style={{ fontFamily: displayFontFamily }}
           >
             {authHeadingText}
           </h2>
           <p
             ref={authBodyRef}
-            className="max-w-2xl text-base leading-6 font-medium text-balance text-amber-500 sm:text-lg sm:leading-7"
+            className="max-w-2xl text-base leading-6 font-medium text-balance text-amber-300 sm:text-lg sm:leading-7"
           >
             Sign up to create your player character
           </p>
