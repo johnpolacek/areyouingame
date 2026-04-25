@@ -20,7 +20,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
   Let an authenticated user create exactly one player for today's game before entering the surprise first-chat YES or NO moment.
 - [Stage 04: Canonical State And Event History](stage-04-canonical-state-and-event-history.md) - directional stub; later units will be added incrementally.
   Introduce the structured Convex model for authoritative world and player state, plus append-only events for meaningful changes before any LLM-mediated consequences alter reality.
-- [Stage 05: First Chat And Natural Language Action Loop](stage-05-natural-language-action-loop.md) - planned product-spine unit.
+- [Stage 05: First Chat And Natural Language Action Loop](stage-05-natural-language-action-loop.md) - planned product-spine units.
   Connect the player to a private game chat, reveal the `Are you in?` choice at the end of the first game prompt, then grow toward LLM interpretation, adjudication, event logging, and grounded narrative response.
 - [Stage 06: Narrative Memory](stage-06-narrative-memory.md) - directional stub; later units will be added incrementally.
   Add markdown-backed world memory updates for significant events while preserving the rule that wiki summaries explain the world but do not own numeric or enforceable truth.

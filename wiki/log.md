@@ -51,3 +51,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Updated the post-character `/game/today` surface to match the landing-page aesthetic and begin with the first in-world question.
 - Clarified that each daily game has one shared random start instant rendered in each player's timezone.
 - Moved the first location/activity answer out of character creation and into the opening game prompt.
+
+## [2026-04-25] planning | define first move yes-no reveal
+
+- Added the next Stage 05 unit for submitting the opening response through the AI SDK boundary and advancing to the YES/NO reveal.
+- Locked the reveal copy: `A new way of being is available. Connection. Understanding. Freedom. Are you in?`
+- Recorded the audio fallback instruction: `Please respond yes or no`.

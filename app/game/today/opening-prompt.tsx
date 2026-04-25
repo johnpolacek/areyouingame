@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { SendIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type OpeningPromptProps = {
@@ -53,7 +52,6 @@ export function OpeningPrompt({
         disabled={!canSend}
       >
         Send
-        <SendIcon data-icon="inline-end" />
       </Button>
     </section>
   );
