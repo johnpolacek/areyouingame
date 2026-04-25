@@ -23,7 +23,7 @@ export function HeroBackgroundVideo() {
       onCanPlay={prepareVideo}
       playsInline
       preload="auto"
-      src="/video/generated/background-loop-slow.mp4"
+      src="/video/generated/background-loop-slower.mp4"
     />
   );
 }
