@@ -186,7 +186,7 @@ export function HomeEntryActions({
             disabled={!canCreateAccount}
             onClick={savePendingDraft}
           >
-            <PrimaryActionLabel>Create Account & Character</PrimaryActionLabel>
+            <PrimaryActionLabel>Create Account</PrimaryActionLabel>
           </Button>
         </SignUpButton>
         <SignInButton mode="modal" forceRedirectUrl="/join">
