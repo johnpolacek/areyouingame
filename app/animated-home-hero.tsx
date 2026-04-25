@@ -189,6 +189,10 @@ export function AnimatedHomeHero() {
       const authActionsTop =
         authBodyBox.bottom - sectionBox.top + authActionsGap;
 
+      gsap.set(containerRef.current, {
+        minHeight: `${sectionBox.height}px`,
+      });
+
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
       tl.to(
@@ -343,8 +347,7 @@ export function AnimatedHomeHero() {
         >
           <h2
             ref={authHeadingRef}
-            className="hero-display-title max-w-2xl text-3xl leading-none font-normal text-balance text-amber-500 sm:text-5xl"
-            style={{ fontFamily: displayFontFamily }}
+            className="max-w-2xl text-3xl leading-none font-semibold text-balance text-amber-400 sm:text-5xl"
           >
             {authHeadingText}
           </h2>
