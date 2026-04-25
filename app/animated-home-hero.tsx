@@ -182,33 +182,12 @@ export function AnimatedHomeHero() {
         return;
       }
 
-      const titleBox = titleRef.current.getBoundingClientRect();
-      const subtitleBox = subtitleRef.current.getBoundingClientRect();
       const sectionBox = containerRef.current.getBoundingClientRect();
       const actionsBox = actionsRef.current.getBoundingClientRect();
       const authBodyBox = authBodyRef.current.getBoundingClientRect();
       const authActionsGap = window.innerWidth >= 640 ? 28 : 24;
       const authActionsTop =
         authBodyBox.bottom - sectionBox.top + authActionsGap;
-
-      gsap.set(titleRef.current, {
-        height: `${titleBox.height}px`,
-        width: `${titleBox.width}px`,
-      });
-      gsap.set(subtitleRef.current, {
-        height: `${subtitleBox.height}px`,
-        width: `${subtitleBox.width}px`,
-      });
-      gsap.set(actionsRef.current, {
-        bottom: showAuthPrompt ? "auto" : undefined,
-        height: `${actionsBox.height}px`,
-        left: showAuthPrompt ? "50%" : undefined,
-        marginTop: showAuthPrompt ? 0 : undefined,
-        position: showAuthPrompt ? "absolute" : undefined,
-        top: showAuthPrompt ? `${authActionsTop}px` : undefined,
-        transform: showAuthPrompt ? "translateX(-50%)" : undefined,
-        width: `${actionsBox.width}px`,
-      });
 
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
@@ -220,8 +199,18 @@ export function AnimatedHomeHero() {
         },
         0,
       )
-        .set([titleRef.current, subtitleRef.current], { visibility: "hidden" })
-        .set(actionsRef.current, { y: 0 })
+        .set([titleRef.current, subtitleRef.current], { display: "none" })
+        .set(actionsRef.current, {
+          bottom: "auto",
+          height: `${actionsBox.height}px`,
+          left: "50%",
+          marginTop: 0,
+          position: "absolute",
+          top: `${authActionsTop}px`,
+          width: `${actionsBox.width}px`,
+          xPercent: -50,
+          y: 0,
+        })
         .fromTo(
           authCopyRef.current,
           {
