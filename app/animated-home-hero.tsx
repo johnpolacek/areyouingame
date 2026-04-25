@@ -62,23 +62,34 @@ export function AnimatedHomeHero() {
         position: "relative",
       });
 
-      const split = SplitText.create(titleRef.current, {
-        type: "words,chars",
-        tag: "span",
-      });
       subtitleRef.current.textContent = subtitleText;
 
       gsap.set(titleRef.current, {
-        opacity: 1,
+        transformOrigin: "50% 50%",
       });
-      gsap.set(split.words, { display: "inline-block", whiteSpace: "nowrap" });
-      gsap.set(split.chars, {
-        color: "rgb(251 191 36)",
+      const subtitleSplit = SplitText.create(subtitleRef.current, {
+        type: "words,chars",
+        tag: "span",
+      });
+      gsap.set(subtitleRef.current, {
+        opacity: 1,
+        perspective: 800,
+      });
+      gsap.set(subtitleSplit.words, {
         display: "inline-block",
-        opacity: 0,
-        textShadow: "0 22px 50px rgb(0 0 0 / 0.48)",
-        WebkitTextFillColor: "rgb(251 191 36)",
-        willChange: "opacity",
+        whiteSpace: "nowrap",
+      });
+      gsap.set(subtitleSplit.chars, {
+        autoAlpha: 0,
+        display: "inline-block",
+        transformOrigin: "50% 50%",
+        willChange: "opacity, transform",
+        x: () => gsap.utils.random(-180, 180),
+        y: () => gsap.utils.random(-96, 96),
+        z: () => gsap.utils.random(-220, 160),
+        rotationX: () => gsap.utils.random(-180, 180),
+        rotationY: () => gsap.utils.random(-180, 180),
+        rotationZ: () => gsap.utils.random(-55, 55),
       });
 
       const tl = gsap.timeline({
@@ -86,32 +97,43 @@ export function AnimatedHomeHero() {
         defaults: { ease: "expo.out" },
       });
 
-      tl.to(split.chars, {
-        opacity: 1,
-        clearProps: "willChange,textShadow",
-        duration: 0.9,
-        ease: "power2.out",
-        stagger: {
-          each: 0.075,
-          from: "random",
+      tl.fromTo(
+        titleRef.current,
+        {
+          autoAlpha: 0,
+          y: 18,
         },
-      })
-        .call(() => split.revert())
-        .fromTo(
-          subtitleRef.current,
-          {
-            autoAlpha: 0,
-          },
+        {
+          autoAlpha: 1,
+          y: 0,
+          clearProps: "transform,visibility",
+          duration: 1.4,
+        },
+      )
+        .to(
+          subtitleSplit.chars,
           {
             autoAlpha: 1,
-            duration: 2.4,
+            clearProps: "willChange",
+            duration: 1.6,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+            x: 0,
+            y: 0,
+            z: 0,
             ease: "expo.out",
+            stagger: {
+              amount: 0.58,
+              from: "random",
+            },
           },
-          "-=0.12",
+          "-=0.32",
         )
         .set(
           subtitleRef.current,
           {
+            clearProps: "perspective,transform,visibility",
             textContent: subtitleText,
           },
           ">",
@@ -133,7 +155,7 @@ export function AnimatedHomeHero() {
 
       return () => {
         tl.kill();
-        split.revert();
+        subtitleSplit.revert();
         if (subtitleRef.current) {
           subtitleRef.current.textContent = subtitleText;
         }
@@ -376,14 +398,14 @@ export function AnimatedHomeHero() {
       <h1
         ref={titleRef}
         id="entry-title"
-        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-600/90 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] [text-shadow:0_22px_60px_rgb(0_0_0_/_0.55)]"
+        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-600/90 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed]"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
         Are You In?
       </h1>
       <p
         ref={subtitleRef}
-        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-amber-500 uppercase [text-shadow:0_12px_32px_rgb(0_0_0_/_0.52)] sm:text-xl"
+        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-amber-500 uppercase sm:text-xl"
         style={{ opacity: 0 }}
       >
         An invitation to the future awaits.
