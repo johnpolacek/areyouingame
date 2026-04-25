@@ -1,16 +1,10 @@
+import { HeroBackgroundVideo } from "./hero-background-video";
 import { HomeEntryActions } from "./home-entry-actions";
 
 export default function Home() {
   return (
-    <main className="relative isolate grid min-h-screen overflow-hidden bg-[#020711] px-5 py-16 text-[#f7ead2] sm:p-8">
-      <div className="hero-ambient" aria-hidden="true" />
-      <div className="hero-grain" aria-hidden="true" />
-      <div className="hero-horizon" aria-hidden="true" />
-      <div className="hero-floor" aria-hidden="true" />
-      <div className="hero-orbit hero-orbit-outer" aria-hidden="true" />
-      <div className="hero-orbit hero-orbit-inner" aria-hidden="true" />
-      <div className="hero-flare hero-flare-left" aria-hidden="true" />
-      <div className="hero-flare hero-flare-right" aria-hidden="true" />
+    <main className="relative isolate grid h-svh place-items-center overflow-hidden bg-black px-5 py-16 text-[#f7ead2] sm:p-8">
+      <HeroBackgroundVideo />
 
       <section
         className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-7 self-center text-center sm:gap-8"
