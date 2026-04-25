@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const primaryActionClass =
-  "relative isolate h-12 w-full max-w-[31rem] overflow-hidden rounded-lg border border-amber-200/70 bg-gradient-to-b from-amber-500 to-amber-950 px-8 font-accent text-[0.8rem] font-normal tracking-[0.06em] text-amber-50 uppercase shadow-2xl shadow-black/60 backdrop-blur-md transition-[transform,box-shadow,filter] duration-200 ease-out hover:-translate-y-0.5 hover:brightness-[1.18] hover:saturate-[1.2] hover:shadow-amber-400/40 active:translate-y-px disabled:opacity-90 sm:h-[4.5rem] sm:text-[1.12rem] sm:tracking-[0.08em]";
+  "relative isolate h-12 w-full max-w-[31rem] transition-all ease-in-out duration-500 overflow-hidden rounded-lg border border-amber-200/70 bg-gradient-to-b from-amber-500 to-amber-950 px-8 font-accent text-[0.8rem] font-normal tracking-[0.06em] text-amber-50 uppercase shadow-2xl shadow-black/60 backdrop-blur-md hover:-translate-y-0.5 hover:brightness-[1.18] hover:saturate-[1.2] hover:shadow-amber-400/40 active:translate-y-px disabled:opacity-90 sm:h-[4.5rem] sm:text-[1.12rem] sm:tracking-[0.08em]";
 
 function PrimaryActionLabel({ children }: { children: React.ReactNode }) {
   return (
