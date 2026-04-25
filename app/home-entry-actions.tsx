@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const primaryActionClass =
-  "h-24 w-full max-w-xl px-8 text-3xl font-semibold sm:h-32 sm:text-5xl";
+  "hero-join-button h-16 w-full max-w-[34rem] rounded-lg border border-[#ffe5aa]/70 px-8 text-2xl font-black text-[#06101c] shadow-none sm:h-24 sm:text-4xl";
 
 export function HomeEntryActions() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -26,12 +26,15 @@ export function HomeEntryActions() {
 
   if (showAuthActions) {
     return (
-      <div className="flex w-full flex-col items-center gap-3">
+      <div className="flex w-full flex-col items-center gap-4">
         <SignUpButton mode="modal" forceRedirectUrl="/join">
           <Button className={primaryActionClass}>Create Account</Button>
         </SignUpButton>
         <SignInButton mode="modal" forceRedirectUrl="/join">
-          <Button className="h-9 px-4 text-sm font-semibold" variant="outline">
+          <Button
+            className="rounded-md border-[#d8a55b]/45 bg-[#020711]/55 px-5 text-sm font-semibold text-[#f8dfb3] shadow-[0_0_22px_rgba(219,159,79,0.16)] backdrop-blur hover:bg-[#d8a55b]/12 hover:text-[#fff7e8]"
+            variant="outline"
+          >
             Sign In
           </Button>
         </SignInButton>

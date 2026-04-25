@@ -2,19 +2,31 @@ import { HomeEntryActions } from "./home-entry-actions";
 
 export default function Home() {
   return (
-    <main className="grid min-h-screen place-items-center px-4 py-16 sm:p-8">
+    <main className="relative isolate grid min-h-screen overflow-hidden bg-[#020711] px-5 py-16 text-[#f7ead2] sm:p-8">
+      <div className="hero-ambient" aria-hidden="true" />
+      <div className="hero-grain" aria-hidden="true" />
+      <div className="hero-horizon" aria-hidden="true" />
+      <div className="hero-floor" aria-hidden="true" />
+      <div className="hero-orbit hero-orbit-outer" aria-hidden="true" />
+      <div className="hero-orbit hero-orbit-inner" aria-hidden="true" />
+      <div className="hero-flare hero-flare-left" aria-hidden="true" />
+      <div className="hero-flare hero-flare-right" aria-hidden="true" />
+
       <section
-        className="flex w-full max-w-4xl flex-col items-center gap-6 text-center"
+        className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-7 self-center text-center sm:gap-8"
         aria-labelledby="entry-title"
       >
         <h1
           id="entry-title"
-          className="text-6xl leading-none font-semibold text-balance text-foreground sm:text-8xl"
+          className="hero-title text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-black tracking-normal text-balance"
         >
           Are You In?
         </h1>
+        <p className="hero-subtitle max-w-[22rem] text-[0.78rem] leading-7 font-medium tracking-[0.28em] text-balance text-[#e3b875] uppercase sm:max-w-none sm:text-xl sm:tracking-[0.55em]">
+          A mysterious invitation awaits.
+        </p>
         <div
-          className="flex w-full justify-center"
+          className="mt-4 flex w-full justify-center sm:mt-7"
           aria-label="Daily game actions"
         >
           <HomeEntryActions />
