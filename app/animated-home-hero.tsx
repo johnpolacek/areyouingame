@@ -279,7 +279,6 @@ export function AnimatedHomeHero() {
             autoAlpha: 1,
             duration: 0.9,
           },
-          "-=0.62",
         );
 
       return () => {

@@ -77,7 +77,7 @@ export function HomeEntryActions({
 
   if (shouldShowAuthActions) {
     return (
-      <div className="flex w-full flex-col items-center gap-3 sm:gap-4">
+      <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
         <CharacterSetupForm />
         <SignUpButton mode="modal" forceRedirectUrl="/join">
           <Button className={`${primaryActionClass} hero-create-account`}>
