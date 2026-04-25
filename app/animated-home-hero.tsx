@@ -210,92 +210,35 @@ export function AnimatedHomeHero() {
         width: `${actionsBox.width}px`,
       });
 
-      const oldTitleSplit = SplitText.create(titleRef.current, {
-        type: "words",
-        tag: "span",
-      });
-      const oldSubtitleSplit = SplitText.create(subtitleRef.current, {
-        type: "words",
-        tag: "span",
-      });
-      const authHeadingSplit = SplitText.create(authHeadingRef.current, {
-        type: "words",
-        tag: "span",
-      });
-
-      gsap.set(authCopyRef.current, { autoAlpha: 1 });
-      gsap.set([oldTitleSplit.words, oldSubtitleSplit.words], {
-        display: "inline-block",
-        willChange: "opacity, transform",
-      });
-      gsap.set(oldSubtitleSplit.words, {
-        whiteSpace: "nowrap",
-      });
-      gsap.set(authHeadingSplit.words, {
-        display: "inline-block",
-        willChange: "opacity, transform",
-      });
-
-      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+      const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
       tl.to(
-        [...oldTitleSplit.words, ...oldSubtitleSplit.words],
+        [titleRef.current, subtitleRef.current, actionsRef.current],
         {
           autoAlpha: 0,
-          x: () => gsap.utils.random(-170, 170),
-          y: () => gsap.utils.random(-92, 92),
-          scale: () => gsap.utils.random(0.48, 0.72),
-          rotation: () => gsap.utils.random(-28, 28),
-          duration: 0.62,
-          stagger: {
-            amount: 0.18,
-            from: "random",
-          },
+          duration: 0.24,
         },
         0,
       )
-        .to(
-          actionsRef.current,
-          {
-            autoAlpha: 0,
-            y: 16,
-            duration: 0.42,
-          },
-          0,
-        )
         .set([titleRef.current, subtitleRef.current], { visibility: "hidden" })
         .set(actionsRef.current, { y: 0 })
-        .from(
-          authHeadingSplit.words,
+        .fromTo(
+          authCopyRef.current,
           {
             autoAlpha: 0,
-            y: 24,
-            scale: 0.96,
-            duration: 0.78,
-            stagger: {
-              amount: 0.18,
-              from: "center",
-            },
+            y: 10,
           },
-          "-=0.08",
-        )
-        .call(() => authHeadingSplit.revert())
-        .from(
-          authBodyRef.current,
           {
-            autoAlpha: 0,
-            y: 20,
-            duration: 1,
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.48,
+            ease: "expo.out",
           },
-          "-=0.35",
         )
-        .call(() => setShowAuthActions(true), undefined, "-=0.2");
+        .call(() => setShowAuthActions(true), undefined, "-=0.12");
 
       return () => {
         tl.kill();
-        oldTitleSplit.revert();
-        oldSubtitleSplit.revert();
-        authHeadingSplit.revert();
       };
     },
     {
@@ -411,7 +354,7 @@ export function AnimatedHomeHero() {
         >
           <h2
             ref={authHeadingRef}
-            className="hero-display-title max-w-2xl text-[2.9rem] leading-none font-normal text-balance text-amber-50 sm:text-[clamp(4.4rem,7vw,7rem)]"
+            className="hero-display-title max-w-2xl text-3xl leading-none font-normal text-balance text-amber-500 sm:text-5xl"
             style={{ fontFamily: displayFontFamily }}
           >
             {authHeadingText}
