@@ -1,3 +1,5 @@
+import { getPlayerForUserGame } from "./player-store";
+
 export type DailyGame = {
   id: string;
   eventStartsAtIso: string;
@@ -28,9 +30,18 @@ export function getTodayGame(now = new Date()): DailyGame {
 }
 
 export async function getTodayGameDestination(
-  _clerkUserId: string,
-  _dailyGameId: string,
+  clerkUserId: string,
+  dailyGameId: string,
 ): Promise<TodayGameDestination> {
+  const existingPlayer = await getPlayerForUserGame(clerkUserId, dailyGameId);
+
+  if (existingPlayer) {
+    return {
+      href: "/game/today",
+      reason: "has-player",
+    };
+  }
+
   return {
     href: "/player/new",
     reason: "needs-player",

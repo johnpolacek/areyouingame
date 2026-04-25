@@ -9,6 +9,7 @@ After signing in, the user creates a player specifically for today's daily game.
 ## Scope
 
 - Build a player creation form for authenticated users joining today's game.
+- Support the first-screen pre-auth character draft flow: users can enter character details before Clerk account creation, then claim that character after sign-up or sign-in completes.
 - Collect name, age, location, occupation, bio, and what the player is doing at the time of the event.
 - Display the daily event time adjusted to the user's timezone when asking what they are doing.
 - Persist the player against the authenticated Clerk user id and today's game id.
@@ -34,9 +35,16 @@ After signing in, the user creates a player specifically for today's daily game.
 
 ## Data And State Notes
 
+- Pre-auth character data may be stored as a short-lived browser draft until Clerk returns an authenticated user.
 - Store enough timezone or locale context to render the event moment consistently.
 - The player record should preserve the user's event-moment activity as initial narrative context for the first prompt.
 - The user account remains separate from the daily player, because a new player can be created for each new daily game.
+
+## Implementation Notes
+
+- The current implementation saves the first-screen character draft in `sessionStorage`, claims it from `/join` after Clerk auth, and creates a server-side player record linked to `clerkUserId + dailyGameId`.
+- Until Convex is connected, local development persistence uses `.data/players.json`; this is intentionally ignored by git and should be replaced by the canonical Convex model in the next persistence-focused slice.
+- Duplicate daily player creation is blocked by returning the existing player for the same Clerk user id and daily game id.
 
 ## Verification
 
@@ -44,8 +52,10 @@ After signing in, the user creates a player specifically for today's daily game.
 - Test duplicate player creation for the same user and game is blocked.
 - Test a new daily game allows the same user to create a new player.
 - Test the YES or NO phrase does not appear in the form flow.
+- Test the post-auth draft claim path after Clerk Google/email providers are enabled.
 
 ## Manual Steps
 
 - Confirm minimum age handling and whether age needs range validation.
 - Confirm whether location should begin as free text or structured region/timezone input.
+- Enable Google and email sign-up/sign-in in the Clerk Dashboard before full end-to-end auth testing.

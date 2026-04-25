@@ -39,3 +39,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 02 Unit 01 with Clerk, a public `Join Today's Game` entry surface, a protected `/join` route, and placeholder authenticated destinations for player creation and today's game.
 - Added daily game date-id and event-time helpers, Clerk proxy wiring, Clerk provider setup, and `.env.example` entries for the required Clerk keys.
 - Verified TypeScript, production build, and local browser smoke behavior where `/join` redirects unauthenticated users to Clerk sign-in.
+
+## [2026-04-25] implementation | add pre-auth character draft claim
+
+- Added the first-screen character draft flow for Stage 03: users can enter character details before account creation, then `/join` claims the draft after Clerk auth.
+- Added an authenticated player creation API and a temporary local `.data/players.json` development store that enforces one player per Clerk user id per daily game id.
+- Verified TypeScript, production build, signed-out `/join` Clerk redirect behavior, and unauthorized player API protection.
