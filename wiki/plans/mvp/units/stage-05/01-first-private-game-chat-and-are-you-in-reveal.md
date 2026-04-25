@@ -4,7 +4,7 @@ Start the private player-to-game chat with the shared-time location/activity que
 
 ## Product Intent
 
-The player should feel they have entered today's world before the core choice appears. The first prompt uses their name, the shared daily game start rendered in their local timezone, and their location: `Hi John, it is <game-time-start> at <player-location>. Where are you and what are you doing?`
+The player should feel they have entered today's world before the core choice appears. The first prompt uses their name, the shared daily game start rendered in their local timezone, and their location: `Hi John, it is <game-time-start> in <player-location>. Where are you and what are you doing?`
 
 ## Scope
 
