@@ -7,10 +7,6 @@ export function HeroBackgroundVideo() {
   const [isReady, setIsReady] = useState(false);
 
   function prepareVideo() {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 0.25;
-    }
-
     setIsReady(true);
   }
 
@@ -27,7 +23,7 @@ export function HeroBackgroundVideo() {
       onCanPlay={prepareVideo}
       playsInline
       preload="auto"
-      src="/video/background-loop.mp4"
+      src="/video/generated/background-loop-slow.mp4"
     />
   );
 }
