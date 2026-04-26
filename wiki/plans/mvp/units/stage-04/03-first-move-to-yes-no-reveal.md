@@ -1,6 +1,6 @@
-# Stage 04, Unit 02: First Move To YES/NO Reveal
+# Stage 04, Unit 03: First Move To YES/NO Reveal
 
-Submit the player's opening location/activity response, run the first AI-mediated narration step, and end with the central YES/NO choice.
+Use the player's stored opening location/activity response, run the first AI-mediated narration step, and end with the central YES/NO choice.
 
 ## Product Intent
 
@@ -8,7 +8,7 @@ Submit the player's opening location/activity response, run the first AI-mediate
 - If they are watching TV, playing video games, using a computer at work, etc then there will also be a screen takeover in addition to their phone buzzing.
 - If they are not near a TV or not on their phone in an area that has network connected speakers (driving, sleeping) then they will be communicated to via audio.
 
-After the player answers where they are and what they are doing, the game should respond as if the first contact event has arrived in that specific personal context. The response should be concise, cinematic, and deterministic enough to preserve the product spine. It ends with:
+After the player has answered where they are and what they are doing, the game should respond as if the first contact event has arrived in that specific personal context. The response should be concise, cinematic, and deterministic enough to preserve the product spine. It ends with:
 
 ```text
 A new way of being is available.
@@ -22,7 +22,7 @@ The AI should write a 1-2 paragraph short intro describing the scene and how the
 
 - Add AI SDK as the application AI integration boundary for the first move.
 - Use the direct OpenAI provider with `gpt-5.4-mini` for the first text-generation path.
-- Persist the player's opening response against user id, player id, and daily game id.
+- Load the persisted opening response for the authenticated user, player, and daily game.
 - Generate or assemble the first AI narration from player profile, opening response, daily game id, and shared event time.
 - Generate a 1-2 paragraph scene intro describing how the first-contact message reaches the player in their current situation.
 - Use the player's opening response to choose the narrative delivery mode: phone buzz, screen takeover, ambient audio, or another plausible connected-device interruption.
@@ -38,8 +38,8 @@ The AI should write a 1-2 paragraph short intro describing the scene and how the
 
 ## Acceptance Criteria
 
-- Send remains disabled until the opening response contains text.
-- Submitting the opening response advances away from the opening prompt.
+- Players who have not submitted the opening response remain on the opening prompt flow.
+- Players with a submitted opening response advance from the submitted state to the reveal flow.
 - The next screen ends with:
   - `A new way of being is available.`
   - `Connection. Understanding. Freedom.`
@@ -49,12 +49,11 @@ The AI should write a 1-2 paragraph short intro describing the scene and how the
 - The intro references the player's stated location/activity without contradicting it.
 - The intro may narrate phone buzzes, screen takeovers, or audio interruptions, but these are story events only in this unit.
 - The fixed reveal copy is not paraphrased by the model.
-- The player cannot submit multiple opening responses for the same player/day without an explicit reset.
-- The server route verifies Clerk auth and player ownership before generating or saving the response.
+- The server route verifies Clerk auth and player ownership before generating or saving reveal state.
 
 ## Data And State Notes
 
-- The first move should create durable records for the opening user message, the generated reveal narration, and the pending YES/NO decision.
+- The first move should create durable records for the generated reveal narration and the pending YES/NO decision, using the already-stored opening user message as input.
 - Store the reveal copy as structured state, not only as rendered UI, so the next stage can process the YES/NO choice.
 - Store the 1-2 paragraph scene intro separately from the fixed reveal copy so the reveal remains deterministic.
 - Start with a deterministic fallback reveal if AI generation fails; the exact YES/NO copy should still appear.
@@ -65,8 +64,7 @@ The AI should write a 1-2 paragraph short intro describing the scene and how the
 
 - Test unauthenticated requests fail.
 - Test users cannot submit a first move for another user's player.
-- Test empty opening responses are rejected client-side and server-side.
-- Test successful submission shows the YES/NO reveal.
+- Test successful reveal generation shows the YES/NO reveal.
 - Test refresh after submission does not return the player to the opening prompt.
 
 ## Manual Steps

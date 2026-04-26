@@ -1,4 +1,4 @@
-# Stage 04, Unit 03: Submit YES/NO Choice And First Consequence
+# Stage 04, Unit 04: Submit YES/NO Choice And First Consequence
 
 Persist the player's central YES or NO decision and show the first immediate consequence state without expanding into full world simulation.
 
@@ -40,7 +40,7 @@ After the reveal asks `Are you in?`, the player needs a decisive moment that fee
 
 ## Data And State Notes
 
-- Reuse the reveal state from Stage 04 Unit 02 as the prerequisite for submitting the choice.
+- Reuse the reveal state from Stage 04 Unit 03 as the prerequisite for submitting the choice.
 - Store the normalized decision as `YES` or `NO`.
 - Store enough metadata for later canonicalization: user id, player id, daily game id, submitted timestamp, and the reveal/version context if available.
 - Treat this as a narrow bridge record until Stage 05 introduces authoritative state, append-only events, and narrative memory.

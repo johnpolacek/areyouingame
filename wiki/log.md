@@ -80,3 +80,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Added Stage 04 Unit 03 for submitting the YES/NO choice, blocking duplicate decisions, and showing the first immediate consequence state.
 - Kept full canonical state, append-only events, and narrative memory out of the unit so those systems remain the focus of Stage 05.
+
+## [2026-04-26] implementation | split and implement opening response submission
+
+- Split Stage 04 Unit 02 into a durable opening-response submission step before the AI-mediated YES/NO reveal.
+- Renumbered the reveal work to Stage 04 Unit 03 and the YES/NO choice submission work to Stage 04 Unit 04.
+- Implemented the opening prompt Send path so the player response is persisted once and reloads into a submitted state.

@@ -15,6 +15,8 @@ export type DailyPlayer = PlayerDraftInput & {
   id: string;
   clerkUserId: string;
   dailyGameId: string;
+  openingResponse?: string;
+  openingResponseSubmittedAt?: string;
   publicGameplayAgreementAcceptedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -120,6 +122,58 @@ export async function acceptPublicGameplayAgreement({
     ...store.players[playerIndex],
     publicGameplayAgreementAcceptedAt:
       store.players[playerIndex].publicGameplayAgreementAcceptedAt ?? now,
+    updatedAt: now,
+  };
+  const players = [...store.players];
+  players[playerIndex] = player;
+
+  await writeStore({ players });
+
+  return player;
+}
+
+export function validateOpeningResponse(input: unknown): string {
+  const response = readRequiredString(input, "Opening response", 1000);
+
+  if (response.length < 2) {
+    throw new Error("Opening response is too short.");
+  }
+
+  return response;
+}
+
+export async function submitOpeningResponseForUserGame({
+  clerkUserId,
+  dailyGameId,
+  openingResponse,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  openingResponse: string;
+}): Promise<DailyPlayer> {
+  const store = await readStore();
+  const playerIndex = store.players.findIndex(
+    (player) =>
+      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
+  );
+
+  if (playerIndex === -1) {
+    throw new Error("Player not found.");
+  }
+
+  if (!store.players[playerIndex].publicGameplayAgreementAcceptedAt) {
+    throw new Error("Public gameplay agreement is required first.");
+  }
+
+  if (store.players[playerIndex].openingResponseSubmittedAt) {
+    throw new Error("Opening response has already been submitted.");
+  }
+
+  const now = new Date().toISOString();
+  const player = {
+    ...store.players[playerIndex],
+    openingResponse,
+    openingResponseSubmittedAt: now,
     updatedAt: now,
   };
   const players = [...store.players];
