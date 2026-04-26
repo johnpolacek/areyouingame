@@ -67,8 +67,6 @@ export async function writeArtifactObject({
 function getS3Client(): S3Client {
   return new S3Client({
     region: process.env.S3_ARTIFACT_REGION || "us-east-1",
-    endpoint: process.env.S3_ARTIFACT_ENDPOINT || undefined,
-    forcePathStyle: process.env.S3_ARTIFACT_FORCE_PATH_STYLE === "true",
     credentials:
       process.env.S3_ARTIFACT_ACCESS_KEY_ID &&
       process.env.S3_ARTIFACT_SECRET_ACCESS_KEY

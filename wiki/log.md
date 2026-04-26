@@ -103,4 +103,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Added Convex schema/functions for daily games, players, current first-chat state, and S3 artifact metadata.
 - Replaced the local `.data/players.json` implementation with a Convex-backed player-store adapter used by the existing Next.js routes.
-- Added S3-compatible artifact storage helpers and environment documentation while keeping hot gameplay state in Convex.
+- Added AWS SDK for Node.js S3 artifact storage helpers and environment documentation while keeping hot gameplay state in Convex.
+
+## [2026-04-26] architecture | target real AWS S3 artifacts
+
+- Confirmed artifact storage should use real AWS S3 through the AWS SDK for Node.js rather than a generic S3-compatible endpoint.
+- Removed S3 endpoint and path-style settings from the application configuration surface.

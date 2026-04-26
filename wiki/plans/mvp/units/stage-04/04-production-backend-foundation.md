@@ -1,6 +1,6 @@
 # Stage 04, Unit 04: Production Backend Foundation
 
-Replace the temporary local player store with a production-grade backend split between Convex for live transactional game state and S3 flat files for stable/versioned artifacts.
+Replace the temporary local player store with a production-grade backend split between Convex for live transactional game state and AWS S3 flat files for stable/versioned artifacts.
 
 ## Product Intent
 
@@ -9,7 +9,7 @@ The prototype should be real from the start. Player creation, acknowledgements, 
 The desired storage model is:
 
 - Convex owns live, queryable, auth-scoped application state and mutations.
-- S3 owns stable flat-file artifacts, snapshots, exports, source material, public recaps, and approved narrative-memory bundles.
+- AWS S3 owns stable flat-file artifacts, snapshots, exports, source material, public recaps, and approved narrative-memory bundles.
 - Convex stores indexes, object keys, status, ownership, and metadata for S3 artifacts when the app needs to query or enforce behavior around them.
 
 ## Scope
@@ -19,9 +19,9 @@ The desired storage model is:
 - Define the first Convex schema for users/players/daily games or the smallest equivalent tables needed by the existing flow.
 - Preserve Clerk ownership checks at the mutation boundary.
 - Keep direct OpenAI generation in the existing AI SDK boundary while saving generated reveal state through Convex.
-- Add an S3 flat-file boundary for stable artifacts without putting hot transactional player state in S3.
+- Add an AWS S3 flat-file boundary for stable artifacts without putting hot transactional player state in S3.
 - Define initial S3 object-key conventions for stable artifacts such as source imports, generated daily recap snapshots, exported event bundles, and approved narrative memory.
-- Add environment-variable documentation for Convex and S3-compatible storage.
+- Add environment-variable documentation for Convex and AWS S3 storage.
 - Add migration or local reset notes for replacing existing `.data/players.json` development records.
 
 ## Out Of Scope
@@ -48,7 +48,7 @@ The desired storage model is:
 ## Data And State Notes
 
 - Convex should be the source of truth for current gameplay state, uniqueness constraints, mutation ordering, and user/player/day ownership.
-- S3 flat files are appropriate for stable, immutable, or slowly changing data where object versioning, portability, and cheap archival matter more than low-latency transactional updates.
+- AWS S3 flat files are appropriate for stable, immutable, or slowly changing data where object versioning, portability, and cheap archival matter more than low-latency transactional updates.
 - S3 should not enforce one-player-per-day, YES/NO uniqueness, active reveal status, or other hot gameplay invariants.
 - Use Convex records to reference S3 object keys when the app needs to discover, publish, or validate artifact availability.
 - Keep the storage boundary explicit in code so future stages do not casually reintroduce local state.
@@ -67,14 +67,14 @@ The desired storage model is:
 - Create Convex project/environment values for local and deployment environments.
 - Set `NEXT_PUBLIC_CONVEX_URL` in the Next.js runtime.
 - Set the same long random `AREYOUIN_BACKEND_SECRET` in the Next.js runtime and Convex environment.
-- Choose the first S3-compatible provider and bucket naming convention.
-- Decide whether local development should use the real S3 bucket, a separate dev bucket, or a local S3-compatible emulator.
+- Create the AWS S3 artifact bucket and choose the bucket naming convention.
+- Decide whether local development should use the real S3 bucket or a separate dev bucket.
 
 ## Implementation Notes
 
 - Added Convex and moved current live player/gameplay state behind Convex queries and mutations.
 - Added `dailyGames`, `players`, and `artifactObjects` schema tables for the first production-backed slice.
 - Kept Clerk verification in the existing Next.js route handlers and added a shared backend secret guard on Convex mutations.
-- Added an S3-compatible artifact helper for stable flat-file writes and object-key conventions; no current gameplay mutation state is stored in S3.
+- Added an AWS SDK for Node.js artifact helper for stable flat-file writes to real S3; no current gameplay mutation state is stored in S3.
 - Replaced the file-backed `lib/player-store.ts` implementation with a Convex-backed adapter while preserving the existing route/page call sites.
 - Existing local `.data/players.json` development records are not migrated automatically; create a fresh player in Convex or manually backfill if a local test record matters.
