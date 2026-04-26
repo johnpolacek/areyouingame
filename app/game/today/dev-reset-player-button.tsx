@@ -37,7 +37,7 @@ export function DevResetPlayerButton() {
   return (
     <Button
       aria-label="Reset today's local player"
-      className="absolute top-4 right-4 z-20 h-8 rounded-[3px] border-amber-200/20 bg-black/35 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-amber-100/70 uppercase backdrop-blur-md hover:bg-amber-200/10 hover:text-amber-50 focus-visible:ring-amber-200/35"
+      className="absolute right-4 bottom-4 z-20 h-8 rounded-[3px] border-amber-200/20 bg-black/35 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-amber-100/70 uppercase backdrop-blur-md hover:bg-amber-200/10 hover:text-amber-50 focus-visible:ring-amber-200/35"
       disabled={isResetting}
       onClick={resetPlayer}
       size="sm"
