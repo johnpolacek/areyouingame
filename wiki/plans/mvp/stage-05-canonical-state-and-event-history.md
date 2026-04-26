@@ -6,32 +6,32 @@ Expand the production backend into deeper authoritative world and player state, 
 
 ## Current Status
 
-Directional stage stub. Stage 04 now includes a production backend foundation unit so this stage should build on Convex and S3 rather than introduce them for the first time.
+Active product-spine stage. Stage 04 now includes a production backend foundation and exactly-once first decision record, so this stage begins by turning the reveal into the first text-capable action loop before expanding deeper canonical state, events, and narrative memory.
 
 ## Scope
 
-- Include: expanded canonical state, append-only event history, narrative memory update boundaries, S3 artifact conventions for stable/generated narrative material, and the rule that durable summaries explain the world but do not own numeric or enforceable truth.
-- Exclude: decision-complete unit plans until the user asks what to plan next.
+- Include: text-based YES/NO response classification, deferred interruption attempts, first post-choice open action, expanded canonical state, append-only event history, narrative memory update boundaries, S3 artifact conventions for stable/generated narrative material, and the rule that durable summaries explain the world but do not own numeric or enforceable truth.
+- Exclude: full global MUD simulation breadth until the first post-choice action loop proves the interaction pattern.
 
 ## Units
 
-- No unit plans yet. Add exactly one next decision-complete unit when this stage becomes active.
+- [Stage 05, Unit 01: Text YES/NO Response And Deferred Interruptions](units/stage-05/01-text-yes-no-response-and-deferred-interruptions.md) - next.
 
 ## Acceptance Criteria
 
-- This stage captures the expanded structured-state, event-history, and narrative-memory direction without pretending the later execution details are already settled.
+- This stage begins with the text-based reveal response loop before broader structured-state and memory work.
 - Later unit plans can be added incrementally without rewriting the roadmap structure.
 
 ## Verification
 
 - Confirm the stage goal still fits the top-level MVP roadmap after the first chat/reveal loop.
-- Confirm there are no unit links yet for this stage.
+- Confirm the first unit keeps the core decision invariant clean: only YES or NO completes the decision, while deferred responses remain pending and get recorded as attempts.
 
 ## Manual Steps
 
-- Revisit this stage when the user asks what to plan next.
-- Add one decision-complete unit and update the roadmap links when this stage becomes active.
+- Implement one decision-complete unit at a time.
+- Keep deferred reveal interactions narrow until canonical event/history design is expanded.
 
 ## Assumptions
 
-- This stub was generated during initial plan creation to preserve direction while deferring detailed planning.
+- A visible skip option would weaken the central threshold. Deferral should be expressed through open text actions that the game interprets and answers, not through a third button.

@@ -4,11 +4,11 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 
 ## Current Status
 
-- Next execution unit: [Stage 5: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md)
-- Most recently completed stage: [Stage 3: Daily Player Creation](stage-03-daily-player-creation.md)
+- Next execution unit: [Stage 5, Unit 01: Text YES/NO Response And Deferred Interruptions](units/stage-05/01-text-yes-no-response-and-deferred-interruptions.md)
+- Most recently completed stage: [Stage 4: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md)
 - Most recently completed unit: [Stage 4, Unit 05: Submit YES/NO Choice And First Consequence](units/stage-04/05-submit-yes-no-choice-and-first-consequence.md)
 - Current execution stage: [Stage 5: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md)
-- Status: the first-chat path now persists the opening response, YES/NO reveal, and exactly-once first decision in Convex before showing a deterministic first consequence.
+- Status: the first-chat path now persists the opening response, YES/NO reveal, and exactly-once first decision in Convex. The next unit upgrades the reveal into a text-capable decision moment where open responses can resolve to YES, resolve to NO, or defer the choice while the interruption continues.
 
 ## Stages
 
@@ -20,7 +20,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
   Let an authenticated user create exactly one player for today's game before entering the surprise first-chat YES or NO moment.
 - [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - completed stage.
   Connect the player to a private game chat, reveal the `Are you in?` choice at the end of the first game prompt, then grow toward LLM interpretation, adjudication, event logging, and grounded narrative response.
-- [Stage 05: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md) - active planning target; later units will be added incrementally.
+- [Stage 05: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md) - active product-spine stage; first text decision-loop unit planned next.
   Expand the production backend into deeper authoritative world state, append-only events for meaningful changes, and narrative memory updates for significant world history.
 - [Stage 06: Daily Game Lifecycle And Recaps](stage-06-daily-progression.md) - planned product-spine unit.
   Implement the global daily game lifecycle, date-id game creation, durable archives, end-of-day public recaps, and return-player continuity across accumulated games.

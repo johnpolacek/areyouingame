@@ -35,6 +35,8 @@ AreYouIn is organized around daily shared game instances.
 - Each daily game starts at one randomly selected global time of day. That instant is shared by every player, then rendered in each player's local timezone.
 - After character creation, the first game screen uses the player's name, local event time, and player location to ask: `Hi John, it is <game-time-start> in <player-location>. Where are you and what are you doing?`
 - The YES or NO choice must not appear in player creation or in the first location/activity prompt. It is reserved for a later reveal after the player has entered the scene.
+- The YES/NO reveal supports explicit `YES` and `NO` buttons plus an open text response. Open text can be classified as `YES`, `NO`, or deferred/no obvious choice.
+- Deferred reveal responses do not complete the central decision and should not be stored as a third final choice. They keep the decision pending while recording the attempted action and returning another interruption that repeats the demand for yes or no.
 - Player chat is private during the day. End-of-day results, summaries, and selected consequences become visible to everyone through the daily recap/archive.
 - Each day should produce a durable recap that summarizes the game and preserves it as part of the growing archive.
 
@@ -43,6 +45,7 @@ AreYouIn is organized around daily shared game instances.
 AreYouIn should use production-backed storage from the prototype stage onward.
 
 - Convex is the source of truth for live gameplay state, auth-scoped mutations, uniqueness, ordering, current player progress, daily-game records, decisions, and queryable indexes.
+- Convex should own reveal response attempts, decision classification outputs, pending-vs-submitted decision status, and first post-choice action state.
 - AWS S3 flat files, written through the AWS SDK for Node.js, are the source of durable stable artifacts: source imports, approved narrative-memory bundles, generated recap snapshots, exports, audit bundles, and other versioned documents that should be cheap to preserve and easy to move.
 - S3 should not own hot transactional state such as one-player-per-day enforcement, current reveal status, YES/NO uniqueness, or player mutation ordering.
 - Convex should store S3 object keys, checksums, versions, publication status, ownership, and metadata whenever the app needs to discover or enforce behavior around an artifact.

@@ -120,3 +120,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 04 Unit 05 with a Clerk-protected YES/NO submission route backed by Convex player ownership checks.
 - Added an exactly-once first-decision record with reveal context, selected choice, submitted timestamp, and deterministic first consequence copy.
 - Updated the today-game UI to submit YES or NO from the reveal and reload into the post-choice consequence state.
+
+## [2026-04-26] planning | add text YES/NO deferral loop
+
+- Added Stage 05 Unit 01 for text-based reveal responses that classify as YES, NO, or DEFERRED.
+- Recorded that deferral is not a final skip choice: the central decision remains pending while interruption attempts are stored and answered.
+- Planned the post-choice transition toward a generated narrative beat with an open textarea action instead of receipt-style confirmation copy.
