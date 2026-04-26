@@ -84,6 +84,12 @@ const saveFirstMoveRevealForUserGameRef = makeFunctionReference<
   DailyPlayer
 >("playerStore:saveFirstMoveRevealForUserGame");
 
+const deletePlayerForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs,
+  boolean
+>("playerStore:deletePlayerForUserGame");
+
 export function validatePlayerDraft(input: unknown): PlayerDraftInput {
   if (!input || typeof input !== "object") {
     throw new Error("Character draft is required.");
@@ -190,6 +196,17 @@ export async function saveFirstMoveRevealForUserGame({
     clerkUserId,
     dailyGameId,
     reveal,
+  });
+}
+
+export async function deletePlayerForUserGame(
+  clerkUserId: string,
+  dailyGameId: string,
+): Promise<boolean> {
+  return await fetchMutation(deletePlayerForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
   });
 }
 

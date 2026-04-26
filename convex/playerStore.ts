@@ -212,6 +212,28 @@ export const saveFirstMoveRevealForUserGame = mutationGeneric({
   },
 });
 
+export const deletePlayerForUserGame = mutationGeneric({
+  args: authenticatedArgs,
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayer(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer) {
+      return false;
+    }
+
+    await ctx.db.delete(existingPlayer._id);
+
+    return true;
+  },
+});
+
 async function ensureDailyGame(
   ctx: any,
   game: {

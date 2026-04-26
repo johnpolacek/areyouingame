@@ -7,6 +7,7 @@ import {
 } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
 import { BeforeWeBegin } from "./before-we-begin";
+import { DevResetPlayerButton } from "./dev-reset-player-button";
 import { FirstMoveReveal, FirstMoveRevealPending } from "./first-move-reveal";
 import { OpeningPrompt } from "./opening-prompt";
 
@@ -29,6 +30,9 @@ export default async function TodaysGamePage() {
     <main className="relative isolate grid min-h-svh place-items-center overflow-hidden bg-black px-5 py-16 text-amber-50 sm:p-8">
       <HeroBackgroundVideo />
       <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.24)_42%,rgba(0,0,0,0.86)_100%)]" />
+      {process.env.NODE_ENV === "development" ? (
+        <DevResetPlayerButton />
+      ) : null}
 
       {player.firstMoveReveal ? (
         <FirstMoveReveal reveal={player.firstMoveReveal} />
