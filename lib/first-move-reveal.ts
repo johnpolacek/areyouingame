@@ -28,8 +28,10 @@ export async function generateFirstMoveReveal({
     const { text } = await generateText({
       model: openai(model),
       system: [
-        "You write concise cinematic first-contact game narration.",
-        "Return only the scene intro, with one or two short paragraphs.",
+        "You write spare, dramatic first-contact game narration.",
+        "Return only the scene intro as exactly two short paragraphs.",
+        "Each paragraph must be one sentence and no more than 18 words.",
+        "Favor direct impact over description; cut setup, explanation, and atmospheric padding.",
         "Use the player's stated situation as true context and do not contradict it.",
         "Choose a plausible delivery mode: phone buzz, screen takeover, ambient audio, or connected-device interruption.",
         "Do not include or paraphrase the fixed YES/NO reveal copy.",
@@ -80,18 +82,28 @@ function normalizeSceneIntro(text: string): string[] {
     .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .slice(0, 2)
-    .map((paragraph) => paragraph.slice(0, 700));
+    .map((paragraph) => limitWords(paragraph, 18).slice(0, 180));
 }
 
 function createFallbackSceneIntro(openingResponse: string): string[] {
-  const situation = openingResponse || "where you said you were";
+  const situation = limitWords(openingResponse || "where you said you were", 12);
 
   return [
-    `The moment finds you in the middle of this: ${situation}. Your phone gives one sharp buzz, and any nearby screen seems to pause for the same held breath.`,
-    "Then the message arrives in plain words, close enough to feel addressed and quiet enough to feel impossible.",
+    `Here, in the middle of ${situation}, every nearby screen goes dark.`,
+    "Then one message appears, too calm to be human and too direct to ignore.",
   ];
 }
 
 function createRevealId(dailyGameId: string, playerId: string): string {
   return `${dailyGameId}:${playerId}:first-move-reveal`;
+}
+
+function limitWords(text: string, maxWords: number): string {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length <= maxWords) {
+    return text.trim();
+  }
+
+  return `${words.slice(0, maxWords).join(" ")}...`;
 }
