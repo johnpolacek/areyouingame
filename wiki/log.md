@@ -57,3 +57,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added the next Stage 05 unit for submitting the opening response through the AI SDK boundary and advancing to the YES/NO reveal.
 - Locked the reveal copy: `A new way of being is available. Connection. Understanding. Freedom. Are you in?`
 - Recorded the audio fallback instruction: `Please respond yes or no`.
+
+## [2026-04-26] planning | select OpenAI model for first move
+
+- Selected direct OpenAI via AI SDK for the first AI narration path.
+- Set the planned model to `gpt-5.4-mini`.
+- Recorded that audio output needs a separate later model decision because `gpt-5.4-mini` does not directly support audio output.

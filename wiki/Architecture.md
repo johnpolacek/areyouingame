@@ -17,6 +17,7 @@ These are the locked greenfield defaults for the MVP scaffold. They record the e
 - Package manager: pnpm.
 - Persistence model: Convex as the canonical backend for current structured world state and append-only event history.
 - AI boundary: AI SDK as the LLM integration boundary for intent interpretation, classification, adjudication support, narration, and summarization. The LLM is not the source of truth for world state.
+- First AI provider/model: direct OpenAI API through AI SDK using `gpt-5.4-mini` for text narration and structured reveal generation.
 - Testing baseline: Vitest for isolated logic and Playwright for running app smoke checks.
 - Source precedence: imported PRD, technical brief, wiki overview, roadmap, then supporting source artifacts.
 
@@ -38,6 +39,12 @@ AreYouIn is organized around daily shared game instances.
 - Each day should produce a durable recap that summarizes the game and preserves it as part of the growing archive.
 
 ## Durable Architecture Topics
+
+## AI Model Notes
+
+- Use OpenAI `gpt-5.4-mini` for the first move text path.
+- `gpt-5.4-mini` does not support audio output directly; voice delivery needs a separate later audio/TTS model decision.
+- Keep the reveal copy deterministic even when AI narration is used, so the required YES/NO decision screen remains stable.
 
 Common topics include:
 

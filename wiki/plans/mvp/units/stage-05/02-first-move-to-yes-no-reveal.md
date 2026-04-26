@@ -17,6 +17,7 @@ The player must then choose `YES` or `NO`. If this is presented through audio, t
 ## Scope
 
 - Add AI SDK as the application AI integration boundary for the first move.
+- Use the direct OpenAI provider with `gpt-5.4-mini` for the first text-generation path.
 - Persist the player's opening response against user id, player id, and daily game id.
 - Generate or assemble the first AI narration from player profile, opening response, daily game id, and shared event time.
 - Render the reveal screen with the exact YES/NO copy and two buttons.
@@ -46,6 +47,8 @@ The player must then choose `YES` or `NO`. If this is presented through audio, t
 - The first move should create durable records for the opening user message, the generated reveal narration, and the pending YES/NO decision.
 - Store the reveal copy as structured state, not only as rendered UI, so the next stage can process the YES/NO choice.
 - Start with a deterministic fallback reveal if AI generation fails; the exact YES/NO copy should still appear.
+- The implementation should read the model from `OPENAI_MODEL`, defaulting to `gpt-5.4-mini`.
+- Audio remains a later integration because `gpt-5.4-mini` is text/image-input focused and does not directly provide audio output.
 
 ## Verification
 
@@ -57,6 +60,6 @@ The player must then choose `YES` or `NO`. If this is presented through audio, t
 
 ## Manual Steps
 
-- Choose the AI provider path before implementation: Vercel AI Gateway or a direct provider package.
-- Add required AI environment variables locally and in deployment.
+- Add `OPENAI_API_KEY` locally and in deployment.
+- Confirm whether to pin `OPENAI_MODEL=gpt-5.4-mini` explicitly in production or rely on the application default.
 - Confirm whether the first implementation streams narration or returns one complete response.

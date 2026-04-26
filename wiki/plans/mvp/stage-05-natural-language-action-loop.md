@@ -37,7 +37,7 @@ Planned product-spine stage.
 
 ## Manual Steps
 
-- Choose the AI SDK provider path and model before implementation.
+- Use direct OpenAI via AI SDK with `gpt-5.4-mini` for the first implementation.
 - Confirm whether the reveal narration streams or returns as one complete response.
 
 ## Assumptions
