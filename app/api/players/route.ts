@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const todayGame = getTodayGame();
     const player = await createPlayerForUserGame({
       clerkUserId: userId,
-      dailyGameId: todayGame.id,
+      dailyGame: todayGame,
       draft,
     });
 

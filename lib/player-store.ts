@@ -1,6 +1,7 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { makeFunctionReference } from "convex/server";
 import { deriveTimeZoneFromLocation } from "./character-draft";
+import type { DailyGame } from "./daily-game";
 
 export type PlayerDraftInput = {
   name: string;
@@ -40,11 +41,48 @@ export type FirstMoveReveal = {
   source: "ai" | "fallback";
 };
 
-type PlayerStoreFile = {
-  players: DailyPlayer[];
+type AuthenticatedPlayerArgs = {
+  backendSecret: string;
+  clerkUserId: string;
+  dailyGameId: string;
 };
 
-const storePath = path.join(process.cwd(), ".data", "players.json");
+const getPlayerForUserGameRef = makeFunctionReference<
+  "query",
+  AuthenticatedPlayerArgs,
+  DailyPlayer | null
+>("playerStore:getPlayerForUserGame");
+
+const createPlayerForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    dailyGame: DailyGame;
+    draft: PlayerDraftInput;
+  },
+  DailyPlayer
+>("playerStore:createPlayerForUserGame");
+
+const acceptPublicGameplayAgreementRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs,
+  DailyPlayer
+>("playerStore:acceptPublicGameplayAgreement");
+
+const submitOpeningResponseForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    openingResponse: string;
+  },
+  DailyPlayer
+>("playerStore:submitOpeningResponseForUserGame");
+
+const saveFirstMoveRevealForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    reveal: FirstMoveReveal;
+  },
+  DailyPlayer
+>("playerStore:saveFirstMoveRevealForUserGame");
 
 export function validatePlayerDraft(input: unknown): PlayerDraftInput {
   if (!input || typeof input !== "object") {
@@ -72,50 +110,29 @@ export async function getPlayerForUserGame(
   clerkUserId: string,
   dailyGameId: string,
 ): Promise<DailyPlayer | null> {
-  const store = await readStore();
-
-  return (
-    store.players.find(
-      (player) =>
-        player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
-    ) ?? null
-  );
+  return await fetchQuery(getPlayerForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+  });
 }
 
 export async function createPlayerForUserGame({
   clerkUserId,
-  dailyGameId,
+  dailyGame,
   draft,
 }: {
   clerkUserId: string;
-  dailyGameId: string;
+  dailyGame: DailyGame;
   draft: PlayerDraftInput;
 }): Promise<DailyPlayer> {
-  const store = await readStore();
-  const existingPlayer = store.players.find(
-    (player) =>
-      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
-  );
-
-  if (existingPlayer) {
-    return existingPlayer;
-  }
-
-  const now = new Date().toISOString();
-  const player: DailyPlayer = {
-    ...draft,
-    id: `${dailyGameId}:${clerkUserId}`,
+  return await fetchMutation(createPlayerForUserGameRef, {
+    backendSecret: getBackendSecret(),
     clerkUserId,
-    dailyGameId,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  await writeStore({
-    players: [...store.players, player],
+    dailyGameId: dailyGame.id,
+    dailyGame,
+    draft,
   });
-
-  return player;
 }
 
 export async function acceptPublicGameplayAgreement({
@@ -125,29 +142,11 @@ export async function acceptPublicGameplayAgreement({
   clerkUserId: string;
   dailyGameId: string;
 }): Promise<DailyPlayer> {
-  const store = await readStore();
-  const playerIndex = store.players.findIndex(
-    (player) =>
-      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
-  );
-
-  if (playerIndex === -1) {
-    throw new Error("Player not found.");
-  }
-
-  const now = new Date().toISOString();
-  const player = {
-    ...store.players[playerIndex],
-    publicGameplayAgreementAcceptedAt:
-      store.players[playerIndex].publicGameplayAgreementAcceptedAt ?? now,
-    updatedAt: now,
-  };
-  const players = [...store.players];
-  players[playerIndex] = player;
-
-  await writeStore({ players });
-
-  return player;
+  return await fetchMutation(acceptPublicGameplayAgreementRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+  });
 }
 
 export function validateOpeningResponse(input: unknown): string {
@@ -169,37 +168,12 @@ export async function submitOpeningResponseForUserGame({
   dailyGameId: string;
   openingResponse: string;
 }): Promise<DailyPlayer> {
-  const store = await readStore();
-  const playerIndex = store.players.findIndex(
-    (player) =>
-      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
-  );
-
-  if (playerIndex === -1) {
-    throw new Error("Player not found.");
-  }
-
-  if (!store.players[playerIndex].publicGameplayAgreementAcceptedAt) {
-    throw new Error("Public gameplay agreement is required first.");
-  }
-
-  if (store.players[playerIndex].openingResponseSubmittedAt) {
-    throw new Error("Opening response has already been submitted.");
-  }
-
-  const now = new Date().toISOString();
-  const player = {
-    ...store.players[playerIndex],
+  return await fetchMutation(submitOpeningResponseForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
     openingResponse,
-    openingResponseSubmittedAt: now,
-    updatedAt: now,
-  };
-  const players = [...store.players];
-  players[playerIndex] = player;
-
-  await writeStore({ players });
-
-  return player;
+  });
 }
 
 export async function saveFirstMoveRevealForUserGame({
@@ -211,59 +185,22 @@ export async function saveFirstMoveRevealForUserGame({
   dailyGameId: string;
   reveal: FirstMoveReveal;
 }): Promise<DailyPlayer> {
-  const store = await readStore();
-  const playerIndex = store.players.findIndex(
-    (player) =>
-      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
-  );
-
-  if (playerIndex === -1) {
-    throw new Error("Player not found.");
-  }
-
-  const currentPlayer = store.players[playerIndex];
-
-  if (!currentPlayer.openingResponseSubmittedAt || !currentPlayer.openingResponse) {
-    throw new Error("Opening response is required first.");
-  }
-
-  if (currentPlayer.firstMoveReveal) {
-    return currentPlayer;
-  }
-
-  const player = {
-    ...currentPlayer,
-    firstMoveReveal: reveal,
-    updatedAt: reveal.generatedAt,
-  };
-  const players = [...store.players];
-  players[playerIndex] = player;
-
-  await writeStore({ players });
-
-  return player;
+  return await fetchMutation(saveFirstMoveRevealForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    reveal,
+  });
 }
 
-async function readStore(): Promise<PlayerStoreFile> {
-  try {
-    const file = await readFile(storePath, "utf8");
-    const parsed = JSON.parse(file) as Partial<PlayerStoreFile>;
+function getBackendSecret(): string {
+  const backendSecret = process.env.AREYOUIN_BACKEND_SECRET;
 
-    return {
-      players: Array.isArray(parsed.players) ? parsed.players : [],
-    };
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      return { players: [] };
-    }
-
-    throw error;
+  if (!backendSecret) {
+    throw new Error("AREYOUIN_BACKEND_SECRET is required.");
   }
-}
 
-async function writeStore(store: PlayerStoreFile): Promise<void> {
-  await mkdir(path.dirname(storePath), { recursive: true });
-  await writeFile(storePath, `${JSON.stringify(store, null, 2)}\n`);
+  return backendSecret;
 }
 
 function readRequiredString(

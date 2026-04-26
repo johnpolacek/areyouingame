@@ -46,7 +46,9 @@ AreYouIn should use production-backed storage from the prototype stage onward.
 - S3 flat files are the source of durable stable artifacts: source imports, approved narrative-memory bundles, generated recap snapshots, exports, audit bundles, and other versioned documents that should be cheap to preserve and easy to move.
 - S3 should not own hot transactional state such as one-player-per-day enforcement, current reveal status, YES/NO uniqueness, or player mutation ordering.
 - Convex should store S3 object keys, checksums, versions, publication status, ownership, and metadata whenever the app needs to discover or enforce behavior around an artifact.
-- The temporary `.data/players.json` store is not part of the target architecture and should be removed in the production-backend foundation unit.
+- Browser-facing player mutations continue to go through Clerk-protected Next.js routes. Those routes call Convex with `AREYOUIN_BACKEND_SECRET`; the same secret must be configured in the Next.js runtime and Convex environment.
+- The temporary `.data/players.json` store is not part of the target architecture and is no longer required by the current gameplay path.
+- S3 artifact keys follow `areyouin/<scope>/artifacts/<artifactType>/<version>.json`, where `<scope>` is either `global` or `daily-games/<dailyGameId>`.
 
 ## Durable Architecture Topics
 

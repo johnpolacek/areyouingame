@@ -4,11 +4,11 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 
 ## Current Status
 
-- Next execution unit: [Stage 4, Unit 04: Production Backend Foundation](units/stage-04/04-production-backend-foundation.md)
+- Next execution unit: [Stage 4, Unit 05: Submit YES/NO Choice And First Consequence](units/stage-04/05-submit-yes-no-choice-and-first-consequence.md)
 - Most recently completed stage: [Stage 3: Daily Player Creation](stage-03-daily-player-creation.md)
-- Most recently completed unit: [Stage 4, Unit 03: First Move To YES/NO Reveal](units/stage-04/03-first-move-to-yes-no-reveal.md)
+- Most recently completed unit: [Stage 4, Unit 04: Production Backend Foundation](units/stage-04/04-production-backend-foundation.md)
 - Current execution stage: [Stage 4: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md)
-- Status: first-move reveal generation is implemented with AI SDK, direct OpenAI, structured reveal state, deterministic fallback, and a YES/NO pending screen. Before adding more gameplay state, the next unit replaces the temporary local store with a production backend: Convex for live transactional game state and S3 flat files for stable/versioned artifacts.
+- Status: current player/gameplay state has been moved from the temporary local store to Convex, with S3 reserved for stable/versioned artifacts. The first-chat path is ready for the YES/NO choice-submission unit.
 
 ## Stages
 
@@ -18,7 +18,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
   Build the public `Join Today's Game` entry path, resolve today's global game, and gate joining behind Clerk sign-in or account creation.
 - [Stage 03: Daily Player Creation](stage-03-daily-player-creation.md) - completed stage.
   Let an authenticated user create exactly one player for today's game before entering the surprise first-chat YES or NO moment.
-- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; production backend foundation planned next, then final choice-submission unit.
+- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; final choice-submission unit planned next.
   Connect the player to a private game chat, reveal the `Are you in?` choice at the end of the first game prompt, then grow toward LLM interpretation, adjudication, event logging, and grounded narrative response.
 - [Stage 05: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md) - directional stub; later units will be added incrementally.
   Expand the production backend into deeper authoritative world state, append-only events for meaningful changes, and narrative memory updates for significant world history.

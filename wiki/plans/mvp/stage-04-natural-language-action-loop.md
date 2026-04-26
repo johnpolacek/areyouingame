@@ -6,7 +6,7 @@ Connect the player to a private game chat, begin with the shared-time location/a
 
 ## Current Status
 
-Active product-spine stage. The next unit pauses new gameplay features long enough to replace the temporary local store with the production backend foundation.
+Active product-spine stage. Current player/gameplay state now uses the production backend foundation.
 
 ## Scope
 
@@ -18,8 +18,8 @@ Active product-spine stage. The next unit pauses new gameplay features long enou
 - [Stage 04, Unit 01: First Private Game Chat Opening](units/stage-04/01-first-private-game-chat-and-are-you-in-reveal.md) - completed.
 - [Stage 04, Unit 02: Submit Opening Response](units/stage-04/02-submit-opening-response.md) - completed.
 - [Stage 04, Unit 03: First Move To YES/NO Reveal](units/stage-04/03-first-move-to-yes-no-reveal.md) - completed.
-- [Stage 04, Unit 04: Production Backend Foundation](units/stage-04/04-production-backend-foundation.md) - next planned.
-- [Stage 04, Unit 05: Submit YES/NO Choice And First Consequence](units/stage-04/05-submit-yes-no-choice-and-first-consequence.md) - planned final Stage 04 product-spine unit.
+- [Stage 04, Unit 04: Production Backend Foundation](units/stage-04/04-production-backend-foundation.md) - completed.
+- [Stage 04, Unit 05: Submit YES/NO Choice And First Consequence](units/stage-04/05-submit-yes-no-choice-and-first-consequence.md) - next planned final Stage 04 product-spine unit.
 
 ## Acceptance Criteria
 

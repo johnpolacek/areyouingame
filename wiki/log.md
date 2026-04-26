@@ -98,3 +98,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Inserted Stage 04 Unit 04 for replacing the temporary local player store with a production backend before adding the YES/NO choice submission unit.
 - Defined the backend split: Convex owns live transactional game state, while S3 flat files own stable/versioned artifacts such as recaps, exports, source imports, and approved narrative-memory bundles.
 - Renumbered the YES/NO choice submission unit to Stage 04 Unit 05 and updated the MVP status, architecture notes, and older local-store assumptions.
+
+## [2026-04-26] implementation | move current player state to Convex
+
+- Added Convex schema/functions for daily games, players, current first-chat state, and S3 artifact metadata.
+- Replaced the local `.data/players.json` implementation with a Convex-backed player-store adapter used by the existing Next.js routes.
+- Added S3-compatible artifact storage helpers and environment documentation while keeping hot gameplay state in Convex.

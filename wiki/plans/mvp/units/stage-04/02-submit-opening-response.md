@@ -35,7 +35,7 @@ The opening prompt should behave like a real game input, not a visual placeholde
 
 ## Data And State Notes
 
-- The backend-foundation unit should migrate this state from the temporary local store to Convex before new gameplay state is added.
+- The backend-foundation unit migrated this state from the temporary local store to Convex before new gameplay state was added.
 - Store the raw trimmed opening response and submission timestamp on the daily player record.
 - The next unit should treat the stored opening response as prerequisite context for the first AI narration and YES/NO reveal.
 

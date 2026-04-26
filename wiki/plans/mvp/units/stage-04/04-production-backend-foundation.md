@@ -64,6 +64,17 @@ The desired storage model is:
 
 ## Manual Steps
 
+- Create Convex project/environment values for local and deployment environments.
+- Set `NEXT_PUBLIC_CONVEX_URL` in the Next.js runtime.
+- Set the same long random `AREYOUIN_BACKEND_SECRET` in the Next.js runtime and Convex environment.
 - Choose the first S3-compatible provider and bucket naming convention.
 - Decide whether local development should use the real S3 bucket, a separate dev bucket, or a local S3-compatible emulator.
-- Create Convex project/environment values for local and deployment environments.
+
+## Implementation Notes
+
+- Added Convex and moved current live player/gameplay state behind Convex queries and mutations.
+- Added `dailyGames`, `players`, and `artifactObjects` schema tables for the first production-backed slice.
+- Kept Clerk verification in the existing Next.js route handlers and added a shared backend secret guard on Convex mutations.
+- Added an S3-compatible artifact helper for stable flat-file writes and object-key conventions; no current gameplay mutation state is stored in S3.
+- Replaced the file-backed `lib/player-store.ts` implementation with a Convex-backed adapter while preserving the existing route/page call sites.
+- Existing local `.data/players.json` development records are not migrated automatically; create a fresh player in Convex or manually backfill if a local test record matters.
