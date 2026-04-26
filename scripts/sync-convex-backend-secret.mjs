@@ -1,10 +1,10 @@
-import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 
 const envFile = ".env.local";
 const key = "AREYOUIN_BACKEND_SECRET";
-const secret = readEnvValue(envFile, key);
+const secret = readNextEnvValue(key);
 
 if (!secret) {
   console.error(`${key} is missing from ${envFile}.`);
@@ -28,26 +28,17 @@ if (result.status !== 0) {
 console.log(`${key} synced to Convex dev deployment.`);
 console.log(`Local secret fingerprint: ${fingerprint(secret)}`);
 
-function readEnvValue(filePath, name) {
-  const file = readFileSync(filePath, "utf8");
-  const line = file
-    .split(/\r?\n/)
-    .find((entry) => entry.trim().startsWith(`${name}=`));
+function readNextEnvValue(name) {
+  const localRequire = createRequire(import.meta.url);
+  const requireFromNext = createRequire(
+    localRequire.resolve("next/package.json"),
+  );
+  const { loadEnvConfig } = requireFromNext("@next/env");
 
-  if (!line) {
-    return "";
-  }
+  delete process.env[name];
+  loadEnvConfig(process.cwd(), true, undefined, true);
 
-  const rawValue = line.slice(line.indexOf("=") + 1).trim();
-
-  if (
-    (rawValue.startsWith('"') && rawValue.endsWith('"')) ||
-    (rawValue.startsWith("'") && rawValue.endsWith("'"))
-  ) {
-    return rawValue.slice(1, -1);
-  }
-
-  return rawValue;
+  return process.env[name] ?? "";
 }
 
 function fingerprint(value) {
