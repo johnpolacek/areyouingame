@@ -1,13 +1,36 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
 .next/
 node_modules/
+/.next/
+/out/
 .data/
+
+# production
+/build
 
 *.log
 *.tsbuildinfo
 .DS_Store
+*.pem
 .env*
 !.env.example
 !.env.local.example
 
-# clerk configuration (can include secrets)
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
 /.clerk/
