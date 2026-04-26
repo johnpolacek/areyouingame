@@ -43,7 +43,7 @@ After signing in, the user creates a player specifically for today's daily game.
 ## Implementation Notes
 
 - The current implementation saves the first-screen character draft in `sessionStorage`, claims it from `/join` after Clerk auth, and creates a server-side player record linked to `clerkUserId + dailyGameId`.
-- Until Convex is connected, local development persistence uses `.data/players.json`; this is intentionally ignored by git and should be replaced by the canonical Convex model in the next persistence-focused slice.
+- The next backend-foundation unit replaces the temporary `.data/players.json` implementation with production Convex persistence before additional gameplay state is added.
 - Duplicate daily player creation is blocked by returning the existing player for the same Clerk user id and daily game id.
 
 ## Verification

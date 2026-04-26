@@ -92,3 +92,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 04 Unit 03 with AI SDK and the direct OpenAI provider for first-contact scene narration.
 - Added durable first-move reveal state on the daily player record, including separated scene intro, fixed reveal copy, audio prompt text, model metadata, and `yes_no_pending` status.
 - Replaced the response-submitted placeholder with a generation state and YES/NO reveal screen, using a deterministic fallback if AI generation fails.
+
+## [2026-04-26] planning | pivot to production backend foundation
+
+- Inserted Stage 04 Unit 04 for replacing the temporary local player store with a production backend before adding the YES/NO choice submission unit.
+- Defined the backend split: Convex owns live transactional game state, while S3 flat files own stable/versioned artifacts such as recaps, exports, source imports, and approved narrative-memory bundles.
+- Renumbered the YES/NO choice submission unit to Stage 04 Unit 05 and updated the MVP status, architecture notes, and older local-store assumptions.

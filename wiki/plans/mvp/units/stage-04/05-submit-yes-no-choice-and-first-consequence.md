@@ -1,10 +1,10 @@
-# Stage 04, Unit 04: Submit YES/NO Choice And First Consequence
+# Stage 04, Unit 05: Submit YES/NO Choice And First Consequence
 
 Persist the player's central YES or NO decision and show the first immediate consequence state without expanding into full world simulation.
 
 ## Product Intent
 
-After the reveal asks `Are you in?`, the player needs a decisive moment that feels accepted by the game. The system should record the choice exactly once for the player/day, acknowledge it in the interface, and show a short first consequence that makes the decision feel real while preserving deeper state, event history, and memory work for Stage 05.
+After the reveal asks `Are you in?`, the player needs a decisive moment that feels accepted by the game. The system should record the choice exactly once for the player/day, acknowledge it in the interface, and show a short first consequence that makes the decision feel real while preserving deeper world simulation and narrative memory work for Stage 05.
 
 ## Scope
 
@@ -13,14 +13,14 @@ After the reveal asks `Are you in?`, the player needs a decisive moment that fee
 - Prevent duplicate or changed choices without an explicit reset path.
 - Advance the player from `YES/NO pending` to `first choice submitted`.
 - Show an immediate post-choice consequence state for both YES and NO.
-- Store a simple durable first-decision record that Stage 05 can later migrate or map into canonical state and event history.
+- Store a simple durable first-decision record in the production backend that Stage 05 can later expand into deeper canonical state and event history.
 - Keep the immediate consequence concise and deterministic for the first implementation.
 
 ## Out Of Scope
 
 - Full consequence simulation after the choice.
 - Long-term player powers, affiliations, or world-state mutation.
-- Append-only event schema design beyond the simple first-decision record.
+- Full append-only event schema design beyond the simple first-decision record.
 - Narrative memory updates.
 - Public recap generation.
 - Voice input implementation for verbal YES/NO.
@@ -43,7 +43,7 @@ After the reveal asks `Are you in?`, the player needs a decisive moment that fee
 - Reuse the reveal state from Stage 04 Unit 03 as the prerequisite for submitting the choice.
 - Store the normalized decision as `YES` or `NO`.
 - Store enough metadata for later canonicalization: user id, player id, daily game id, submitted timestamp, and the reveal/version context if available.
-- Treat this as a narrow bridge record until Stage 05 introduces authoritative state, append-only events, and narrative memory.
+- Treat this as a narrow bridge record on top of the production backend until Stage 05 expands authoritative world state, append-only events, and narrative memory.
 - Start with deterministic consequence copy so the first implementation does not require another model call.
 
 ## Verification

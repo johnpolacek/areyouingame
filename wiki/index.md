@@ -7,7 +7,7 @@ This is the maintained project knowledge and planning layer for AreYouIn.
 
 AreYouIn is a persistent, real-time, AI-driven global simulation about humanity's first contact with artificial superintelligence. Players enter one shared timeline, make the defining YES/NO choice, and act through natural language as the world evolves day by day.
 
-The project is built around a strict separation between canonical world state, immutable event history, and narrative wiki memory. Its intended direction is a Next.js, TypeScript, AI SDK, Convex, and pnpm stack where the LLM acts as game master and narrator while structured systems preserve coherence, consequence, and long-term continuity.
+The project is built around a strict separation between canonical world state, immutable event history, and narrative memory/artifacts. Its intended direction is a Next.js, TypeScript, AI SDK, Convex, S3 flat-file artifact storage, and pnpm stack where the LLM acts as game master and narrator while structured systems preserve coherence, consequence, and long-term continuity.
 
 ## Core Pages
 

@@ -6,7 +6,7 @@ Connect the player to a private game chat, begin with the shared-time location/a
 
 ## Current Status
 
-Active product-spine stage.
+Active product-spine stage. The next unit pauses new gameplay features long enough to replace the temporary local store with the production backend foundation.
 
 ## Scope
 
@@ -18,7 +18,8 @@ Active product-spine stage.
 - [Stage 04, Unit 01: First Private Game Chat Opening](units/stage-04/01-first-private-game-chat-and-are-you-in-reveal.md) - completed.
 - [Stage 04, Unit 02: Submit Opening Response](units/stage-04/02-submit-opening-response.md) - completed.
 - [Stage 04, Unit 03: First Move To YES/NO Reveal](units/stage-04/03-first-move-to-yes-no-reveal.md) - completed.
-- [Stage 04, Unit 04: Submit YES/NO Choice And First Consequence](units/stage-04/04-submit-yes-no-choice-and-first-consequence.md) - planned final Stage 04 product-spine unit.
+- [Stage 04, Unit 04: Production Backend Foundation](units/stage-04/04-production-backend-foundation.md) - next planned.
+- [Stage 04, Unit 05: Submit YES/NO Choice And First Consequence](units/stage-04/05-submit-yes-no-choice-and-first-consequence.md) - planned final Stage 04 product-spine unit.
 
 ## Acceptance Criteria
 
@@ -27,7 +28,8 @@ Active product-spine stage.
 - The first game prompt asks where the player is and what they are doing.
 - The player's first response is submitted and stored before a later reveal ending with `A new way of being is available. Connection. Understanding. Freedom. Are you in?`
 - The YES or NO choice is captured on the reveal screen, not the player creation form or first location/activity prompt.
-- The selected YES or NO choice is persisted exactly once for the player/day before deeper state and memory systems are introduced.
+- The current gameplay path is migrated off local storage before the selected YES or NO choice is added.
+- The selected YES or NO choice is persisted exactly once for the player/day in the production backend before deeper state and memory systems are introduced.
 - The interface communicates that private chat content may affect end-of-day public results or summaries.
 
 ## Verification
@@ -36,13 +38,14 @@ Active product-spine stage.
 - Verify the first prompt is generated only after player creation.
 - Verify the first prompt asks where the player is and what they are doing using the player's local game-start time.
 - Verify the first response persists and advances out of the opening prompt before the YES/NO reveal screen.
+- Verify player creation, acknowledgement, opening response, and first-move reveal state no longer depend on `.data/players.json`.
 - Verify the YES/NO choice persists and reloads to a post-choice consequence state.
 - Verify chat records are scoped to the user, player, and daily game.
 
 ## Manual Steps
 
 - Use direct OpenAI via AI SDK with `gpt-5.4-mini` for the first implementation.
-- Confirm whether the reveal narration streams or returns as one complete response.
+- Keep Convex responsible for live gameplay state and S3 responsible for stable/versioned artifacts.
 
 ## Assumptions
 

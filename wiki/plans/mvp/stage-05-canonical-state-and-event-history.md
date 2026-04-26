@@ -2,15 +2,15 @@
 
 ## Stage Goal
 
-Introduce the structured Convex model for authoritative world and player state, append-only events for meaningful changes, and markdown-backed narrative memory for significant world history after the first chat/reveal loop proves the product spine.
+Expand the production backend into deeper authoritative world and player state, append-only events for meaningful changes, and S3-backed narrative memory/artifact bundles after the first chat/reveal/choice loop proves the product spine.
 
 ## Current Status
 
-Directional stage stub.
+Directional stage stub. Stage 04 now includes a production backend foundation unit so this stage should build on Convex and S3 rather than introduce them for the first time.
 
 ## Scope
 
-- Include: canonical state, append-only event history, narrative memory update boundaries, and the rule that durable summaries explain the world but do not own numeric or enforceable truth.
+- Include: expanded canonical state, append-only event history, narrative memory update boundaries, S3 artifact conventions for stable/generated narrative material, and the rule that durable summaries explain the world but do not own numeric or enforceable truth.
 - Exclude: decision-complete unit plans until the user asks what to plan next.
 
 ## Units
@@ -19,7 +19,7 @@ Directional stage stub.
 
 ## Acceptance Criteria
 
-- This stage captures the combined structured-state, event-history, and narrative-memory direction without pretending the later execution details are already settled.
+- This stage captures the expanded structured-state, event-history, and narrative-memory direction without pretending the later execution details are already settled.
 - Later unit plans can be added incrementally without rewriting the roadmap structure.
 
 ## Verification

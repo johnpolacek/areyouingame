@@ -15,7 +15,7 @@ These are the locked greenfield defaults for the MVP scaffold. They record the e
 - Runtime shell: Next.js app runtime with TypeScript.
 - Frontend tooling: Tailwind CSS for styling, shadcn/ui for application components, and Base UI primitives for lower-level accessible behavior where needed.
 - Package manager: pnpm.
-- Persistence model: Convex as the canonical backend for current structured world state and append-only event history.
+- Persistence model: Convex for live transactional game state and S3 flat files for stable/versioned artifacts.
 - AI boundary: AI SDK as the LLM integration boundary for intent interpretation, classification, adjudication support, narration, and summarization. The LLM is not the source of truth for world state.
 - First AI provider/model: direct OpenAI API through AI SDK using `gpt-5.4-mini` for text narration and structured reveal generation.
 - Testing baseline: Vitest for isolated logic and Playwright for running app smoke checks.
@@ -37,6 +37,16 @@ AreYouIn is organized around daily shared game instances.
 - The YES or NO choice must not appear in player creation or in the first location/activity prompt. It is reserved for a later reveal after the player has entered the scene.
 - Player chat is private during the day. End-of-day results, summaries, and selected consequences become visible to everyone through the daily recap/archive.
 - Each day should produce a durable recap that summarizes the game and preserves it as part of the growing archive.
+
+## Backend Storage Model
+
+AreYouIn should use production-backed storage from the prototype stage onward.
+
+- Convex is the source of truth for live gameplay state, auth-scoped mutations, uniqueness, ordering, current player progress, daily-game records, decisions, and queryable indexes.
+- S3 flat files are the source of durable stable artifacts: source imports, approved narrative-memory bundles, generated recap snapshots, exports, audit bundles, and other versioned documents that should be cheap to preserve and easy to move.
+- S3 should not own hot transactional state such as one-player-per-day enforcement, current reveal status, YES/NO uniqueness, or player mutation ordering.
+- Convex should store S3 object keys, checksums, versions, publication status, ownership, and metadata whenever the app needs to discover or enforce behavior around an artifact.
+- The temporary `.data/players.json` store is not part of the target architecture and should be removed in the production-backend foundation unit.
 
 ## Durable Architecture Topics
 
