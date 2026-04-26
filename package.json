@@ -9,6 +9,7 @@
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
     "convex:sync-secret": "node scripts/sync-convex-backend-secret.mjs",
+    "convex:check-secret": "node scripts/check-convex-backend-secret.mjs",
     "build": "next build",
     "start": "next start"
   },

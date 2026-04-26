@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 
 const envFile = ".env.local";
@@ -10,11 +11,22 @@ if (!secret) {
   process.exit(1);
 }
 
-const result = spawnSync("pnpm", ["convex", "env", "set", key, secret], {
+const result = spawnSync("pnpm", [
+  "convex",
+  "env",
+  "set",
+  key,
+  secret,
+], {
   stdio: "inherit",
 });
 
-process.exit(result.status ?? 1);
+if (result.status !== 0) {
+  process.exit(result.status ?? 1);
+}
+
+console.log(`${key} synced to Convex dev deployment.`);
+console.log(`Local secret fingerprint: ${fingerprint(secret)}`);
 
 function readEnvValue(filePath, name) {
   const file = readFileSync(filePath, "utf8");
@@ -36,4 +48,8 @@ function readEnvValue(filePath, name) {
   }
 
   return rawValue;
+}
+
+function fingerprint(value) {
+  return createHash("sha256").update(value).digest("hex").slice(0, 12);
 }
