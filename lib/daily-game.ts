@@ -33,20 +33,12 @@ export function formatGameStartForTimeZone(
   eventStartsAtIso: string,
   timeZone: string,
 ): string {
+  const eventStartsAt = new Date(eventStartsAtIso);
+
   try {
-    return new Intl.DateTimeFormat("en", {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone,
-      timeZoneName: "short",
-    }).format(new Date(eventStartsAtIso));
+    return formatLocalGameStart(eventStartsAt, timeZone);
   } catch {
-    return new Intl.DateTimeFormat("en", {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone: "UTC",
-      timeZoneName: "short",
-    }).format(new Date(eventStartsAtIso));
+    return formatLocalGameStart(eventStartsAt, "UTC");
   }
 }
 
@@ -83,4 +75,45 @@ function getEventStartsAt(dateId: string): Date {
   eventStartsAt.setUTCMinutes(minutesAfterMidnight);
 
   return eventStartsAt;
+}
+
+function formatLocalGameStart(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone,
+    weekday: "long",
+  }).formatToParts(date);
+  const weekday = getDatePart(parts, "weekday");
+  const hour = Number(getDatePart(parts, "hour"));
+  const minute = getDatePart(parts, "minute");
+  const daypart = getDaypart(hour);
+  const meridiem = hour < 12 ? "am" : "pm";
+  const displayHour = hour % 12 || 12;
+  const displayTime =
+    minute === "00"
+      ? `${displayHour}${meridiem}`
+      : `${displayHour}:${minute}${meridiem}`;
+
+  return `${displayTime} on ${weekday} ${daypart}`;
+}
+
+function getDatePart(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): string {
+  return parts.find((part) => part.type === type)?.value ?? "";
+}
+
+function getDaypart(hour: number): "morning" | "afternoon" | "night" {
+  if (hour >= 5 && hour < 12) {
+    return "morning";
+  }
+
+  if (hour >= 12 && hour < 17) {
+    return "afternoon";
+  }
+
+  return "night";
 }

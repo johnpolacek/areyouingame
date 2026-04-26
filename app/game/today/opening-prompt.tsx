@@ -27,7 +27,7 @@ export function OpeningPrompt({
       <div className="grid gap-4">
         <p
           id="opening-question"
-          className="text-2xl leading-9 font-medium text-amber-50 text-balance sm:text-4xl sm:leading-12"
+          className="text-base leading-7 font-medium text-amber-100 text-balance sm:text-lg sm:leading-8"
         >
           Hi {playerName}, it is{" "}
           <time dateTime={eventStartsAtIso}>{localGameStart}</time> in{" "}
