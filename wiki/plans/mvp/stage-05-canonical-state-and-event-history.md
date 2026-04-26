@@ -6,7 +6,7 @@ Expand the production backend into deeper authoritative world and player state, 
 
 ## Current Status
 
-Active product-spine stage. Stage 04 now includes a production backend foundation and exactly-once first decision record, so this stage begins by turning the reveal into the first text-capable action loop before expanding deeper canonical state, events, and narrative memory.
+Active product-spine stage. Stage 05 Unit 01 now turns the reveal into the first text-capable action loop, including deferred interruptions and first post-choice action persistence, before the stage expands deeper canonical state, events, and narrative memory.
 
 ## Scope
 
@@ -15,7 +15,7 @@ Active product-spine stage. Stage 04 now includes a production backend foundatio
 
 ## Units
 
-- [Stage 05, Unit 01: Text YES/NO Response And Deferred Interruptions](units/stage-05/01-text-yes-no-response-and-deferred-interruptions.md) - next.
+- [Stage 05, Unit 01: Text YES/NO Response And Deferred Interruptions](units/stage-05/01-text-yes-no-response-and-deferred-interruptions.md) - completed.
 
 ## Acceptance Criteria
 

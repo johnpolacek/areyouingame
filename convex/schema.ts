@@ -26,10 +26,32 @@ const firstDecision = v.object({
   status: v.literal("first_choice_submitted"),
   consequenceTitle: v.string(),
   consequenceBody: v.string(),
+  consequenceModel: v.string(),
+  consequenceSource: v.union(v.literal("ai"), v.literal("fallback")),
   revealId: v.string(),
   revealGeneratedAt: v.string(),
   revealModel: v.string(),
   revealSource: v.union(v.literal("ai"), v.literal("fallback")),
+  submittedAt: v.string(),
+});
+
+const firstRevealTextResponse = v.object({
+  id: v.string(),
+  inputText: v.string(),
+  classification: v.union(
+    v.literal("YES"),
+    v.literal("NO"),
+    v.literal("DEFERRED"),
+  ),
+  model: v.string(),
+  source: v.union(v.literal("ai"), v.literal("fallback")),
+  submittedAt: v.string(),
+  interruptionText: v.optional(v.string()),
+});
+
+const firstPostChoiceAction = v.object({
+  id: v.string(),
+  actionText: v.string(),
   submittedAt: v.string(),
 });
 
@@ -53,6 +75,8 @@ export default defineSchema({
     bio: v.string(),
     timeZone: v.string(),
     firstDecision: v.optional(firstDecision),
+    firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
+    firstPostChoiceAction: v.optional(firstPostChoiceAction),
     firstMoveReveal: v.optional(firstMoveReveal),
     openingResponse: v.optional(v.string()),
     openingResponseSubmittedAt: v.optional(v.string()),

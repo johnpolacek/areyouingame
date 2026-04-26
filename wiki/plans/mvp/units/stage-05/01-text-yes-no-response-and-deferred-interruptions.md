@@ -2,6 +2,8 @@
 
 Upgrade the `Are you in?` reveal from button-only choice submission into the first text-capable decision loop: players can click YES or NO, or type what they do, and the system classifies the text as YES, NO, or deferred.
 
+Status: completed.
+
 ## Product Intent
 
 The reveal should feel like the first moment of the global text-based MUD-style experience, not a form receipt. Explicit YES/NO buttons preserve the central ritual choice, while the open textarea lets players roleplay hesitation, confusion, avoidance, or alternate actions. If they defer, the world should keep interrupting them until they answer yes or no.

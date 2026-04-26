@@ -17,6 +17,8 @@ export type DailyPlayer = PlayerDraftInput & {
   clerkUserId: string;
   dailyGameId: string;
   firstDecision?: FirstDecision;
+  firstRevealTextResponses?: FirstRevealTextResponse[];
+  firstPostChoiceAction?: FirstPostChoiceAction;
   firstMoveReveal?: FirstMoveReveal;
   openingResponse?: string;
   openingResponseSubmittedAt?: string;
@@ -48,6 +50,8 @@ export type FirstDecision = {
   status: "first_choice_submitted";
   consequenceTitle: string;
   consequenceBody: string;
+  consequenceModel: string;
+  consequenceSource: "ai" | "fallback";
   revealId: string;
   revealGeneratedAt: string;
   revealModel: string;
@@ -56,6 +60,23 @@ export type FirstDecision = {
 };
 
 export type YesNoChoice = "YES" | "NO";
+export type FirstRevealTextClassification = YesNoChoice | "DEFERRED";
+
+export type FirstRevealTextResponse = {
+  id: string;
+  inputText: string;
+  classification: FirstRevealTextClassification;
+  model: string;
+  source: "ai" | "fallback";
+  submittedAt: string;
+  interruptionText?: string;
+};
+
+export type FirstPostChoiceAction = {
+  id: string;
+  actionText: string;
+  submittedAt: string;
+};
 
 type AuthenticatedPlayerArgs = {
   backendSecret: string;
@@ -107,6 +128,26 @@ const submitFirstDecisionForUserGameRef = makeFunctionReference<
   },
   DailyPlayer
 >("playerStore:submitFirstDecisionForUserGame");
+
+const submitFirstRevealTextResponseForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    responseText: string;
+    classification: FirstRevealTextClassification;
+    model: string;
+    source: "ai" | "fallback";
+    interruptionText?: string;
+  },
+  DailyPlayer
+>("playerStore:submitFirstRevealTextResponseForUserGame");
+
+const submitFirstPostChoiceActionForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    actionText: string;
+  },
+  DailyPlayer
+>("playerStore:submitFirstPostChoiceActionForUserGame");
 
 const deletePlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -237,6 +278,16 @@ export function validateYesNoChoice(input: unknown): YesNoChoice {
   return choice;
 }
 
+export function validateFirstRevealTextResponse(input: unknown): string {
+  const response = readRequiredString(input, "Response text", 1200);
+
+  if (response.length < 1) {
+    throw new Error("Response text is required.");
+  }
+
+  return response;
+}
+
 export async function submitFirstDecisionForUserGame({
   clerkUserId,
   dailyGameId,
@@ -251,6 +302,56 @@ export async function submitFirstDecisionForUserGame({
     clerkUserId,
     dailyGameId,
     choice,
+  });
+}
+
+export async function submitFirstRevealTextResponseForUserGame({
+  clerkUserId,
+  dailyGameId,
+  responseText,
+  classification,
+  model,
+  source,
+  interruptionText,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  responseText: string;
+  classification: FirstRevealTextClassification;
+  model: string;
+  source: "ai" | "fallback";
+  interruptionText?: string;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(submitFirstRevealTextResponseForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    responseText,
+    classification,
+    model,
+    source,
+    ...(interruptionText ? { interruptionText } : {}),
+  });
+}
+
+export function validateFirstPostChoiceAction(input: unknown): string {
+  return readRequiredString(input, "Action text", 1200);
+}
+
+export async function submitFirstPostChoiceActionForUserGame({
+  clerkUserId,
+  dailyGameId,
+  actionText,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  actionText: string;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(submitFirstPostChoiceActionForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    actionText,
   });
 }
 

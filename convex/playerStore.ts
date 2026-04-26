@@ -33,10 +33,32 @@ const firstDecision = v.object({
   status: v.literal("first_choice_submitted"),
   consequenceTitle: v.string(),
   consequenceBody: v.string(),
+  consequenceModel: v.string(),
+  consequenceSource: v.union(v.literal("ai"), v.literal("fallback")),
   revealId: v.string(),
   revealGeneratedAt: v.string(),
   revealModel: v.string(),
   revealSource: v.union(v.literal("ai"), v.literal("fallback")),
+  submittedAt: v.string(),
+});
+
+const firstRevealTextResponse = v.object({
+  id: v.string(),
+  inputText: v.string(),
+  classification: v.union(
+    v.literal("YES"),
+    v.literal("NO"),
+    v.literal("DEFERRED"),
+  ),
+  model: v.string(),
+  source: v.union(v.literal("ai"), v.literal("fallback")),
+  submittedAt: v.string(),
+  interruptionText: v.optional(v.string()),
+});
+
+const firstPostChoiceAction = v.object({
+  id: v.string(),
+  actionText: v.string(),
   submittedAt: v.string(),
 });
 
@@ -46,6 +68,8 @@ const player = v.object({
   dailyGameId: v.string(),
   ...playerDraft,
   firstDecision: v.optional(firstDecision),
+  firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
+  firstPostChoiceAction: v.optional(firstPostChoiceAction),
   firstMoveReveal: v.optional(firstMoveReveal),
   openingResponse: v.optional(v.string()),
   openingResponseSubmittedAt: v.optional(v.string()),
@@ -271,6 +295,139 @@ export const submitFirstDecisionForUserGame = mutationGeneric({
   },
 });
 
+export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    responseText: v.string(),
+    classification: v.union(
+      v.literal("YES"),
+      v.literal("NO"),
+      v.literal("DEFERRED"),
+    ),
+    model: v.string(),
+    source: v.union(v.literal("ai"), v.literal("fallback")),
+    interruptionText: v.optional(v.string()),
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (!args.responseText.trim()) {
+      throw new ConvexError("Response text is required.");
+    }
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.firstMoveReveal) {
+      throw new ConvexError("YES/NO reveal is required first.");
+    }
+
+    if (existingPlayer.firstDecision) {
+      throw new ConvexError("YES/NO choice has already been submitted.");
+    }
+
+    const now = new Date().toISOString();
+    const previousResponses = existingPlayer.firstRevealTextResponses ?? [];
+    const responseRecord = {
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-reveal-text-response:${previousResponses.length + 1}`,
+      inputText: args.responseText,
+      classification: args.classification,
+      model: args.model,
+      source: args.source,
+      submittedAt: now,
+      ...(args.interruptionText
+        ? { interruptionText: args.interruptionText }
+        : {}),
+    };
+    const firstRevealTextResponses = [...previousResponses, responseRecord];
+
+    if (args.classification === "DEFERRED") {
+      await ctx.db.patch(existingPlayer._id, {
+        firstRevealTextResponses,
+        updatedAt: now,
+      });
+
+      return toDailyPlayer({
+        ...existingPlayer,
+        firstRevealTextResponses,
+        updatedAt: now,
+      });
+    }
+
+    const firstDecisionRecord = createFirstDecision({
+      choice: args.classification,
+      dailyGameId: args.dailyGameId,
+      firstMoveReveal: existingPlayer.firstMoveReveal,
+      playerId: existingPlayer.id,
+      submittedAt: now,
+    });
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstDecision: firstDecisionRecord,
+      firstRevealTextResponses,
+      updatedAt: now,
+    });
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      firstDecision: firstDecisionRecord,
+      firstRevealTextResponses,
+      updatedAt: now,
+    });
+  },
+});
+
+export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    actionText: v.string(),
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (!args.actionText.trim()) {
+      throw new ConvexError("Action text is required.");
+    }
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.firstDecision) {
+      throw new ConvexError("YES/NO choice is required first.");
+    }
+
+    if (existingPlayer.firstPostChoiceAction) {
+      throw new ConvexError("First post-choice action has already been submitted.");
+    }
+
+    const now = new Date().toISOString();
+    const firstPostChoiceActionRecord = {
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-post-choice-action`,
+      actionText: args.actionText,
+      submittedAt: now,
+    };
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstPostChoiceAction: firstPostChoiceActionRecord,
+      updatedAt: now,
+    });
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      firstPostChoiceAction: firstPostChoiceActionRecord,
+      updatedAt: now,
+    });
+  },
+});
+
 export const deletePlayerForUserGame = mutationGeneric({
   args: authenticatedArgs,
   returns: v.boolean(),
@@ -397,6 +554,8 @@ function createFirstDecision({
     choice,
     status: "first_choice_submitted" as const,
     ...consequence,
+    consequenceModel: "deterministic-stage-05",
+    consequenceSource: "fallback" as const,
     revealId: firstMoveReveal.id,
     revealGeneratedAt: firstMoveReveal.generatedAt,
     revealModel: firstMoveReveal.model,
@@ -418,6 +577,12 @@ function toDailyPlayer(source: any) {
     timeZone: source.timeZone,
     ...(source.firstDecision
       ? { firstDecision: source.firstDecision }
+      : {}),
+    ...(source.firstRevealTextResponses
+      ? { firstRevealTextResponses: source.firstRevealTextResponses }
+      : {}),
+    ...(source.firstPostChoiceAction
+      ? { firstPostChoiceAction: source.firstPostChoiceAction }
       : {}),
     ...(source.firstMoveReveal
       ? { firstMoveReveal: source.firstMoveReveal }

@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
   FirstDecision,
+  FirstPostChoiceAction,
   FirstMoveReveal as FirstMoveRevealState,
+  FirstRevealTextResponse,
   YesNoChoice,
 } from "@/lib/player-store";
 
 type FirstMoveRevealProps = {
   reveal: FirstMoveRevealState;
+  latestTextResponse?: FirstRevealTextResponse;
 };
 
 type FirstChoiceConsequenceProps = {
   decision: FirstDecision;
+  firstPostChoiceAction?: FirstPostChoiceAction;
 };
 
 type FirstMoveRevealPendingProps = {
@@ -101,13 +105,22 @@ export function FirstMoveRevealPending({
   );
 }
 
-export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
+export function FirstMoveReveal({
+  latestTextResponse,
+  reveal,
+}: FirstMoveRevealProps) {
   const router = useRouter();
   const [submittedChoice, setSubmittedChoice] = useState<YesNoChoice | null>(
     null,
   );
+  const [textResponse, setTextResponse] = useState("");
+  const [isSubmittingText, setIsSubmittingText] = useState(false);
   const [error, setError] = useState("");
-  const isSubmitting = submittedChoice !== null;
+  const isSubmitting = submittedChoice !== null || isSubmittingText;
+  const latestInterruption =
+    latestTextResponse?.classification === "DEFERRED"
+      ? latestTextResponse.interruptionText
+      : undefined;
 
   async function submitChoice(choice: YesNoChoice) {
     if (isSubmitting) {
@@ -139,6 +152,50 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
           : "Unable to record choice.",
       );
       setSubmittedChoice(null);
+    }
+  }
+
+  async function submitTextResponse(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    const responseText = textResponse.trim();
+
+    if (!responseText) {
+      setError("Enter what you do, or choose YES or NO.");
+      return;
+    }
+
+    setIsSubmittingText(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/players/yes-no-text-response", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ responseText }),
+      });
+      const result = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to submit response.");
+      }
+
+      setTextResponse("");
+      router.refresh();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to submit response.",
+      );
+    } finally {
+      setIsSubmittingText(false);
     }
   }
 
@@ -210,6 +267,51 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
         </Button>
       </div>
 
+      {latestInterruption ? (
+        <p className="mt-7 max-w-2xl rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-left text-base leading-7 font-medium text-amber-100 shadow-2xl shadow-black/30 backdrop-blur-md">
+          {latestInterruption}
+        </p>
+      ) : null}
+
+      <form
+        className="mt-8 grid w-full max-w-2xl gap-3 text-left"
+        onSubmit={(event) => void submitTextResponse(event)}
+      >
+        <label
+          className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+          htmlFor="first-reveal-text-response"
+        >
+          What will you do?
+        </label>
+        <textarea
+          id="first-reveal-text-response"
+          value={textResponse}
+          onChange={(event) => setTextResponse(event.target.value)}
+          disabled={isSubmitting}
+          maxLength={1200}
+          rows={4}
+          className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
+          placeholder="Say yes, refuse, stall, ask, run, call someone, or try anything else."
+        />
+        <div className="flex justify-end">
+          <Button
+            disabled={isSubmitting}
+            type="submit"
+            variant="ghost"
+            className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+          >
+            {isSubmittingText ? (
+              <LoaderCircleIcon
+                aria-hidden="true"
+                className="size-4 animate-spin"
+              />
+            ) : (
+              "Continue"
+            )}
+          </Button>
+        </div>
+      </form>
+
       {error ? (
         <p className="mt-6 max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
           {error}
@@ -221,9 +323,58 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
 
 export function FirstChoiceConsequence({
   decision,
+  firstPostChoiceAction,
 }: FirstChoiceConsequenceProps) {
+  const router = useRouter();
+  const [actionText, setActionText] = useState("");
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [error, setError] = useState("");
   const choiceClass =
     decision.choice === "YES" ? "text-emerald-200" : "text-red-300";
+
+  async function submitAction(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSubmittingAction || firstPostChoiceAction) {
+      return;
+    }
+
+    const nextActionText = actionText.trim();
+
+    if (!nextActionText) {
+      setError("Enter your next action.");
+      return;
+    }
+
+    setIsSubmittingAction(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/players/first-post-choice-action", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ actionText: nextActionText }),
+      });
+      const result = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to submit action.");
+      }
+
+      setActionText("");
+      router.refresh();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to submit action.",
+      );
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }
 
   return (
     <section
@@ -231,28 +382,69 @@ export function FirstChoiceConsequence({
       className="relative z-10 flex w-full max-w-2xl flex-col items-center gap-7 text-center"
     >
       <div className="grid gap-4">
-        <p className="text-[0.68rem] font-bold tracking-[0.22em] text-amber-400 uppercase">
-          Choice recorded for today
-        </p>
-        <p
+        <h1
+          id="first-choice-consequence-title"
           className={`text-5xl leading-none font-light tracking-[0.2em] ${choiceClass} sm:text-7xl`}
         >
           {decision.choice}
-        </p>
-        <h1
-          id="first-choice-consequence-title"
+        </h1>
+        <p
           className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12"
         >
           {decision.consequenceTitle}
-        </h1>
+        </p>
         <p className="mx-auto max-w-xl text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8">
           {decision.consequenceBody}
         </p>
       </div>
 
-      <p className="rounded-md border border-amber-300/25 bg-black/35 px-4 py-3 text-sm leading-6 font-medium text-amber-100/80 backdrop-blur">
-        Your {decision.choice} is locked for today&apos;s game.
-      </p>
+      {firstPostChoiceAction ? (
+        <blockquote className="w-full rounded-md border border-amber-300/25 bg-black/35 px-4 py-3 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur">
+          {firstPostChoiceAction.actionText}
+        </blockquote>
+      ) : (
+        <form className="grid w-full gap-3 text-left" onSubmit={submitAction}>
+          <label
+            className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+            htmlFor="first-post-choice-action"
+          >
+            What will you do?
+          </label>
+          <textarea
+            id="first-post-choice-action"
+            value={actionText}
+            onChange={(event) => setActionText(event.target.value)}
+            disabled={isSubmittingAction}
+            maxLength={1200}
+            rows={4}
+            className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
+            placeholder="Act in the world now that the answer has been given."
+          />
+          <div className="flex justify-end">
+            <Button
+              disabled={isSubmittingAction}
+              type="submit"
+              variant="ghost"
+              className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+            >
+              {isSubmittingAction ? (
+                <LoaderCircleIcon
+                  aria-hidden="true"
+                  className="size-4 animate-spin"
+                />
+              ) : (
+                "Continue"
+              )}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {error ? (
+        <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }

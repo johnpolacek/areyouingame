@@ -29,6 +29,7 @@ export default async function TodaysGamePage() {
     todayGame.eventStartsAtIso,
     player.timeZone,
   );
+  const latestTextResponse = player.firstRevealTextResponses?.at(-1);
 
   return (
     <main className="relative isolate grid min-h-svh place-items-center overflow-hidden bg-black px-5 py-16 text-amber-50 sm:p-8">
@@ -39,9 +40,15 @@ export default async function TodaysGamePage() {
       ) : null}
 
       {player.firstDecision ? (
-        <FirstChoiceConsequence decision={player.firstDecision} />
+        <FirstChoiceConsequence
+          decision={player.firstDecision}
+          firstPostChoiceAction={player.firstPostChoiceAction}
+        />
       ) : player.firstMoveReveal ? (
-        <FirstMoveReveal reveal={player.firstMoveReveal} />
+        <FirstMoveReveal
+          latestTextResponse={latestTextResponse}
+          reveal={player.firstMoveReveal}
+        />
       ) : player.openingResponseSubmittedAt && player.openingResponse ? (
         <FirstMoveRevealPending openingResponse={player.openingResponse} />
       ) : player.publicGameplayAgreementAcceptedAt ? (

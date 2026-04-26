@@ -126,3 +126,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added Stage 05 Unit 01 for text-based reveal responses that classify as YES, NO, or DEFERRED.
 - Recorded that deferral is not a final skip choice: the central decision remains pending while interruption attempts are stored and answered.
 - Planned the post-choice transition toward a generated narrative beat with an open textarea action instead of receipt-style confirmation copy.
+
+## [2026-04-26] implementation | add text YES/NO deferral loop
+
+- Implemented Stage 05 Unit 01 with a Clerk-protected text response route, AI SDK classifier boundary, and Convex persistence for reveal text attempts.
+- Preserved explicit YES/NO buttons while adding open text classification, deferred interruption copy, duplicate final-decision protection, and refresh-safe pending/final states.
+- Replaced the post-choice receipt with a selected YES/NO heading, consequence copy, and first post-choice action textarea backed by Convex persistence.
