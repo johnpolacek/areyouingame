@@ -11,21 +11,16 @@ import {
   type CharacterDraftField,
   emptyDraft,
   isCompleteDraft,
+  PlayerCreationView,
   primaryActionClass,
   PrimaryActionLabel,
 } from "../../character-draft-form";
 
 type NewPlayerFormProps = {
-  eventStartsAtIso: string;
-  eventStartsAtLabel: string;
-  gameId: string;
   successHref: string;
 };
 
 export function NewPlayerForm({
-  eventStartsAtIso,
-  eventStartsAtLabel,
-  gameId,
   successHref,
 }: NewPlayerFormProps) {
   const router = useRouter();
@@ -112,37 +107,8 @@ export function NewPlayerForm({
   }
 
   return (
-    <section
-      className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-7 text-center sm:gap-8"
-      aria-labelledby="player-create-title"
-    >
-      <div className="flex flex-col items-center gap-3 sm:gap-4">
-        <p className="rounded-full border border-amber-500/30 bg-black/30 px-4 py-1 text-[0.62rem] font-bold tracking-[0.22em] text-amber-300 uppercase shadow-lg shadow-black/30 backdrop-blur">
-          Game {gameId}
-        </p>
-        <h1
-          id="player-create-title"
-          className="hero-display-title max-w-3xl bg-gradient-to-t from-amber-600/90 via-amber-500 to-amber-200 bg-clip-text text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed]"
-        >
-          Are You In?
-        </h1>
-        <p className="max-w-2xl text-base leading-6 font-medium text-balance text-amber-100 sm:text-lg sm:leading-7">
-          Create your player character for the world as it stands at{" "}
-          <time dateTime={eventStartsAtIso}>{eventStartsAtLabel}</time>.
-        </p>
-      </div>
-
-      <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
-        <CharacterSetupForm
-          draft={draft}
-          onChange={updateDraft}
-          onSubmit={createPlayer}
-        />
-        {error ? (
-          <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
-            {error}
-          </p>
-        ) : null}
+    <PlayerCreationView
+      actions={
         <Button
           className={`${primaryActionClass} hero-create-account`}
           disabled={!canCreatePlayer}
@@ -157,7 +123,14 @@ export function NewPlayerForm({
             <PrimaryActionLabel>Create Player</PrimaryActionLabel>
           )}
         </Button>
-      </div>
-    </section>
+      }
+      error={error}
+    >
+      <CharacterSetupForm
+        draft={draft}
+        onChange={updateDraft}
+        onSubmit={createPlayer}
+      />
+    </PlayerCreationView>
   );
 }

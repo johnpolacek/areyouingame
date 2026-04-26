@@ -18,12 +18,7 @@ export default async function NewPlayerPage() {
   return (
     <main className="relative isolate grid min-h-svh place-items-center overflow-hidden bg-black px-5 py-16 text-amber-50 sm:p-8">
       <HeroBackgroundVideo />
-      <NewPlayerForm
-        eventStartsAtIso={todayGame.eventStartsAtIso}
-        eventStartsAtLabel={todayGame.eventStartsAtLabel}
-        gameId={todayGame.id}
-        successHref="/game/today"
-      />
+      <NewPlayerForm successHref="/game/today" />
     </main>
   );
 }

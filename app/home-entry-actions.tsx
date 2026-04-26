@@ -12,6 +12,7 @@ import {
   type CharacterDraftField,
   emptyDraft,
   isCompleteDraft,
+  PlayerCreationView,
   primaryActionClass,
   PrimaryActionLabel,
 } from "./character-draft-form";
@@ -70,27 +71,32 @@ export function HomeEntryActions({
 
   if (shouldShowAuthActions) {
     return (
-      <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
+      <PlayerCreationView
+        actions={
+          <>
+            <SignUpButton mode="modal" forceRedirectUrl="/join">
+              <Button
+                className={`${primaryActionClass} hero-create-account`}
+                disabled={!canCreateAccount}
+                onClick={savePendingDraft}
+              >
+                <PrimaryActionLabel>Create Account</PrimaryActionLabel>
+              </Button>
+            </SignUpButton>
+            <SignInButton mode="modal" forceRedirectUrl="/join">
+              <Button
+                className="hero-sign-in rounded-md border-amber-600/45 bg-slate-950/55 px-5 text-sm font-semibold text-amber-100 shadow-lg shadow-amber-700/15 backdrop-blur hover:bg-amber-600/10 hover:text-amber-50"
+                onClick={savePendingDraft}
+                variant="outline"
+              >
+                Sign In
+              </Button>
+            </SignInButton>
+          </>
+        }
+      >
         <CharacterSetupForm draft={draft} onChange={updateDraft} />
-        <SignUpButton mode="modal" forceRedirectUrl="/join">
-          <Button
-            className={`${primaryActionClass} hero-create-account`}
-            disabled={!canCreateAccount}
-            onClick={savePendingDraft}
-          >
-            <PrimaryActionLabel>Create Account</PrimaryActionLabel>
-          </Button>
-        </SignUpButton>
-        <SignInButton mode="modal" forceRedirectUrl="/join">
-          <Button
-            className="hero-sign-in rounded-md border-amber-600/45 bg-slate-950/55 px-5 text-sm font-semibold text-amber-100 shadow-lg shadow-amber-700/15 backdrop-blur hover:bg-amber-600/10 hover:text-amber-50"
-            onClick={savePendingDraft}
-            variant="outline"
-          >
-            Sign In
-          </Button>
-        </SignInButton>
-      </div>
+      </PlayerCreationView>
     );
   }
 
