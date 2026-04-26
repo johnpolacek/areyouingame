@@ -109,3 +109,27 @@
 .hero-display-title {
   font-family: var(--font-rubik-80s-fade), var(--font-rethink-sans), sans-serif;
 }
+
+.first-move-question {
+  text-shadow:
+    0 0 16px rgb(251 191 36 / 44%),
+    0 0 54px rgb(251 191 36 / 20%),
+    0 2px 18px rgb(0 0 0 / 74%);
+}
+
+.first-move-glint {
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgb(251 191 36 / 48%) 18%,
+      rgb(254 243 199 / 90%) 50%,
+      rgb(251 191 36 / 48%) 82%,
+      transparent
+    );
+  box-shadow: 0 0 18px rgb(251 191 36 / 28%);
+}
+
+.first-move-answer {
+  text-shadow: 0 0 14px currentColor;
+}

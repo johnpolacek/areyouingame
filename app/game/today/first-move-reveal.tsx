@@ -97,12 +97,12 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
   return (
     <section
       aria-labelledby="first-move-reveal-title"
-      className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-8 text-center"
+      className="relative z-10 flex w-full max-w-5xl flex-col items-center text-center"
     >
-      <div className="grid w-full gap-4 text-left sm:text-center">
+      <div className="grid w-full max-w-2xl gap-5 text-left sm:text-center">
         {reveal.sceneIntro.map((paragraph) => (
           <p
-            className="text-base leading-7 font-medium text-amber-100 text-balance sm:text-lg sm:leading-8"
+            className="text-base leading-8 font-medium text-amber-100/90 text-balance sm:text-lg sm:leading-9"
             key={paragraph}
           >
             {paragraph}
@@ -110,16 +110,21 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
         ))}
       </div>
 
-      <div className="grid gap-4">
-        <p className="text-xl leading-8 font-semibold text-amber-200 text-balance sm:text-3xl sm:leading-11">
-          {reveal.revealCopy.availability}
-        </p>
-        <p className="text-xl leading-8 font-semibold text-amber-200 text-balance sm:text-3xl sm:leading-11">
-          {reveal.revealCopy.promise}
-        </p>
+      <div className="mt-9 grid w-full justify-items-center gap-4 sm:mt-11">
+        <div className="grid gap-3 text-amber-200">
+          <p className="text-lg leading-8 font-normal tracking-[0.12em] text-balance sm:text-2xl sm:leading-10 sm:tracking-[0.18em]">
+            {reveal.revealCopy.availability}
+          </p>
+          <p className="text-lg leading-8 font-normal tracking-[0.12em] text-balance sm:text-2xl sm:leading-10 sm:tracking-[0.18em]">
+            {reveal.revealCopy.promise}
+          </p>
+        </div>
+
+        <div className="first-move-glint my-3 h-px w-full max-w-md" />
+
         <h1
           id="first-move-reveal-title"
-          className="font-accent text-4xl leading-12 font-normal tracking-normal text-amber-50 uppercase sm:text-6xl sm:leading-18"
+          className="first-move-question text-[2.25rem] leading-none font-light tracking-[0.08em] text-amber-50 uppercase sm:text-7xl sm:tracking-[0.18em] md:text-8xl md:tracking-[0.22em] lg:text-9xl"
         >
           {reveal.revealCopy.question}
         </h1>
@@ -127,12 +132,18 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
 
       <div
         aria-label={reveal.revealCopy.audioPrompt}
-        className="grid w-full max-w-sm grid-cols-2 gap-3"
+        className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-9"
       >
-        <Button className="h-14 border border-emerald-200/70 bg-emerald-600/80 font-accent text-lg font-normal tracking-normal text-emerald-50 shadow-2xl shadow-black/60 hover:bg-emerald-500">
+        <Button
+          variant="ghost"
+          className="first-move-answer !h-16 !rounded-[3px] border border-emerald-300/70 bg-black/20 font-sans text-xl font-light tracking-[0.48em] text-emerald-200 shadow-[0_0_34px_rgba(34,197,94,0.14)] backdrop-blur-sm hover:border-emerald-200 hover:bg-emerald-400/10 hover:text-emerald-100 focus-visible:border-emerald-100 focus-visible:ring-emerald-300/35 sm:!h-18"
+        >
           {reveal.revealCopy.yesLabel}
         </Button>
-        <Button className="h-14 border border-red-200/70 bg-red-800/80 font-accent text-lg font-normal tracking-normal text-red-50 shadow-2xl shadow-black/60 hover:bg-red-700">
+        <Button
+          variant="ghost"
+          className="first-move-answer !h-16 !rounded-[3px] border border-red-400/75 bg-black/20 font-sans text-xl font-light tracking-[0.48em] text-red-300 shadow-[0_0_34px_rgba(239,68,68,0.13)] backdrop-blur-sm hover:border-red-200 hover:bg-red-500/10 hover:text-red-100 focus-visible:border-red-100 focus-visible:ring-red-300/35 sm:!h-18"
+        >
           {reveal.revealCopy.noLabel}
         </Button>
       </div>
