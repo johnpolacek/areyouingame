@@ -47,16 +47,12 @@ export function BeforeWeBegin() {
         <p className="text-[0.68rem] font-bold tracking-[0.22em] text-amber-400 uppercase">
           Before we begin
         </p>
-        <h1
+        <p
           id="before-we-begin-title"
-          className="text-2xl leading-9 font-semibold text-amber-100 text-balance sm:text-4xl sm:leading-12"
+          className="mx-auto max-w-xl text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8"
         >
-          Everything you play today will become part of the public record.
-        </h1>
-        <p className="mx-auto max-w-xl text-base leading-7 text-amber-100/80 sm:text-lg sm:leading-8">
-          All gameplay is public and published at the end of each day&apos;s
-          session. Do not enter anything you would not want included in the
-          public daily recap or archive.
+          Your gameplay helps shape the shared story and will be published at
+          the end of each day&apos;s session as part of the daily recap.
         </p>
       </div>
 
@@ -68,9 +64,8 @@ export function BeforeWeBegin() {
           type="checkbox"
         />
         <span>
-          I understand and agree that my gameplay may be public and published at
-          the end of the day&apos;s session, and I agree to the Terms and
-          Conditions for this MVP.
+          I understand and agree that my gameplay will be published at the end
+          of the day&apos;s session, and I agree to the Terms and Conditions.
         </span>
       </label>
 
