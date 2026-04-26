@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { deriveTimeZoneFromLocation } from "./character-draft";
 
 export type PlayerDraftInput = {
   name: string;
@@ -36,8 +37,12 @@ export function validatePlayerDraft(input: unknown): PlayerDraftInput {
     location: readRequiredString(source.location, "Location", 120),
     occupation: readRequiredString(source.occupation, "Occupation", 120),
     bio: readRequiredString(source.bio, "Bio", 800),
-    timeZone: readOptionalString(source.timeZone, 80) || "UTC",
+    timeZone: "",
   };
+  draft.timeZone = deriveTimeZoneFromLocation(
+    draft.location,
+    readOptionalString(source.timeZone, 80) || "UTC",
+  );
 
   return draft;
 }

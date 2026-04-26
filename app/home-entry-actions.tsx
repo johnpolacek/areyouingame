@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { pendingDraftStorageKey } from "@/lib/character-draft";
+import { getDraftTimeZone, pendingDraftStorageKey } from "@/lib/character-draft";
 import { cn } from "@/lib/utils";
 import {
   CharacterSetupForm,
@@ -53,7 +53,7 @@ export function HomeEntryActions({
         location: draft.location.trim(),
         occupation: draft.occupation.trim(),
         bio: draft.bio.trim(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+        timeZone: getDraftTimeZone(draft.location),
       }),
     );
   }

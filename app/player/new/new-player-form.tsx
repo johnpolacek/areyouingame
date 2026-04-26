@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { pendingDraftStorageKey } from "@/lib/character-draft";
+import { getDraftTimeZone, pendingDraftStorageKey } from "@/lib/character-draft";
 import {
   CharacterSetupForm,
   type CharacterDraft,
@@ -84,7 +84,7 @@ export function NewPlayerForm({
             location: draft.location.trim(),
             occupation: draft.occupation.trim(),
             bio: draft.bio.trim(),
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+            timeZone: getDraftTimeZone(draft.location),
           },
         }),
       });
