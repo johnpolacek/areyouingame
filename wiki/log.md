@@ -75,3 +75,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Swapped the chat/action loop ahead of canonical state planning so `First Chat And Natural Language Action Loop` is now Stage 04.
 - Merged the standalone Narrative Memory stub into `Canonical State, Event History, And Narrative Memory`, now Stage 05.
 - Renumbered later MVP stages and unit folders so daily lifecycle is Stage 06 and hardening/legal work is Stage 07.
+
+## [2026-04-26] planning | add first choice consequence unit
+
+- Added Stage 04 Unit 03 for submitting the YES/NO choice, blocking duplicate decisions, and showing the first immediate consequence state.
+- Kept full canonical state, append-only events, and narrative memory out of the unit so those systems remain the focus of Stage 05.

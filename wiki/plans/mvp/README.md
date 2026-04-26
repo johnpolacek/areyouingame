@@ -8,7 +8,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 - Most recently completed stage: [Stage 3: Daily Player Creation](stage-03-daily-player-creation.md)
 - Most recently completed unit: [Stage 4, Unit 01: First Private Game Chat Opening](units/stage-04/01-first-private-game-chat-and-are-you-in-reveal.md)
 - Current execution stage: [Stage 4: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md)
-- Status: ready for the first AI-mediated opening-response submission and YES/NO reveal.
+- Status: ready for the first AI-mediated opening-response submission and YES/NO reveal; Stage 04 now has one follow-up unit planned for submitting the central choice.
 
 ## Stages
 
@@ -18,7 +18,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
   Build the public `Join Today's Game` entry path, resolve today's global game, and gate joining behind Clerk sign-in or account creation.
 - [Stage 03: Daily Player Creation](stage-03-daily-player-creation.md) - completed stage.
   Let an authenticated user create exactly one player for today's game before entering the surprise first-chat YES or NO moment.
-- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; next unit ready now.
+- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; next unit ready now, with final choice-submission unit planned.
   Connect the player to a private game chat, reveal the `Are you in?` choice at the end of the first game prompt, then grow toward LLM interpretation, adjudication, event logging, and grounded narrative response.
 - [Stage 05: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md) - directional stub; later units will be added incrementally.
   Introduce the structured Convex model for authoritative world and player state, append-only events for meaningful changes, and narrative memory updates for significant world history.
