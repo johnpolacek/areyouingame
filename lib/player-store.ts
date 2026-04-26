@@ -15,6 +15,7 @@ export type DailyPlayer = PlayerDraftInput & {
   id: string;
   clerkUserId: string;
   dailyGameId: string;
+  publicGameplayAgreementAcceptedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -93,6 +94,38 @@ export async function createPlayerForUserGame({
   await writeStore({
     players: [...store.players, player],
   });
+
+  return player;
+}
+
+export async function acceptPublicGameplayAgreement({
+  clerkUserId,
+  dailyGameId,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+}): Promise<DailyPlayer> {
+  const store = await readStore();
+  const playerIndex = store.players.findIndex(
+    (player) =>
+      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
+  );
+
+  if (playerIndex === -1) {
+    throw new Error("Player not found.");
+  }
+
+  const now = new Date().toISOString();
+  const player = {
+    ...store.players[playerIndex],
+    publicGameplayAgreementAcceptedAt:
+      store.players[playerIndex].publicGameplayAgreementAcceptedAt ?? now,
+    updatedAt: now,
+  };
+  const players = [...store.players];
+  players[playerIndex] = player;
+
+  await writeStore({ players });
 
   return player;
 }

@@ -6,31 +6,31 @@ Tighten verification, persistence checks, failure recovery, and local commit beh
 
 ## Current Status
 
-Directional stage stub.
+Directional stage with one planned end-of-MVP legal-docs unit.
 
 ## Scope
 
-- Include: the stage direction and boundary only.
-- Exclude: decision-complete unit plans until the user asks what to plan next.
+- Include: the stage direction, verification/hardening boundary, and formal legal-docs work needed before public launch.
+- Exclude: additional decision-complete unit plans until the user asks what to plan next.
 
 ## Units
 
-- No unit plans yet. Add exactly one next decision-complete unit when this stage becomes active.
+- [Stage 08, Unit 01: Terms Conditions And Privacy Policy](units/stage-08/01-terms-conditions-and-privacy-policy.md) - planned for the end of the MVP plan.
 
 ## Acceptance Criteria
 
-- This stage captures a credible next direction without pretending the later execution details are already settled.
+- This stage captures a credible next direction while identifying the legal-docs work required before public launch.
 - Later unit plans can be added incrementally without rewriting the roadmap structure.
 
 ## Verification
 
 - Confirm the stage goal still fits the top-level MVP roadmap.
-- Confirm there are no unit links yet for this stage.
+- Confirm the legal-docs unit remains linked and deferred until the end of the MVP plan.
 
 ## Manual Steps
 
 - Revisit this stage when the user asks what to plan next.
-- Add one decision-complete unit and update the roadmap links when this stage becomes active.
+- Add more decision-complete units only when this stage becomes active.
 
 ## Assumptions
 

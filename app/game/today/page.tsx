@@ -6,6 +6,7 @@ import {
   getTodayGame,
 } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
+import { BeforeWeBegin } from "./before-we-begin";
 import { OpeningPrompt } from "./opening-prompt";
 
 export default async function TodaysGamePage() {
@@ -28,12 +29,16 @@ export default async function TodaysGamePage() {
       <HeroBackgroundVideo />
       <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.24)_42%,rgba(0,0,0,0.86)_100%)]" />
 
-      <OpeningPrompt
-        eventStartsAtIso={todayGame.eventStartsAtIso}
-        localGameStart={localGameStart}
-        playerLocation={player.location}
-        playerName={player.name}
-      />
+      {player.publicGameplayAgreementAcceptedAt ? (
+        <OpeningPrompt
+          eventStartsAtIso={todayGame.eventStartsAtIso}
+          localGameStart={localGameStart}
+          playerLocation={player.location}
+          playerName={player.name}
+        />
+      ) : (
+        <BeforeWeBegin />
+      )}
     </main>
   );
 }

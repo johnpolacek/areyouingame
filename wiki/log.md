@@ -63,3 +63,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Selected direct OpenAI via AI SDK for the first AI narration path.
 - Set the planned model to `gpt-5.4-mini`.
 - Recorded that audio output needs a separate later model decision because `gpt-5.4-mini` does not directly support audio output.
+
+## [2026-04-26] planning | add public gameplay acknowledgement and legal-docs unit
+
+- Added a `Before we begin` public-gameplay acknowledgement gate to the first private game chat opening unit.
+- Added Stage 08 Unit 01 for formal Terms and Conditions and Privacy Policy work at the end of the MVP plan.
+- Clarified that provisional MVP gameplay-term acknowledgement should later link to formal legal documents before public launch.

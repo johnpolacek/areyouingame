@@ -27,4 +27,4 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 - [Stage 07: Daily Game Lifecycle And Recaps](stage-07-daily-progression.md) - planned product-spine unit.
   Implement the global daily game lifecycle, date-id game creation, durable archives, end-of-day public recaps, and return-player continuity across accumulated games.
 - [Stage 08: MVP Hardening And Commit Flow](stage-08-mvp-hardening-and-commit-flow.md) - directional stub; later units will be added incrementally.
-  Tighten verification, persistence checks, failure recovery, and local commit behavior so successful scaffold and implementation runs are staged and committed while pushes remain explicit user decisions.
+  Tighten verification, persistence checks, failure recovery, legal launch readiness, and local commit behavior so successful scaffold and implementation runs are staged and committed while pushes remain explicit user decisions.
