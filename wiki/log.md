@@ -86,3 +86,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Split Stage 04 Unit 02 into a durable opening-response submission step before the AI-mediated YES/NO reveal.
 - Renumbered the reveal work to Stage 04 Unit 03 and the YES/NO choice submission work to Stage 04 Unit 04.
 - Implemented the opening prompt Send path so the player response is persisted once and reloads into a submitted state.
+
+## [2026-04-26] implementation | add first move YES/NO reveal
+
+- Implemented Stage 04 Unit 03 with AI SDK and the direct OpenAI provider for first-contact scene narration.
+- Added durable first-move reveal state on the daily player record, including separated scene intro, fixed reveal copy, audio prompt text, model metadata, and `yes_no_pending` status.
+- Replaced the response-submitted placeholder with a generation state and YES/NO reveal screen, using a deterministic fallback if AI generation fails.

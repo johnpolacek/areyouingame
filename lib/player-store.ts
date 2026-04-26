@@ -15,11 +15,29 @@ export type DailyPlayer = PlayerDraftInput & {
   id: string;
   clerkUserId: string;
   dailyGameId: string;
+  firstMoveReveal?: FirstMoveReveal;
   openingResponse?: string;
   openingResponseSubmittedAt?: string;
   publicGameplayAgreementAcceptedAt?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type FirstMoveReveal = {
+  id: string;
+  sceneIntro: string[];
+  revealCopy: {
+    availability: "A new way of being is available.";
+    promise: "Connection. Understanding. Freedom.";
+    question: "Are you in?";
+    yesLabel: "YES";
+    noLabel: "NO";
+    audioPrompt: "Please respond yes or no";
+  };
+  status: "yes_no_pending";
+  generatedAt: string;
+  model: string;
+  source: "ai" | "fallback";
 };
 
 type PlayerStoreFile = {
@@ -175,6 +193,48 @@ export async function submitOpeningResponseForUserGame({
     openingResponse,
     openingResponseSubmittedAt: now,
     updatedAt: now,
+  };
+  const players = [...store.players];
+  players[playerIndex] = player;
+
+  await writeStore({ players });
+
+  return player;
+}
+
+export async function saveFirstMoveRevealForUserGame({
+  clerkUserId,
+  dailyGameId,
+  reveal,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  reveal: FirstMoveReveal;
+}): Promise<DailyPlayer> {
+  const store = await readStore();
+  const playerIndex = store.players.findIndex(
+    (player) =>
+      player.clerkUserId === clerkUserId && player.dailyGameId === dailyGameId,
+  );
+
+  if (playerIndex === -1) {
+    throw new Error("Player not found.");
+  }
+
+  const currentPlayer = store.players[playerIndex];
+
+  if (!currentPlayer.openingResponseSubmittedAt || !currentPlayer.openingResponse) {
+    throw new Error("Opening response is required first.");
+  }
+
+  if (currentPlayer.firstMoveReveal) {
+    return currentPlayer;
+  }
+
+  const player = {
+    ...currentPlayer,
+    firstMoveReveal: reveal,
+    updatedAt: reveal.generatedAt,
   };
   const players = [...store.players];
   players[playerIndex] = player;

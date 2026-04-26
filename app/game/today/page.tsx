@@ -7,8 +7,8 @@ import {
 } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
 import { BeforeWeBegin } from "./before-we-begin";
+import { FirstMoveReveal, FirstMoveRevealPending } from "./first-move-reveal";
 import { OpeningPrompt } from "./opening-prompt";
-import { OpeningResponseSubmitted } from "./opening-response-submitted";
 
 export default async function TodaysGamePage() {
   const { userId } = await auth.protect();
@@ -30,8 +30,10 @@ export default async function TodaysGamePage() {
       <HeroBackgroundVideo />
       <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.24)_42%,rgba(0,0,0,0.86)_100%)]" />
 
-      {player.openingResponseSubmittedAt && player.openingResponse ? (
-        <OpeningResponseSubmitted openingResponse={player.openingResponse} />
+      {player.firstMoveReveal ? (
+        <FirstMoveReveal reveal={player.firstMoveReveal} />
+      ) : player.openingResponseSubmittedAt && player.openingResponse ? (
+        <FirstMoveRevealPending openingResponse={player.openingResponse} />
       ) : player.publicGameplayAgreementAcceptedAt ? (
         <OpeningPrompt
           eventStartsAtIso={todayGame.eventStartsAtIso}

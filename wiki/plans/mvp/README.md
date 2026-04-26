@@ -4,11 +4,11 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 
 ## Current Status
 
-- Next execution unit: [Stage 4, Unit 03: First Move To YES/NO Reveal](units/stage-04/03-first-move-to-yes-no-reveal.md)
+- Next execution unit: [Stage 4, Unit 04: Submit YES/NO Choice And First Consequence](units/stage-04/04-submit-yes-no-choice-and-first-consequence.md)
 - Most recently completed stage: [Stage 3: Daily Player Creation](stage-03-daily-player-creation.md)
-- Most recently completed unit: [Stage 4, Unit 02: Submit Opening Response](units/stage-04/02-submit-opening-response.md)
+- Most recently completed unit: [Stage 4, Unit 03: First Move To YES/NO Reveal](units/stage-04/03-first-move-to-yes-no-reveal.md)
 - Current execution stage: [Stage 4: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md)
-- Status: opening-response submission is implemented as its own durable step; ready for the first AI-mediated YES/NO reveal, with a follow-up unit planned for submitting the central choice.
+- Status: first-move reveal generation is implemented with AI SDK, direct OpenAI, durable reveal state, deterministic fallback, and a YES/NO pending screen; ready for the choice-submission unit.
 
 ## Stages
 
@@ -18,7 +18,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
   Build the public `Join Today's Game` entry path, resolve today's global game, and gate joining behind Clerk sign-in or account creation.
 - [Stage 03: Daily Player Creation](stage-03-daily-player-creation.md) - completed stage.
   Let an authenticated user create exactly one player for today's game before entering the surprise first-chat YES or NO moment.
-- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; next reveal unit ready now, with final choice-submission unit planned.
+- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; final choice-submission unit planned next.
   Connect the player to a private game chat, reveal the `Are you in?` choice at the end of the first game prompt, then grow toward LLM interpretation, adjudication, event logging, and grounded narrative response.
 - [Stage 05: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md) - directional stub; later units will be added incrementally.
   Introduce the structured Convex model for authoritative world and player state, append-only events for meaningful changes, and narrative memory updates for significant world history.

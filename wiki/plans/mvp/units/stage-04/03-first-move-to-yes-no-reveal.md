@@ -72,3 +72,11 @@ The AI should write a 1-2 paragraph short intro describing the scene and how the
 - Add `OPENAI_API_KEY` locally and in deployment.
 - Confirm whether to pin `OPENAI_MODEL=gpt-5.4-mini` explicitly in production or rely on the application default.
 - Confirm whether the first implementation streams narration or returns one complete response.
+
+## Implementation Notes
+
+- Implemented as a complete-response generation rather than streaming.
+- Added AI SDK plus the direct OpenAI provider, reading `OPENAI_MODEL` with `gpt-5.4-mini` as the application default.
+- Added a protected first-move reveal route that loads the authenticated player's stored opening response for today's game, generates the scene intro, and saves structured reveal state once.
+- Stored the generated intro separately from deterministic reveal copy and preserved `status: yes_no_pending` for the next choice-submission unit.
+- Added a deterministic fallback intro so the reveal still reaches the fixed YES/NO screen if AI generation fails.
