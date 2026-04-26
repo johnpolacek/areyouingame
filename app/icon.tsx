@@ -9,8 +9,8 @@ export const size = {
 };
 export const contentType = "image/png";
 
-const rubik80sFade = fetch(
-  "https://fonts.gstatic.com/s/rubik80sfade/v2/U9MF6dW37nLSmnwZXyoV-uPXUhHw.ttf",
+const rethinkSansExtraBold = fetch(
+  "https://fonts.gstatic.com/s/rethinksans/v7/AMODz4SDuXOMCPfdoglY9JQuWHBGG0X45DmqkuFWCE4.ttf",
 ).then((response) => response.arrayBuffer());
 
 export async function createQuestionMarkIcon({
@@ -20,7 +20,7 @@ export async function createQuestionMarkIcon({
   height: number;
   width: number;
 }) {
-  const rubik80sFadeData = await rubik80sFade;
+  const rethinkSansExtraBoldData = await rethinkSansExtraBold;
 
   return new ImageResponse(
     (
@@ -30,12 +30,13 @@ export async function createQuestionMarkIcon({
           background: "transparent",
           color: "#92400e",
           display: "flex",
-          fontFamily: "Rubik 80s Fade",
-          fontSize: Math.round(width * 0.69),
+          fontFamily: "Rethink Sans",
+          fontSize: Math.round(width * 0.78),
+          fontWeight: 800,
           height: "100%",
           justifyContent: "center",
           lineHeight: 1,
-          paddingBottom: Math.round(height * 0.02),
+          paddingBottom: Math.round(height * 0.045),
           width: "100%",
         }}
       >
@@ -47,10 +48,10 @@ export async function createQuestionMarkIcon({
       width,
       fonts: [
         {
-          name: "Rubik 80s Fade",
-          data: rubik80sFadeData,
+          name: "Rethink Sans",
+          data: rethinkSansExtraBoldData,
           style: "normal",
-          weight: 400,
+          weight: 800,
         },
       ],
     },
