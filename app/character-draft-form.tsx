@@ -63,6 +63,7 @@ export function CharacterSetupForm({
 }) {
   return (
     <form
+      autoComplete="off"
       className="hero-character-form grid w-full max-w-[31rem] grid-cols-2 gap-1.5 rounded-lg border border-amber-600/35 bg-slate-950/45 p-2 text-left shadow-2xl shadow-black/35 backdrop-blur-md sm:gap-3 sm:p-4"
       onSubmit={(event) => {
         event.preventDefault();
@@ -72,7 +73,7 @@ export function CharacterSetupForm({
       <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-amber-400 uppercase sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Name
         <input
-          autoComplete="name"
+          autoComplete="off"
           className={fieldClass()}
           name="character-name"
           onChange={(event) => onChange("name", event.target.value)}
@@ -83,6 +84,7 @@ export function CharacterSetupForm({
       <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-amber-400 uppercase sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Age
         <input
+          autoComplete="off"
           className={fieldClass()}
           inputMode="numeric"
           max="120"
@@ -97,7 +99,7 @@ export function CharacterSetupForm({
       <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-amber-400 uppercase sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Location
         <input
-          autoComplete="address-level2"
+          autoComplete="off"
           className={fieldClass()}
           name="character-location"
           onChange={(event) => onChange("location", event.target.value)}
@@ -108,6 +110,7 @@ export function CharacterSetupForm({
       <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-amber-400 uppercase sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Occupation
         <input
+          autoComplete="off"
           className={fieldClass()}
           name="character-occupation"
           onChange={(event) => onChange("occupation", event.target.value)}
@@ -118,6 +121,7 @@ export function CharacterSetupForm({
       <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-amber-400 uppercase sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Bio
         <textarea
+          autoComplete="off"
           className="min-h-16 resize-none rounded-md border border-amber-300/30 bg-black/35 px-2 py-1.5 text-xs font-medium tracking-normal text-amber-50 outline-none transition placeholder:text-amber-700 focus:border-amber-200/70 focus:ring-2 focus:ring-amber-500/20 sm:min-h-20 sm:px-2.5 sm:py-2 sm:text-sm"
           maxLength={800}
           name="character-bio"
