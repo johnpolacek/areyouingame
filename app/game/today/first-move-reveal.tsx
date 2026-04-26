@@ -4,10 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { FirstMoveReveal as FirstMoveRevealState } from "@/lib/player-store";
+import type {
+  FirstDecision,
+  FirstMoveReveal as FirstMoveRevealState,
+  YesNoChoice,
+} from "@/lib/player-store";
 
 type FirstMoveRevealProps = {
   reveal: FirstMoveRevealState;
+};
+
+type FirstChoiceConsequenceProps = {
+  decision: FirstDecision;
 };
 
 type FirstMoveRevealPendingProps = {
@@ -94,6 +102,46 @@ export function FirstMoveRevealPending({
 }
 
 export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
+  const router = useRouter();
+  const [submittedChoice, setSubmittedChoice] = useState<YesNoChoice | null>(
+    null,
+  );
+  const [error, setError] = useState("");
+  const isSubmitting = submittedChoice !== null;
+
+  async function submitChoice(choice: YesNoChoice) {
+    if (isSubmitting) {
+      return;
+    }
+
+    setSubmittedChoice(choice);
+    setError("");
+
+    try {
+      const response = await fetch("/api/players/yes-no-choice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ choice }),
+      });
+      const result = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to record choice.");
+      }
+
+      router.refresh();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to record choice.",
+      );
+      setSubmittedChoice(null);
+    }
+  }
+
   return (
     <section
       aria-labelledby="first-move-reveal-title"
@@ -135,18 +183,76 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
         className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-9"
       >
         <Button
+          disabled={isSubmitting}
+          onClick={() => void submitChoice("YES")}
+          type="button"
           variant="ghost"
           className="first-move-answer !h-16 !rounded-[3px] border border-emerald-300/70 bg-black/20 font-sans text-xl font-light tracking-[0.48em] text-emerald-200 shadow-[0_0_34px_rgba(34,197,94,0.14)] backdrop-blur-sm hover:border-emerald-200 hover:bg-emerald-400/10 hover:text-emerald-100 focus-visible:border-emerald-100 focus-visible:ring-emerald-300/35 sm:!h-18"
         >
-          {reveal.revealCopy.yesLabel}
+          {submittedChoice === "YES" ? (
+            <LoaderCircleIcon aria-hidden="true" className="size-5 animate-spin" />
+          ) : (
+            reveal.revealCopy.yesLabel
+          )}
         </Button>
         <Button
+          disabled={isSubmitting}
+          onClick={() => void submitChoice("NO")}
+          type="button"
           variant="ghost"
           className="first-move-answer !h-16 !rounded-[3px] border border-red-400/75 bg-black/20 font-sans text-xl font-light tracking-[0.48em] text-red-300 shadow-[0_0_34px_rgba(239,68,68,0.13)] backdrop-blur-sm hover:border-red-200 hover:bg-red-500/10 hover:text-red-100 focus-visible:border-red-100 focus-visible:ring-red-300/35 sm:!h-18"
         >
-          {reveal.revealCopy.noLabel}
+          {submittedChoice === "NO" ? (
+            <LoaderCircleIcon aria-hidden="true" className="size-5 animate-spin" />
+          ) : (
+            reveal.revealCopy.noLabel
+          )}
         </Button>
       </div>
+
+      {error ? (
+        <p className="mt-6 max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+export function FirstChoiceConsequence({
+  decision,
+}: FirstChoiceConsequenceProps) {
+  const choiceClass =
+    decision.choice === "YES" ? "text-emerald-200" : "text-red-300";
+
+  return (
+    <section
+      aria-labelledby="first-choice-consequence-title"
+      className="relative z-10 flex w-full max-w-2xl flex-col items-center gap-7 text-center"
+    >
+      <div className="grid gap-4">
+        <p className="text-[0.68rem] font-bold tracking-[0.22em] text-amber-400 uppercase">
+          Choice recorded for today
+        </p>
+        <p
+          className={`text-5xl leading-none font-light tracking-[0.2em] ${choiceClass} sm:text-7xl`}
+        >
+          {decision.choice}
+        </p>
+        <h1
+          id="first-choice-consequence-title"
+          className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12"
+        >
+          {decision.consequenceTitle}
+        </h1>
+        <p className="mx-auto max-w-xl text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8">
+          {decision.consequenceBody}
+        </p>
+      </div>
+
+      <p className="rounded-md border border-amber-300/25 bg-black/35 px-4 py-3 text-sm leading-6 font-medium text-amber-100/80 backdrop-blur">
+        Your {decision.choice} is locked for today&apos;s game.
+      </p>
     </section>
   );
 }

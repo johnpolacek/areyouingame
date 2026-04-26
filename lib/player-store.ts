@@ -16,6 +16,7 @@ export type DailyPlayer = PlayerDraftInput & {
   id: string;
   clerkUserId: string;
   dailyGameId: string;
+  firstDecision?: FirstDecision;
   firstMoveReveal?: FirstMoveReveal;
   openingResponse?: string;
   openingResponseSubmittedAt?: string;
@@ -40,6 +41,21 @@ export type FirstMoveReveal = {
   model: string;
   source: "ai" | "fallback";
 };
+
+export type FirstDecision = {
+  id: string;
+  choice: YesNoChoice;
+  status: "first_choice_submitted";
+  consequenceTitle: string;
+  consequenceBody: string;
+  revealId: string;
+  revealGeneratedAt: string;
+  revealModel: string;
+  revealSource: "ai" | "fallback";
+  submittedAt: string;
+};
+
+export type YesNoChoice = "YES" | "NO";
 
 type AuthenticatedPlayerArgs = {
   backendSecret: string;
@@ -83,6 +99,14 @@ const saveFirstMoveRevealForUserGameRef = makeFunctionReference<
   },
   DailyPlayer
 >("playerStore:saveFirstMoveRevealForUserGame");
+
+const submitFirstDecisionForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    choice: YesNoChoice;
+  },
+  DailyPlayer
+>("playerStore:submitFirstDecisionForUserGame");
 
 const deletePlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -196,6 +220,37 @@ export async function saveFirstMoveRevealForUserGame({
     clerkUserId,
     dailyGameId,
     reveal,
+  });
+}
+
+export function validateYesNoChoice(input: unknown): YesNoChoice {
+  if (typeof input !== "string") {
+    throw new Error("YES or NO choice is required.");
+  }
+
+  const choice = input.trim().toUpperCase();
+
+  if (choice !== "YES" && choice !== "NO") {
+    throw new Error("Choice must be YES or NO.");
+  }
+
+  return choice;
+}
+
+export async function submitFirstDecisionForUserGame({
+  clerkUserId,
+  dailyGameId,
+  choice,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  choice: YesNoChoice;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(submitFirstDecisionForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    choice,
   });
 }
 

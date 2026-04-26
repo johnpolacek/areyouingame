@@ -27,11 +27,25 @@ const firstMoveReveal = v.object({
   source: v.union(v.literal("ai"), v.literal("fallback")),
 });
 
+const firstDecision = v.object({
+  id: v.string(),
+  choice: v.union(v.literal("YES"), v.literal("NO")),
+  status: v.literal("first_choice_submitted"),
+  consequenceTitle: v.string(),
+  consequenceBody: v.string(),
+  revealId: v.string(),
+  revealGeneratedAt: v.string(),
+  revealModel: v.string(),
+  revealSource: v.union(v.literal("ai"), v.literal("fallback")),
+  submittedAt: v.string(),
+});
+
 const player = v.object({
   id: v.string(),
   clerkUserId: v.string(),
   dailyGameId: v.string(),
   ...playerDraft,
+  firstDecision: v.optional(firstDecision),
   firstMoveReveal: v.optional(firstMoveReveal),
   openingResponse: v.optional(v.string()),
   openingResponseSubmittedAt: v.optional(v.string()),
@@ -212,6 +226,51 @@ export const saveFirstMoveRevealForUserGame = mutationGeneric({
   },
 });
 
+export const submitFirstDecisionForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    choice: v.union(v.literal("YES"), v.literal("NO")),
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.firstMoveReveal) {
+      throw new ConvexError("YES/NO reveal is required first.");
+    }
+
+    if (existingPlayer.firstDecision) {
+      throw new ConvexError("YES/NO choice has already been submitted.");
+    }
+
+    const now = new Date().toISOString();
+    const firstDecisionRecord = createFirstDecision({
+      choice: args.choice,
+      dailyGameId: args.dailyGameId,
+      firstMoveReveal: existingPlayer.firstMoveReveal,
+      playerId: existingPlayer.id,
+      submittedAt: now,
+    });
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstDecision: firstDecisionRecord,
+      updatedAt: now,
+    });
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      firstDecision: firstDecisionRecord,
+      updatedAt: now,
+    });
+  },
+});
+
 export const deletePlayerForUserGame = mutationGeneric({
   args: authenticatedArgs,
   returns: v.boolean(),
@@ -302,6 +361,50 @@ function requireBackendSecret(secret: string) {
   }
 }
 
+function createFirstDecision({
+  choice,
+  dailyGameId,
+  firstMoveReveal,
+  playerId,
+  submittedAt,
+}: {
+  choice: "YES" | "NO";
+  dailyGameId: string;
+  firstMoveReveal: {
+    id: string;
+    generatedAt: string;
+    model: string;
+    source: "ai" | "fallback";
+  };
+  playerId: string;
+  submittedAt: string;
+}) {
+  const consequence =
+    choice === "YES"
+      ? {
+          consequenceTitle: "The invitation accepts you.",
+          consequenceBody:
+            "A private channel opens for today's game. The next move is now waiting on the other side of your answer.",
+        }
+      : {
+          consequenceTitle: "The door stays closed.",
+          consequenceBody:
+            "The signal fades, but the game records your refusal. Today continues with that answer held in place.",
+        };
+
+  return {
+    id: `${dailyGameId}:${playerId}:first-decision`,
+    choice,
+    status: "first_choice_submitted" as const,
+    ...consequence,
+    revealId: firstMoveReveal.id,
+    revealGeneratedAt: firstMoveReveal.generatedAt,
+    revealModel: firstMoveReveal.model,
+    revealSource: firstMoveReveal.source,
+    submittedAt,
+  };
+}
+
 function toDailyPlayer(source: any) {
   return {
     id: source.id,
@@ -313,6 +416,9 @@ function toDailyPlayer(source: any) {
     occupation: source.occupation,
     bio: source.bio,
     timeZone: source.timeZone,
+    ...(source.firstDecision
+      ? { firstDecision: source.firstDecision }
+      : {}),
     ...(source.firstMoveReveal
       ? { firstMoveReveal: source.firstMoveReveal }
       : {}),

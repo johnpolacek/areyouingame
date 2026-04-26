@@ -8,7 +8,11 @@ import {
 import { getPlayerForUserGame } from "../../../lib/player-store";
 import { BeforeWeBegin } from "./before-we-begin";
 import { DevResetPlayerButton } from "./dev-reset-player-button";
-import { FirstMoveReveal, FirstMoveRevealPending } from "./first-move-reveal";
+import {
+  FirstChoiceConsequence,
+  FirstMoveReveal,
+  FirstMoveRevealPending,
+} from "./first-move-reveal";
 import { OpeningPrompt } from "./opening-prompt";
 
 export default async function TodaysGamePage() {
@@ -34,7 +38,9 @@ export default async function TodaysGamePage() {
         <DevResetPlayerButton />
       ) : null}
 
-      {player.firstMoveReveal ? (
+      {player.firstDecision ? (
+        <FirstChoiceConsequence decision={player.firstDecision} />
+      ) : player.firstMoveReveal ? (
         <FirstMoveReveal reveal={player.firstMoveReveal} />
       ) : player.openingResponseSubmittedAt && player.openingResponse ? (
         <FirstMoveRevealPending openingResponse={player.openingResponse} />

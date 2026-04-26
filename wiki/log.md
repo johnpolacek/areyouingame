@@ -114,3 +114,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Recorded the dev artifact bucket setup: IAM user `areyouin-artifacts-dev`, policy `AreYouInArtifactDevBucketAccess`, and bucket `areyouin-artifacts-dev`.
 - Noted that production still needs a separate S3 bucket, IAM user, IAM policy, and access keys before launch.
+
+## [2026-04-26] implementation | submit first YES/NO decision
+
+- Implemented Stage 04 Unit 05 with a Clerk-protected YES/NO submission route backed by Convex player ownership checks.
+- Added an exactly-once first-decision record with reveal context, selected choice, submitted timestamp, and deterministic first consequence copy.
+- Updated the today-game UI to submit YES or NO from the reveal and reload into the post-choice consequence state.

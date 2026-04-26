@@ -20,6 +20,19 @@ const firstMoveReveal = v.object({
   source: v.union(v.literal("ai"), v.literal("fallback")),
 });
 
+const firstDecision = v.object({
+  id: v.string(),
+  choice: v.union(v.literal("YES"), v.literal("NO")),
+  status: v.literal("first_choice_submitted"),
+  consequenceTitle: v.string(),
+  consequenceBody: v.string(),
+  revealId: v.string(),
+  revealGeneratedAt: v.string(),
+  revealModel: v.string(),
+  revealSource: v.union(v.literal("ai"), v.literal("fallback")),
+  submittedAt: v.string(),
+});
+
 export default defineSchema({
   dailyGames: defineTable({
     dailyGameId: v.string(),
@@ -39,6 +52,7 @@ export default defineSchema({
     occupation: v.string(),
     bio: v.string(),
     timeZone: v.string(),
+    firstDecision: v.optional(firstDecision),
     firstMoveReveal: v.optional(firstMoveReveal),
     openingResponse: v.optional(v.string()),
     openingResponseSubmittedAt: v.optional(v.string()),

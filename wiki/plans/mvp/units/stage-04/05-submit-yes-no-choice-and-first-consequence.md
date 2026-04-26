@@ -2,6 +2,8 @@
 
 Persist the player's central YES or NO decision and show the first immediate consequence state without expanding into full world simulation.
 
+Status: completed.
+
 ## Product Intent
 
 After the reveal asks `Are you in?`, the player needs a decisive moment that feels accepted by the game. The system should record the choice exactly once for the player/day, acknowledge it in the interface, and show a short first consequence that makes the decision feel real while preserving deeper world simulation and narrative memory work for Stage 05.
