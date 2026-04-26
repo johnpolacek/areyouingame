@@ -97,7 +97,7 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
   return (
     <section
       aria-labelledby="first-move-reveal-title"
-      className="relative z-10 flex w-full max-w-5xl flex-col items-center text-center"
+      className="relative z-10 flex w-full max-w-[96rem] flex-col items-center text-center"
     >
       <div className="grid w-full max-w-2xl gap-5 text-left sm:text-center">
         {reveal.sceneIntro.map((paragraph) => (
@@ -124,7 +124,7 @@ export function FirstMoveReveal({ reveal }: FirstMoveRevealProps) {
 
         <h1
           id="first-move-reveal-title"
-          className="first-move-question text-[2.25rem] leading-none font-light tracking-[0.08em] text-amber-50 uppercase sm:text-7xl sm:tracking-[0.18em] md:text-8xl md:tracking-[0.22em] lg:text-9xl"
+          className="first-move-question whitespace-nowrap text-[2.25rem] leading-none font-light tracking-[0.08em] text-amber-50 uppercase sm:text-7xl sm:tracking-[0.18em] md:text-8xl md:tracking-[0.22em] lg:text-9xl"
         >
           {reveal.revealCopy.question}
         </h1>
