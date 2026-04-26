@@ -69,3 +69,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added a `Before we begin` public-gameplay acknowledgement gate to the first private game chat opening unit.
 - Added Stage 08 Unit 01 for formal Terms and Conditions and Privacy Policy work at the end of the MVP plan.
 - Clarified that provisional MVP gameplay-term acknowledgement should later link to formal legal documents before public launch.
+
+## [2026-04-26] planning | reorder chat before canonical memory
+
+- Swapped the chat/action loop ahead of canonical state planning so `First Chat And Natural Language Action Loop` is now Stage 04.
+- Merged the standalone Narrative Memory stub into `Canonical State, Event History, And Narrative Memory`, now Stage 05.
+- Renumbered later MVP stages and unit folders so daily lifecycle is Stage 06 and hardening/legal work is Stage 07.

@@ -7,8 +7,7 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 - Stage 01: Hello World And Stack Lock
 - Stage 02: Daily Game Entry And Auth
 - Stage 03: Daily Player Creation
-- Stage 04: Canonical State And Event History
-- Stage 05: First Chat And Natural Language Action Loop
-- Stage 06: Narrative Memory
-- Stage 07: Daily Game Lifecycle And Recaps
-- Stage 08: MVP Hardening And Commit Flow
+- Stage 04: First Chat And Natural Language Action Loop
+- Stage 05: Canonical State, Event History, And Narrative Memory
+- Stage 06: Daily Game Lifecycle And Recaps
+- Stage 07: MVP Hardening And Commit Flow

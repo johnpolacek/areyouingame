@@ -1,4 +1,4 @@
-# Stage 08, Unit 01: Terms Conditions And Privacy Policy
+# Stage 07, Unit 01: Terms Conditions And Privacy Policy
 
 Create the formal legal-facing documents and acceptance surfaces needed before the MVP is shared beyond internal/test users.
 

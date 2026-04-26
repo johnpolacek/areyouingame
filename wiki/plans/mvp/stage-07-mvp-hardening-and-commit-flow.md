@@ -1,4 +1,4 @@
-# Stage 08: MVP Hardening And Commit Flow
+# Stage 07: MVP Hardening And Commit Flow
 
 ## Stage Goal
 
@@ -15,7 +15,7 @@ Directional stage with one planned end-of-MVP legal-docs unit.
 
 ## Units
 
-- [Stage 08, Unit 01: Terms Conditions And Privacy Policy](units/stage-08/01-terms-conditions-and-privacy-policy.md) - planned for the end of the MVP plan.
+- [Stage 07, Unit 01: Terms Conditions And Privacy Policy](units/stage-07/01-terms-conditions-and-privacy-policy.md) - planned for the end of the MVP plan.
 
 ## Acceptance Criteria
 

@@ -6,7 +6,7 @@ Let an authenticated user create exactly one player for today's daily game befor
 
 ## Current Status
 
-Active stage.
+Completed stage.
 
 ## Scope
 
@@ -15,7 +15,7 @@ Active stage.
 
 ## Units
 
-- [Stage 03, Unit 01: Daily Player Creation Form](units/stage-03/01-daily-player-creation-form.md) - planned.
+- [Stage 03, Unit 01: Daily Player Creation Form](units/stage-03/01-daily-player-creation-form.md) - completed.
 
 ## Acceptance Criteria
 

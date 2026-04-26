@@ -4,11 +4,11 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 
 ## Current Status
 
-- Next execution unit: [Stage 3, Unit 01: Daily Player Creation Form](units/stage-03/01-daily-player-creation-form.md)
-- Most recently completed stage: [Stage 2: Daily Game Entry And Auth](stage-02-daily-game-entry-and-auth.md)
-- Most recently completed unit: [Stage 2, Unit 01: Join Today's Game And Clerk Auth Gate](units/stage-02/01-join-todays-game-and-clerk-auth-gate.md)
-- Current execution stage: [Stage 3: Daily Player Creation](stage-03-daily-player-creation.md)
-- Status: ready for implementation planning/execution of the daily player creation form.
+- Next execution unit: [Stage 4, Unit 02: First Move To YES/NO Reveal](units/stage-04/02-first-move-to-yes-no-reveal.md)
+- Most recently completed stage: [Stage 3: Daily Player Creation](stage-03-daily-player-creation.md)
+- Most recently completed unit: [Stage 4, Unit 01: First Private Game Chat Opening](units/stage-04/01-first-private-game-chat-and-are-you-in-reveal.md)
+- Current execution stage: [Stage 4: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md)
+- Status: ready for the first AI-mediated opening-response submission and YES/NO reveal.
 
 ## Stages
 
@@ -16,15 +16,13 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
   Establish the executable foundation before scaffold work: lock the initial stack, then create the smallest running app surface that proves the chosen runtime can start cleanly.
 - [Stage 02: Daily Game Entry And Auth](stage-02-daily-game-entry-and-auth.md) - completed stage.
   Build the public `Join Today's Game` entry path, resolve today's global game, and gate joining behind Clerk sign-in or account creation.
-- [Stage 03: Daily Player Creation](stage-03-daily-player-creation.md) - active stage; 1 unit ready now.
+- [Stage 03: Daily Player Creation](stage-03-daily-player-creation.md) - completed stage.
   Let an authenticated user create exactly one player for today's game before entering the surprise first-chat YES or NO moment.
-- [Stage 04: Canonical State And Event History](stage-04-canonical-state-and-event-history.md) - directional stub; later units will be added incrementally.
-  Introduce the structured Convex model for authoritative world and player state, plus append-only events for meaningful changes before any LLM-mediated consequences alter reality.
-- [Stage 05: First Chat And Natural Language Action Loop](stage-05-natural-language-action-loop.md) - planned product-spine units.
+- [Stage 04: First Chat And Natural Language Action Loop](stage-04-natural-language-action-loop.md) - active product-spine stage; next unit ready now.
   Connect the player to a private game chat, reveal the `Are you in?` choice at the end of the first game prompt, then grow toward LLM interpretation, adjudication, event logging, and grounded narrative response.
-- [Stage 06: Narrative Memory](stage-06-narrative-memory.md) - directional stub; later units will be added incrementally.
-  Add markdown-backed world memory updates for significant events while preserving the rule that wiki summaries explain the world but do not own numeric or enforceable truth.
-- [Stage 07: Daily Game Lifecycle And Recaps](stage-07-daily-progression.md) - planned product-spine unit.
+- [Stage 05: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md) - directional stub; later units will be added incrementally.
+  Introduce the structured Convex model for authoritative world and player state, append-only events for meaningful changes, and narrative memory updates for significant world history.
+- [Stage 06: Daily Game Lifecycle And Recaps](stage-06-daily-progression.md) - planned product-spine unit.
   Implement the global daily game lifecycle, date-id game creation, durable archives, end-of-day public recaps, and return-player continuity across accumulated games.
-- [Stage 08: MVP Hardening And Commit Flow](stage-08-mvp-hardening-and-commit-flow.md) - directional stub; later units will be added incrementally.
+- [Stage 07: MVP Hardening And Commit Flow](stage-07-mvp-hardening-and-commit-flow.md) - directional stub; later units will be added incrementally.
   Tighten verification, persistence checks, failure recovery, legal launch readiness, and local commit behavior so successful scaffold and implementation runs are staged and committed while pushes remain explicit user decisions.

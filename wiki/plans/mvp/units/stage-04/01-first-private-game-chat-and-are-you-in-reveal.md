@@ -1,4 +1,4 @@
-# Stage 05, Unit 01: First Private Game Chat Opening
+# Stage 04, Unit 01: First Private Game Chat Opening
 
 Start the private player-to-game chat with the shared-time location/activity question.
 

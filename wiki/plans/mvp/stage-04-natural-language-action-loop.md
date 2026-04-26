@@ -1,4 +1,4 @@
-# Stage 05: First Chat And Natural Language Action Loop
+# Stage 04: First Chat And Natural Language Action Loop
 
 ## Stage Goal
 
@@ -6,7 +6,7 @@ Connect the player to a private game chat, begin with the shared-time location/a
 
 ## Current Status
 
-Planned product-spine stage.
+Active product-spine stage.
 
 ## Scope
 
@@ -15,8 +15,8 @@ Planned product-spine stage.
 
 ## Units
 
-- [Stage 05, Unit 01: First Private Game Chat Opening](units/stage-05/01-first-private-game-chat-and-are-you-in-reveal.md) - planned.
-- [Stage 05, Unit 02: First Move To YES/NO Reveal](units/stage-05/02-first-move-to-yes-no-reveal.md) - next planned.
+- [Stage 04, Unit 01: First Private Game Chat Opening](units/stage-04/01-first-private-game-chat-and-are-you-in-reveal.md) - completed.
+- [Stage 04, Unit 02: First Move To YES/NO Reveal](units/stage-04/02-first-move-to-yes-no-reveal.md) - next planned.
 
 ## Acceptance Criteria
 

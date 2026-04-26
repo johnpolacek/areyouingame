@@ -1,4 +1,4 @@
-# Stage 07: Daily Game Lifecycle And Recaps
+# Stage 06: Daily Game Lifecycle And Recaps
 
 ## Stage Goal
 
@@ -15,7 +15,7 @@ Planned product-spine stage.
 
 ## Units
 
-- [Stage 07, Unit 01: Daily Game Lifecycle And Public Recap](units/stage-07/01-daily-game-lifecycle-and-public-recap.md) - planned.
+- [Stage 06, Unit 01: Daily Game Lifecycle And Public Recap](units/stage-06/01-daily-game-lifecycle-and-public-recap.md) - planned.
 
 ## Acceptance Criteria
 

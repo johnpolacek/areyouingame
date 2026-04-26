@@ -1,4 +1,4 @@
-# Stage 05, Unit 02: First Move To YES/NO Reveal
+# Stage 04, Unit 02: First Move To YES/NO Reveal
 
 Submit the player's opening location/activity response, run the first AI-mediated narration step, and end with the central YES/NO choice.
 

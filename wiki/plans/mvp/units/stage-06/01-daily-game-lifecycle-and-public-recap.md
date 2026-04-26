@@ -1,4 +1,4 @@
-# Stage 07, Unit 01: Daily Game Lifecycle And Public Recap
+# Stage 06, Unit 01: Daily Game Lifecycle And Public Recap
 
 Create the lifecycle for accumulating daily games and producing public end-of-day recaps.
 
