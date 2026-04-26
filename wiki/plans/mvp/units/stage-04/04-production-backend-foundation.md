@@ -67,8 +67,8 @@ The desired storage model is:
 - Create Convex project/environment values for local and deployment environments.
 - Set `NEXT_PUBLIC_CONVEX_URL` in the Next.js runtime.
 - Set the same long random `AREYOUIN_BACKEND_SECRET` in the Next.js runtime and Convex environment.
-- Create the AWS S3 artifact bucket and choose the bucket naming convention.
-- Decide whether local development should use the real S3 bucket or a separate dev bucket.
+- Development S3 is configured with bucket `areyouin-artifacts-dev`, IAM user `areyouin-artifacts-dev`, and IAM policy `AreYouInArtifactDevBucketAccess`.
+- Create the production AWS S3 artifact bucket, IAM user, IAM policy, and access keys before launch.
 
 ## Implementation Notes
 

@@ -109,3 +109,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Confirmed artifact storage should use real AWS S3 through the AWS SDK for Node.js rather than a generic S3-compatible endpoint.
 - Removed S3 endpoint and path-style settings from the application configuration surface.
+
+## [2026-04-26] operations | record dev S3 IAM setup
+
+- Recorded the dev artifact bucket setup: IAM user `areyouin-artifacts-dev`, policy `AreYouInArtifactDevBucketAccess`, and bucket `areyouin-artifacts-dev`.
+- Noted that production still needs a separate S3 bucket, IAM user, IAM policy, and access keys before launch.

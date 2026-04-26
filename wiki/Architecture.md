@@ -50,6 +50,8 @@ AreYouIn should use production-backed storage from the prototype stage onward.
 - The temporary `.data/players.json` store is not part of the target architecture and is no longer required by the current gameplay path.
 - S3 artifact keys follow `areyouin/<scope>/artifacts/<artifactType>/<version>.json`, where `<scope>` is either `global` or `daily-games/<dailyGameId>`.
 - The app targets real AWS S3, not a generic S3-compatible endpoint, so artifact storage config should only include bucket, region, and AWS credentials.
+- Development artifact storage uses AWS IAM user `areyouin-artifacts-dev` with policy `AreYouInArtifactDevBucketAccess` for bucket `areyouin-artifacts-dev`.
+- Production still needs its own S3 bucket, IAM user, IAM policy, and access keys before launch.
 
 ## Durable Architecture Topics
 
