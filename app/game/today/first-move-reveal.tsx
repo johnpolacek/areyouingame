@@ -246,12 +246,17 @@ export function FirstMoveReveal({
       {deferredResponses.length > 0 ? (
         <div className="mt-7 grid w-full max-w-2xl gap-3">
           {deferredResponses.map((response) => (
-            <p
-              className="rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-left text-base leading-7 font-medium text-amber-100 shadow-2xl shadow-black/30 backdrop-blur-md"
+            <article
+              className="grid gap-3 rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-left shadow-2xl shadow-black/30 backdrop-blur-md"
               key={response.id}
             >
-              {response.interruptionText}
-            </p>
+              <p className="border-l border-amber-200/35 pl-3 text-sm leading-6 font-medium text-amber-50/70 italic">
+                {response.inputText}
+              </p>
+              <p className="text-base leading-7 font-medium text-amber-100">
+                {response.interruptionText}
+              </p>
+            </article>
           ))}
         </div>
       ) : null}
