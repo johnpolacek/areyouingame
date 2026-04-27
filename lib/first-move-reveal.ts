@@ -40,16 +40,24 @@ export async function generateFirstMoveReveal({
         `Chosen delivery device: ${deliveryDevice.label}.`,
         "Use that delivery device only.",
         "Do not introduce any other device or screen.",
+        "Use saved player location only to infer local time-of-day or private atmosphere.",
+        "Do not name, imply, or expand the saved location unless the opening response names it.",
         "If the chosen delivery device is a screen, it may flicker or turn black only if the message immediately appears.",
       ]),
       prompt: [
         `Daily game id: ${dailyGame.id}`,
         `Shared event time for this player: ${localGameStart}`,
+        `Saved player location: ${player.location}`,
         `Player opening location/activity response: ${player.openingResponse}`,
       ].join("\n"),
     });
     const sceneIntro = normalizeSceneIntro(text);
-    const safeSceneIntro = isSafeSceneIntro(sceneIntro, deliveryDevice)
+    const safeSceneIntro = isSafeSceneIntro({
+      deliveryDevice,
+      openingResponse: player.openingResponse || "",
+      savedLocation: player.location,
+      sceneIntro,
+    })
       ? sceneIntro
       : [];
 
@@ -90,10 +98,17 @@ function normalizeSceneIntro(text: string): string[] {
     .map((paragraph) => limitWords(paragraph, 22).slice(0, 200));
 }
 
-function isSafeSceneIntro(
-  sceneIntro: string[],
-  deliveryDevice: DeliveryDevice,
-): boolean {
+function isSafeSceneIntro({
+  deliveryDevice,
+  openingResponse,
+  savedLocation,
+  sceneIntro,
+}: {
+  deliveryDevice: DeliveryDevice;
+  openingResponse: string;
+  savedLocation: string;
+  sceneIntro: string[];
+}): boolean {
   if (sceneIntro.length !== 2) {
     return false;
   }
@@ -106,7 +121,12 @@ function isSafeSceneIntro(
     !/\b(city|town|kiosk|public|nearby|every screen|all screens|worldwide|global|synchronized|one answer|only answer)\b/.test(
       normalized,
     ) &&
-    !mentionsUnsupportedDevice(normalized, deliveryDevice)
+    !mentionsUnsupportedDevice(normalized, deliveryDevice) &&
+    !mentionsUnsupportedSavedLocation({
+      normalizedOpeningResponse: openingResponse.toLowerCase(),
+      normalizedSceneIntro: normalized,
+      savedLocation,
+    })
   );
 }
 
@@ -251,6 +271,46 @@ function mentionsUnsupportedDevice(
       allowedTerm.test(term),
     );
   });
+}
+
+function mentionsUnsupportedSavedLocation({
+  normalizedOpeningResponse,
+  normalizedSceneIntro,
+  savedLocation,
+}: {
+  normalizedOpeningResponse: string;
+  normalizedSceneIntro: string;
+  savedLocation: string;
+}): boolean {
+  return getSavedLocationTerms(savedLocation).some((term) => {
+    const termPattern = new RegExp(`\\b${escapeRegExp(term)}\\b`);
+
+    return (
+      termPattern.test(normalizedSceneIntro) &&
+      !termPattern.test(normalizedOpeningResponse)
+    );
+  });
+}
+
+function getSavedLocationTerms(savedLocation: string): string[] {
+  const ignoredTerms = new Set([
+    "usa",
+    "united",
+    "states",
+    "america",
+    "county",
+    "township",
+  ]);
+
+  return savedLocation
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 3 && !ignoredTerms.has(term));
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function createRevealId(dailyGameId: string, playerId: string): string {
