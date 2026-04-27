@@ -14,7 +14,7 @@ import type {
 
 type FirstMoveRevealProps = {
   reveal: FirstMoveRevealState;
-  latestTextResponse?: FirstRevealTextResponse;
+  firstRevealTextResponses?: FirstRevealTextResponse[];
 };
 
 type FirstChoiceConsequenceProps = {
@@ -82,7 +82,7 @@ export function FirstMoveRevealPending() {
 }
 
 export function FirstMoveReveal({
-  latestTextResponse,
+  firstRevealTextResponses,
   reveal,
 }: FirstMoveRevealProps) {
   const router = useRouter();
@@ -93,10 +93,10 @@ export function FirstMoveReveal({
   const [isSubmittingText, setIsSubmittingText] = useState(false);
   const [error, setError] = useState("");
   const isSubmitting = submittedChoice !== null || isSubmittingText;
-  const latestInterruption =
-    latestTextResponse?.classification === "DEFERRED"
-      ? latestTextResponse.interruptionText
-      : undefined;
+  const deferredResponses = (firstRevealTextResponses ?? []).filter(
+    (response) =>
+      response.classification === "DEFERRED" && response.interruptionText,
+  );
 
   async function submitChoice(choice: YesNoChoice) {
     if (isSubmitting) {
@@ -243,10 +243,17 @@ export function FirstMoveReveal({
         </Button>
       </div>
 
-      {latestInterruption ? (
-        <p className="mt-7 max-w-2xl rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-left text-base leading-7 font-medium text-amber-100 shadow-2xl shadow-black/30 backdrop-blur-md">
-          {latestInterruption}
-        </p>
+      {deferredResponses.length > 0 ? (
+        <div className="mt-7 grid w-full max-w-2xl gap-3">
+          {deferredResponses.map((response) => (
+            <p
+              className="rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-left text-base leading-7 font-medium text-amber-100 shadow-2xl shadow-black/30 backdrop-blur-md"
+              key={response.id}
+            >
+              {response.interruptionText}
+            </p>
+          ))}
+        </div>
       ) : null}
 
       <form

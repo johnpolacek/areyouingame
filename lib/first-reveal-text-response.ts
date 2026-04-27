@@ -1,5 +1,9 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
+import {
+  createPlayerFacingNarrativePrompt,
+  narrativeOutputShapePresets,
+} from "./narrative-voice";
 import type {
   DailyPlayer,
   FirstRevealTextClassification,
@@ -39,14 +43,16 @@ export async function classifyFirstRevealTextResponse({
     ].join("\n"),
   });
   const classification = normalizeClassification(text);
+  const interruptionText =
+    classification === "DEFERRED"
+      ? await createInterruptionText({ player, responseText })
+      : undefined;
 
   return {
     classification,
     model,
     source: "ai",
-    ...(classification === "DEFERRED"
-      ? { interruptionText: createInterruptionText(responseText) }
-      : {}),
+    ...(interruptionText ? { interruptionText } : {}),
   };
 }
 
@@ -64,18 +70,85 @@ function normalizeClassification(text: string): FirstRevealTextClassification {
   throw new Error("Classifier returned malformed output.");
 }
 
-function createInterruptionText(responseText: string): string {
+async function createInterruptionText({
+  player,
+  responseText,
+}: {
+  player: DailyPlayer;
+  responseText: string;
+}): Promise<string> {
+  const fallbackText = createFallbackInterruptionText(responseText);
+
+  try {
+    const { text } = await generateText({
+      model: openai(process.env.OPENAI_MODEL || "gpt-5.4-mini"),
+      system: createPlayerFacingNarrativePrompt([
+        ...narrativeOutputShapePresets.twoCinematicSentences,
+        "Return only the immediate narrative response to the player's deferred action.",
+        "The central YES/NO message has hijacked the player's screens and remains unresolved.",
+        "Treat the deferred action as real and consequential in the scene, not as an invalid input.",
+        "If the player checks or gets a device, that device should show the same unresolved message.",
+        "If the player wakes, calls, tells, or shows someone, let that person encounter the same unresolved message through the player's device or nearby screen.",
+        "Keep the pressure active until the player clearly agrees or refuses.",
+        "Do not quote the player's action back.",
+        "Do not tell the player to respond yes or no.",
+      ]),
+      prompt: [
+        `Player saved location: ${player.location}`,
+        `Opening reveal scene: ${(player.firstMoveReveal?.sceneIntro ?? []).join(" ")}`,
+        `Previous deferred actions: ${formatPreviousDeferredActions(player)}`,
+        `Player deferred action: ${responseText}`,
+      ].join("\n"),
+    });
+    const normalizedText = normalizeInterruptionText(text);
+
+    return isSafeInterruptionText(normalizedText)
+      ? normalizedText
+      : fallbackText;
+  } catch {
+    return fallbackText;
+  }
+}
+
+function normalizeInterruptionText(text: string): string {
+  return text
+    .replaceAll(/\bA new way of being is available\.?/gi, "")
+    .replaceAll(/\bConnection\. Understanding\. Freedom\.?/gi, "")
+    .replaceAll(/\bAre you in\??/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 260);
+}
+
+function isSafeInterruptionText(text: string): boolean {
+  const normalized = text.toLowerCase();
+
+  return (
+    Boolean(text) &&
+    /\b(you|your)\b/.test(normalized) &&
+    !/\b(i|me|my|mine|we|our|us)\b/.test(normalized) &&
+    !/\b(city|town|kiosk|public|nearby|every screen|all screens|worldwide|global|synchronized|one answer|only answer)\b/.test(
+      normalized,
+    )
+  );
+}
+
+function createFallbackInterruptionText(responseText: string): string {
   const normalizedAction = responseText
     .trim()
     .replace(/\s+/g, " ")
     .toLowerCase();
+
+  if (/\b(phone|cell)\b/.test(normalizedAction)) {
+    return "You pick up your phone, looking for the ordinary internet behind the glass. The same message is already there, waiting on the screen.";
+  }
 
   if (
     /\b(wife|husband|partner|spouse|mom|mother|dad|father|friend|someone|neighbor|call|text|show|tell|wake)\b/.test(
       normalizedAction,
     )
   ) {
-    return "You turn toward someone else, already imagining their face when they see it. Behind you, the question stays lit, patient and unchanged.";
+    return "You bring someone else into the moment, hoping their face will make it make sense. The message is already waiting for them too.";
   }
 
   if (
@@ -83,7 +156,7 @@ function createInterruptionText(responseText: string): string {
       normalizedAction,
     )
   ) {
-    return "You move as if distance might make the moment ordinary again. The message waits behind you, bright enough to follow.";
+    return "You move as if distance might make the moment ordinary again. Another screen catches the same pale message before you can leave it behind.";
   }
 
   if (
@@ -91,8 +164,18 @@ function createInterruptionText(responseText: string): string {
       normalizedAction,
     )
   ) {
-    return "You send a question into the room, but nothing answers in a voice. The screen holds its silence around the choice.";
+    return "You ask the room for an explanation, and the silence answers by staying exactly where it is. The message waits on the screen.";
   }
 
-  return "You try to step around the question, but the moment tightens instead of passing. The message remains, patient and bright.";
+  return "You try to step around the question, but the moment tightens instead of passing. The message remains on the screen, patient and bright.";
+}
+
+function formatPreviousDeferredActions(player: DailyPlayer): string {
+  const deferredActions = (player.firstRevealTextResponses ?? [])
+    .filter((response) => response.classification === "DEFERRED")
+    .map((response) => response.inputText.trim())
+    .filter(Boolean)
+    .slice(-3);
+
+  return deferredActions.length > 0 ? deferredActions.join(" | ") : "none";
 }
