@@ -65,9 +65,34 @@ function normalizeClassification(text: string): FirstRevealTextClassification {
 }
 
 function createInterruptionText(responseText: string): string {
-  const action = responseText.trim().replace(/\s+/g, " ");
-  const clippedAction =
-    action.length > 96 ? `${action.slice(0, 93).trimEnd()}...` : action;
+  const normalizedAction = responseText
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 
-  return `The interruption follows through anyway: "${clippedAction}" changes nothing. Please respond yes or no.`;
+  if (
+    /\b(wife|husband|partner|spouse|mom|mother|dad|father|friend|someone|neighbor|call|text|show|tell|wake)\b/.test(
+      normalizedAction,
+    )
+  ) {
+    return "You turn toward someone else, already imagining their face when they see it. Behind you, the question stays lit, patient and unchanged.";
+  }
+
+  if (
+    /\b(run|leave|escape|outside|door|upstairs|downstairs|hide|walk away|go away)\b/.test(
+      normalizedAction,
+    )
+  ) {
+    return "You move as if distance might make the moment ordinary again. The message waits behind you, bright enough to follow.";
+  }
+
+  if (
+    /\b(ask|question|what|why|who|how|talk|say|speak)\b/.test(
+      normalizedAction,
+    )
+  ) {
+    return "You send a question into the room, but nothing answers in a voice. The screen holds its silence around the choice.";
+  }
+
+  return "You try to step around the question, but the moment tightens instead of passing. The message remains, patient and bright.";
 }
