@@ -50,7 +50,7 @@ export default async function TodaysGamePage() {
           reveal={player.firstMoveReveal}
         />
       ) : player.openingResponseSubmittedAt && player.openingResponse ? (
-        <FirstMoveRevealPending openingResponse={player.openingResponse} />
+        <FirstMoveRevealPending />
       ) : player.publicGameplayAgreementAcceptedAt ? (
         <OpeningPrompt
           eventStartsAtIso={todayGame.eventStartsAtIso}
