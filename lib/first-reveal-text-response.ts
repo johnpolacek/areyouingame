@@ -92,8 +92,12 @@ async function createInterruptionText({
         "The central YES/NO message has hijacked the player's available devices and remains unresolved.",
         "Treat the deferred action as real and consequential in the scene, not as an invalid input.",
         "If the player checks or gets a device, that device should show the same unresolved message.",
+        "If the player checks a different kind of device than before, make that device feel physically distinct instead of repeating the same phrasing.",
         "If the player uses a landline, receiver, intercom, radio, or other audio-only device, it should audibly say the same unresolved message.",
-        "If the player wakes, calls, tells, or shows someone, let that person encounter the same unresolved message through the player's device or nearby screen.",
+        "If the player wakes, calls, tells, or shows someone, include one small human reaction from that person while the unresolved message remains central.",
+        "If the player looks outside, through a window, or onto the block, widen only to what they can plausibly see from there: houses, windows, porch lights, cars, or lit rooms.",
+        "If the player invokes technical expertise, hacking, software, networks, or debugging, honor that knowledge with one concrete failed expectation like no app chrome, no cursor, no dial tone, no notification, or no normal desktop.",
+        "Let repeated deferrals escalate by radius: same room, another device, another person, the house, then the visible block.",
         "Keep the pressure active until the player clearly agrees or refuses.",
         "Do not quote the player's action back.",
         "Do not tell the player to respond yes or no.",
@@ -160,16 +164,28 @@ function createFallbackInterruptionText(responseText: string): string {
     return "You pick up your phone, looking for the ordinary internet behind the glass. The same message is already there, waiting on the screen.";
   }
 
+  if (/\b(laptop|computer|desktop|monitor)\b/.test(normalizedAction)) {
+    return "The computer wakes without a desktop, cursor, window, or warning. The same message sits where everything ordinary should have been.";
+  }
+
   if (
     /\b(wife|husband|partner|spouse|mom|mother|dad|father|friend|someone|neighbor|call|text|show|tell|wake)\b/.test(
       normalizedAction,
     )
   ) {
-    return "You bring someone else into the moment, hoping their face will make it make sense. The message is already waiting for them too.";
+    return "You bring someone else into the moment, hoping their face will make it make sense. Their expression changes as the same message waits in front of them too.";
+  }
+
+  if (/\b(window|outside|block|street|porch|yard|driveway)\b/.test(normalizedAction)) {
+    return "You look out at the block, searching for ordinary dark. Lit windows and quiet rooms hold the same pale message wherever a screen is awake.";
+  }
+
+  if (/\b(hack|hacked|software|engineer|debug|network|router|wifi|wi-fi|internet)\b/.test(normalizedAction)) {
+    return "You look for the shape of an attack, but there is no browser, cursor, alert, or app to blame. The same message sits underneath every explanation.";
   }
 
   if (
-    /\b(run|leave|escape|outside|door|upstairs|downstairs|hide|walk away|go away)\b/.test(
+    /\b(run|leave|escape|door|upstairs|downstairs|hide|walk away|go away)\b/.test(
       normalizedAction,
     )
   ) {
