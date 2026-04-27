@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getPlayerForUserGame } from "./player-store";
 
 export type DailyGame = {
@@ -12,11 +13,69 @@ export type TodayGameDestination = {
 };
 
 const EVENT_MINUTE_BUCKETS = 24 * 4;
+const devGameTimeCookieName = "areyouin-dev-game-time";
 
 export function getTodayGame(now = new Date()): DailyGame {
   const dateId = getGlobalDateId(now);
   const eventStartsAt = getEventStartsAt(dateId);
 
+  return createDailyGame(dateId, eventStartsAt);
+}
+
+export async function getTodayGameForRequest(
+  now = new Date(),
+): Promise<DailyGame> {
+  const todayGame = getTodayGame(now);
+
+  if (process.env.NODE_ENV !== "development") {
+    return todayGame;
+  }
+
+  const cookieStore = await cookies();
+  const devEventStartsAt = readDevGameTimeCookie(
+    cookieStore.get(devGameTimeCookieName)?.value,
+    todayGame.id,
+  );
+
+  return devEventStartsAt
+    ? createDailyGame(todayGame.id, devEventStartsAt)
+    : todayGame;
+}
+
+export async function rerollTodayGameForRequest(
+  now = new Date(),
+): Promise<DailyGame> {
+  const todayGame = getTodayGame(now);
+  const cookieStore = await cookies();
+  const currentEventStartsAt =
+    readDevGameTimeCookie(
+      cookieStore.get(devGameTimeCookieName)?.value,
+      todayGame.id,
+    ) ?? new Date(todayGame.eventStartsAtIso);
+  const eventStartsAt = rerollEventStartsAt(todayGame.id, currentEventStartsAt);
+  const rerolledGame = createDailyGame(todayGame.id, eventStartsAt);
+
+  cookieStore.set(
+    devGameTimeCookieName,
+    `${rerolledGame.id}|${rerolledGame.eventStartsAtIso}`,
+    {
+      httpOnly: true,
+      maxAge: 60 * 60 * 24,
+      path: "/",
+      sameSite: "lax",
+    },
+  );
+
+  return rerolledGame;
+}
+
+export async function clearDevTodayGameReroll() {
+  const cookieStore = await cookies();
+
+  cookieStore.delete(devGameTimeCookieName);
+}
+
+function createDailyGame(dateId: string, eventStartsAt: Date): DailyGame {
   return {
     id: dateId,
     eventStartsAtIso: eventStartsAt.toISOString(),
@@ -75,6 +134,41 @@ function getEventStartsAt(dateId: string): Date {
   eventStartsAt.setUTCMinutes(minutesAfterMidnight);
 
   return eventStartsAt;
+}
+
+function rerollEventStartsAt(dateId: string, currentEventStartsAt: Date): Date {
+  const currentBucket =
+    currentEventStartsAt.getUTCHours() * 4 +
+    Math.floor(currentEventStartsAt.getUTCMinutes() / 15);
+  let nextBucket = Math.floor(Math.random() * EVENT_MINUTE_BUCKETS);
+
+  if (nextBucket === currentBucket) {
+    nextBucket = (nextBucket + 1) % EVENT_MINUTE_BUCKETS;
+  }
+
+  const eventStartsAt = new Date(`${dateId}T00:00:00.000Z`);
+  eventStartsAt.setUTCMinutes(nextBucket * 15);
+
+  return eventStartsAt;
+}
+
+function readDevGameTimeCookie(
+  cookieValue: string | undefined,
+  expectedDateId: string,
+): Date | null {
+  if (!cookieValue) {
+    return null;
+  }
+
+  const [dateId, isoDate] = cookieValue.split("|");
+
+  if (dateId !== expectedDateId || !isoDate) {
+    return null;
+  }
+
+  const eventStartsAt = new Date(isoDate);
+
+  return Number.isNaN(eventStartsAt.getTime()) ? null : eventStartsAt;
 }
 
 function formatLocalGameStart(date: Date, timeZone: string): string {

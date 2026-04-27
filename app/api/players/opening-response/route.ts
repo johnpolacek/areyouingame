@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getTodayGame } from "@/lib/daily-game";
+import { getTodayGameForRequest } from "@/lib/daily-game";
 import {
   submitOpeningResponseForUserGame,
   validateOpeningResponse,
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { openingResponse?: unknown };
     const openingResponse = validateOpeningResponse(body.openingResponse);
-    const todayGame = getTodayGame();
+    const todayGame = await getTodayGameForRequest();
     const player = await submitOpeningResponseForUserGame({
       clerkUserId: userId,
       dailyGameId: todayGame.id,

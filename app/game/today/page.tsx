@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { HeroBackgroundVideo } from "../../hero-background-video";
 import {
   formatGameStartForTimeZone,
-  getTodayGame,
+  getTodayGameForRequest,
 } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
 import { BeforeWeBegin } from "./before-we-begin";
@@ -18,7 +18,7 @@ import { OpeningPrompt } from "./opening-prompt";
 export default async function TodaysGamePage() {
   const { userId } = await auth.protect();
 
-  const todayGame = getTodayGame();
+  const todayGame = await getTodayGameForRequest();
   const player = await getPlayerForUserGame(userId, todayGame.id);
 
   if (!player) {

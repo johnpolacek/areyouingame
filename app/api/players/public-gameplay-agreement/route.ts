@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getTodayGame } from "@/lib/daily-game";
+import { getTodayGameForRequest } from "@/lib/daily-game";
 import { acceptPublicGameplayAgreement } from "@/lib/player-store";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function POST() {
   }
 
   try {
-    const todayGame = getTodayGame();
+    const todayGame = await getTodayGameForRequest();
     const player = await acceptPublicGameplayAgreement({
       clerkUserId: userId,
       dailyGameId: todayGame.id,

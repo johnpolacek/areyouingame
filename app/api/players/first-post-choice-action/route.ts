@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getTodayGame } from "@/lib/daily-game";
+import { getTodayGameForRequest } from "@/lib/daily-game";
 import {
   getPlayerForUserGame,
   submitFirstPostChoiceActionForUserGame,
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { actionText?: unknown };
     const actionText = validateFirstPostChoiceAction(body.actionText);
-    const todayGame = getTodayGame();
+    const todayGame = await getTodayGameForRequest();
     const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
 
     if (!existingPlayer) {

@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getTodayGame } from "@/lib/daily-game";
+import { getTodayGameForRequest } from "@/lib/daily-game";
 import { classifyFirstRevealTextResponse } from "@/lib/first-reveal-text-response";
 import {
   getPlayerForUserGame,
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { responseText?: unknown };
     const responseText = validateFirstRevealTextResponse(body.responseText);
-    const todayGame = getTodayGame();
+    const todayGame = await getTodayGameForRequest();
     const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
 
     if (!existingPlayer) {

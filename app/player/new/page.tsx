@@ -1,14 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { HeroBackgroundVideo } from "@/app/hero-background-video";
 import { redirect } from "next/navigation";
-import { getTodayGame } from "../../../lib/daily-game";
+import { getTodayGameForRequest } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
 import { NewPlayerForm } from "./new-player-form";
 
 export default async function NewPlayerPage() {
   const { userId } = await auth.protect();
 
-  const todayGame = getTodayGame();
+  const todayGame = await getTodayGameForRequest();
   const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
 
   if (existingPlayer) {

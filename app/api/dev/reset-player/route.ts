@@ -1,5 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { getTodayGame } from "@/lib/daily-game";
+import {
+  clearDevTodayGameReroll,
+  getTodayGame,
+  rerollTodayGameForRequest,
+} from "@/lib/daily-game";
 import {
   deletePlayerForUserGame,
   resetPlayerDayForUserGame,
@@ -25,10 +29,12 @@ export async function POST(request: Request) {
 
   if (mode === "day") {
     const reset = await resetPlayerDayForUserGame(userId, todayGame.id);
+    const rerolledGame = await rerollTodayGameForRequest();
 
-    return Response.json({ mode, reset });
+    return Response.json({ mode, reset, todayGame: rerolledGame });
   }
 
+  await clearDevTodayGameReroll();
   const deleted = await deletePlayerForUserGame(userId, todayGame.id);
 
   return Response.json({ mode, deleted });
