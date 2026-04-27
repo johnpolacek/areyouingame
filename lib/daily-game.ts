@@ -200,8 +200,14 @@ function getDatePart(
   return parts.find((part) => part.type === type)?.value ?? "";
 }
 
-function getDaypart(hour: number): "morning" | "afternoon" | "night" {
-  if (hour >= 5 && hour < 12) {
+function getDaypart(
+  hour: number,
+): "early morning" | "morning" | "afternoon" | "night" {
+  if (hour < 5) {
+    return "early morning";
+  }
+
+  if (hour < 12) {
     return "morning";
   }
 
