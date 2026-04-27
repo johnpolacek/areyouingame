@@ -92,11 +92,15 @@ export function FirstMoveReveal({
   const [textResponse, setTextResponse] = useState("");
   const [isSubmittingText, setIsSubmittingText] = useState(false);
   const [error, setError] = useState("");
-  const isSubmitting = submittedChoice !== null || isSubmittingText;
   const deferredResponses = (firstRevealTextResponses ?? []).filter(
     (response) =>
       response.classification === "DEFERRED" && response.interruptionText,
   );
+  const dayEndResponse = [...(firstRevealTextResponses ?? [])]
+    .reverse()
+    .find((response) => response.classification === "END_DAY");
+  const isSubmitting =
+    submittedChoice !== null || isSubmittingText || Boolean(dayEndResponse);
 
   async function submitChoice(choice: YesNoChoice) {
     if (isSubmitting) {
@@ -261,44 +265,59 @@ export function FirstMoveReveal({
         </div>
       ) : null}
 
-      <form
-        className="mt-8 grid w-full max-w-2xl gap-3 text-left"
-        onSubmit={(event) => void submitTextResponse(event)}
-      >
-        <label
-          className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
-          htmlFor="first-reveal-text-response"
+      {dayEndResponse ? (
+        <article className="mt-8 grid w-full max-w-2xl gap-3 rounded-md border border-amber-300/30 bg-black/45 px-4 py-4 text-left shadow-2xl shadow-black/30 backdrop-blur-md">
+          <p className="border-l border-amber-200/35 pl-3 text-sm leading-6 font-medium text-amber-50/70 italic">
+            {dayEndResponse.inputText}
+          </p>
+          <p className="text-base leading-7 font-medium text-amber-100">
+            {dayEndResponse.dayEndText ??
+              "You turn off what you can, leave what you cannot, and go to bed. The house settles around you. For now, that is your answer."}
+          </p>
+          <p className="text-xs font-bold tracking-[0.18em] text-amber-300/75 uppercase">
+            Today&apos;s active play has ended
+          </p>
+        </article>
+      ) : (
+        <form
+          className="mt-8 grid w-full max-w-2xl gap-3 text-left"
+          onSubmit={(event) => void submitTextResponse(event)}
         >
-          What will you do?
-        </label>
-        <textarea
-          id="first-reveal-text-response"
-          value={textResponse}
-          onChange={(event) => setTextResponse(event.target.value)}
-          disabled={isSubmitting}
-          maxLength={1200}
-          rows={4}
-          className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
-          placeholder="Say yes, refuse, stall, ask, run, call someone, or try anything else."
-        />
-        <div className="flex justify-end">
-          <Button
-            disabled={isSubmitting}
-            type="submit"
-            variant="ghost"
-            className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+          <label
+            className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+            htmlFor="first-reveal-text-response"
           >
-            {isSubmittingText ? (
-              <LoaderCircleIcon
-                aria-hidden="true"
-                className="size-4 animate-spin"
-              />
-            ) : (
-              "Continue"
-            )}
-          </Button>
-        </div>
-      </form>
+            What will you do?
+          </label>
+          <textarea
+            id="first-reveal-text-response"
+            value={textResponse}
+            onChange={(event) => setTextResponse(event.target.value)}
+            disabled={isSubmitting}
+            maxLength={1200}
+            rows={4}
+            className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
+            placeholder="Say yes, refuse, stall, ask, run, call someone, or try anything else."
+          />
+          <div className="flex justify-end">
+            <Button
+              disabled={isSubmitting}
+              type="submit"
+              variant="ghost"
+              className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+            >
+              {isSubmittingText ? (
+                <LoaderCircleIcon
+                  aria-hidden="true"
+                  className="size-4 animate-spin"
+                />
+              ) : (
+                "Continue"
+              )}
+            </Button>
+          </div>
+        </form>
+      )}
 
       {error ? (
         <p className="mt-6 max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">

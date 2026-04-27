@@ -132,3 +132,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 05 Unit 01 with a Clerk-protected text response route, AI SDK classifier boundary, and Convex persistence for reveal text attempts.
 - Preserved explicit YES/NO buttons while adding open text classification, deferred interruption copy, duplicate final-decision protection, and refresh-safe pending/final states.
 - Replaced the post-choice receipt with a selected YES/NO heading, consequence copy, and first post-choice action textarea backed by Convex persistence.
+
+## [2026-04-27] implementation | add end-day deferral state
+
+- Extended the first reveal text loop with an `END_DAY` classification for plausible sleep/rest/wait-until-morning actions.
+- Preserved the core YES/NO pending invariant while allowing active play to close for the current daily session without forcing another interruption.
+- Updated Stage 05 Unit 01 notes so end-day deferral is documented as a pending-state closure rather than a third final choice.

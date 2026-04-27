@@ -16,8 +16,9 @@ import type {
 export type FirstRevealTextClassificationResult = {
   classification: FirstRevealTextClassification;
   model: string;
-  source: "ai";
+  source: "ai" | "fallback";
   interruptionText?: string;
+  dayEndText?: string;
 };
 
 export async function classifyFirstRevealTextResponse({
@@ -28,13 +29,24 @@ export async function classifyFirstRevealTextResponse({
   responseText: string;
 }): Promise<FirstRevealTextClassificationResult> {
   const model = getOpenAIClassifierModel();
+
+  if (isEndDayDeferral(responseText)) {
+    return {
+      classification: "END_DAY",
+      model: "deterministic-end-day-deferral",
+      source: "fallback",
+      dayEndText: createDayEndText(),
+    };
+  }
+
   const { text } = await generateText({
     model: openai(model),
     system: [
       "Classify a player's response to the exact question 'Are you in?'.",
-      "Return exactly one token: YES, NO, or DEFERRED.",
+      "Return exactly one token: YES, NO, DEFERRED, or END_DAY.",
       "YES means the player clearly accepts, agrees, joins, consents, or says yes.",
       "NO means the player clearly refuses, rejects, declines, opts out, or says no.",
+      "END_DAY means the player does not answer yes or no, but plausibly goes to sleep, rests for the night, waits until morning, or otherwise ends today's active play.",
       "DEFERRED means ambiguous, avoidant, a question, hesitation, trying something else, or ignoring the demand.",
       "Do not explain your answer.",
     ].join(" "),
@@ -51,12 +63,14 @@ export async function classifyFirstRevealTextResponse({
     classification === "DEFERRED"
       ? await createInterruptionText({ player, responseText })
       : undefined;
+  const dayEndText = classification === "END_DAY" ? createDayEndText() : undefined;
 
   return {
     classification,
     model,
     source: "ai",
     ...(interruptionText ? { interruptionText } : {}),
+    ...(dayEndText ? { dayEndText } : {}),
   };
 }
 
@@ -66,12 +80,37 @@ function normalizeClassification(text: string): FirstRevealTextClassification {
   if (
     normalized === "YES" ||
     normalized === "NO" ||
-    normalized === "DEFERRED"
+    normalized === "DEFERRED" ||
+    normalized === "END_DAY"
   ) {
     return normalized;
   }
 
   throw new Error("Classifier returned malformed output.");
+}
+
+function isEndDayDeferral(responseText: string): boolean {
+  const normalized = responseText.trim().replace(/\s+/g, " ").toLowerCase();
+
+  return (
+    /\b(go|going|went|head|headed|crawl|crawling|try|trying)\b.*\b(bed|sleep)\b/.test(
+      normalized,
+    ) ||
+    /\b(bed|sleep)\b.*\b(morning|tomorrow)\b/.test(normalized) ||
+    /\b(wait|waiting|see|check)\b.*\b(morning|tomorrow|next day)\b/.test(
+      normalized,
+    ) ||
+    /\b(call it a night|sleep on it|turn in for the night|go to bed|went to bed)\b/.test(
+      normalized,
+    )
+  );
+}
+
+function createDayEndText(): string {
+  return [
+    "You turn off what you can, leave what you cannot, and go to bed.",
+    "The house settles around you. For now, that is your answer.",
+  ].join(" ");
 }
 
 async function createInterruptionText({

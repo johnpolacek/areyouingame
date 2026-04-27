@@ -6,22 +6,23 @@ Status: completed.
 
 ## Product Intent
 
-The reveal should feel like the first moment of the global text-based MUD-style experience, not a form receipt. Explicit YES/NO buttons preserve the central ritual choice, while the open textarea lets players roleplay hesitation, confusion, avoidance, or alternate actions. If they defer, the world should keep interrupting them until they answer yes or no.
+The reveal should feel like the first moment of the global text-based MUD-style experience, not a form receipt. Explicit YES/NO buttons preserve the central ritual choice, while the open textarea lets players roleplay hesitation, confusion, avoidance, or alternate actions. Most deferrals keep the world interrupting until they answer yes or no, but a plausible sleep/rest/wait-until-morning action is a valid end-of-day deferral: the player does not answer YES or NO, active play closes for the current day, and the unresolved question carries forward.
 
 ## Scope
 
 - Keep the explicit `YES` and `NO` buttons on the reveal.
 - Add `What will you do?` body text under the buttons.
 - Add an open textarea and `Continue` button for text responses.
-- Classify typed responses as `YES`, `NO`, or `DEFERRED`.
+- Classify typed responses as `YES`, `NO`, `DEFERRED`, or `END_DAY`.
 - If classified as `YES` or `NO`, persist the final first decision exactly once and advance into the first post-choice narrative/action state.
 - If classified as `DEFERRED`, keep the YES/NO decision pending, persist the attempted action, and return a short interruption that again asks for yes or no.
+- If classified as `END_DAY`, keep the YES/NO decision pending, persist the attempted action, show a quiet closed-for-today response, and stop active input for the current daily session.
 - Replace receipt-style post-choice UI with only the selected `YES` or `NO` heading, generated consequence text, and the next open textarea response.
 - Persist the first post-choice open action so it can become the seed of the broader text-based action loop.
 
 ## Out Of Scope
 
-- A visible `Skip` button or explicit third final choice.
+- A visible `Skip` button or explicit third final choice. `END_DAY` is a pending-state closure, not a final decision.
 - Full global MUD simulation after the first post-choice action.
 - Complete canonical world-state mutation rules.
 - Full append-only event model beyond the narrow reveal attempt, final first decision, and first post-choice action records.
@@ -32,13 +33,14 @@ The reveal should feel like the first moment of the global text-based MUD-style 
 
 - The reveal shows explicit YES and NO buttons plus a text response area.
 - Clicking YES or NO still submits a deterministic final choice without an LLM classification call.
-- Text submission calls an LLM classification boundary that returns only `YES`, `NO`, or `DEFERRED`.
+- Text submission calls a classification boundary that returns only `YES`, `NO`, `DEFERRED`, or `END_DAY`.
 - Empty text submissions are rejected client-side and server-side.
 - Malformed classifier output fails closed and does not submit a final choice.
 - A text response clearly accepting the invitation records `YES`.
 - A text response clearly refusing the invitation records `NO`.
 - Ambiguous, avoidant, or action-only text records a deferred reveal attempt and leaves the final choice pending.
 - Deferred examples such as calling someone, throwing the phone away, asking what is happening, or trying to ignore the message produce a new interruption that repeats the yes/no demand.
+- Sleep/rest/morning examples such as going to bed, sleeping on it, or waiting until morning record an end-day deferral, leave the final choice pending, and close active input for the current day.
 - A player cannot submit a final YES/NO decision more than once for the same player/day.
 - Refreshing after a deferred attempt returns to the pending reveal with the latest interruption context visible.
 - Refreshing after a final YES/NO returns to the post-choice narrative/action state.
@@ -47,10 +49,11 @@ The reveal should feel like the first moment of the global text-based MUD-style 
 
 ## Data And State Notes
 
-- Keep the main decision invariant as `pending` until a final `YES` or `NO` is submitted.
+- Keep the main decision invariant as `pending` until a final `YES` or `NO` is submitted, including after `END_DAY`.
 - Do not add `SKIP` as a final decision value.
-- Store deferred attempts separately from the final first decision.
+- Store deferred and end-day attempts separately from the final first decision.
 - Store enough classifier metadata for review: input text, normalized classification, model, source, submitted timestamp, and generated interruption text.
+- Store enough end-day closure metadata for review: input text, normalized classification, model/source, submitted timestamp, and closed-for-today text.
 - Store enough post-choice narrative metadata for Stage 05 expansion: selected choice, generated consequence text, model/source, and the first post-choice action text.
 - Convex owns the hot transactional state for reveal attempts, final decision uniqueness, pending/submitted status, and first post-choice action persistence.
 - S3 remains reserved for later stable/versioned narrative-memory bundles, recap snapshots, exports, and audit artifacts.

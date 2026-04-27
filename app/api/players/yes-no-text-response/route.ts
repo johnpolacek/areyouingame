@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       model: classification.model,
       source: classification.source,
       interruptionText: classification.interruptionText,
+      dayEndText: classification.dayEndText,
     });
 
     return Response.json({ player, classification: classification.classification });

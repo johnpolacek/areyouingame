@@ -60,7 +60,7 @@ export type FirstDecision = {
 };
 
 export type YesNoChoice = "YES" | "NO";
-export type FirstRevealTextClassification = YesNoChoice | "DEFERRED";
+export type FirstRevealTextClassification = YesNoChoice | "DEFERRED" | "END_DAY";
 
 export type FirstRevealTextResponse = {
   id: string;
@@ -70,6 +70,7 @@ export type FirstRevealTextResponse = {
   source: "ai" | "fallback";
   submittedAt: string;
   interruptionText?: string;
+  dayEndText?: string;
 };
 
 export type FirstPostChoiceAction = {
@@ -137,6 +138,7 @@ const submitFirstRevealTextResponseForUserGameRef = makeFunctionReference<
     model: string;
     source: "ai" | "fallback";
     interruptionText?: string;
+    dayEndText?: string;
   },
   DailyPlayer
 >("playerStore:submitFirstRevealTextResponseForUserGame");
@@ -319,6 +321,7 @@ export async function submitFirstRevealTextResponseForUserGame({
   model,
   source,
   interruptionText,
+  dayEndText,
 }: {
   clerkUserId: string;
   dailyGameId: string;
@@ -327,6 +330,7 @@ export async function submitFirstRevealTextResponseForUserGame({
   model: string;
   source: "ai" | "fallback";
   interruptionText?: string;
+  dayEndText?: string;
 }): Promise<DailyPlayer> {
   return await fetchMutation(submitFirstRevealTextResponseForUserGameRef, {
     backendSecret: getBackendSecret(),
@@ -337,6 +341,7 @@ export async function submitFirstRevealTextResponseForUserGame({
     model,
     source,
     ...(interruptionText ? { interruptionText } : {}),
+    ...(dayEndText ? { dayEndText } : {}),
   });
 }
 

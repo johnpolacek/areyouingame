@@ -49,11 +49,13 @@ const firstRevealTextResponse = v.object({
     v.literal("YES"),
     v.literal("NO"),
     v.literal("DEFERRED"),
+    v.literal("END_DAY"),
   ),
   model: v.string(),
   source: v.union(v.literal("ai"), v.literal("fallback")),
   submittedAt: v.string(),
   interruptionText: v.optional(v.string()),
+  dayEndText: v.optional(v.string()),
 });
 
 const firstPostChoiceAction = v.object({
@@ -303,10 +305,12 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
       v.literal("YES"),
       v.literal("NO"),
       v.literal("DEFERRED"),
+      v.literal("END_DAY"),
     ),
     model: v.string(),
     source: v.union(v.literal("ai"), v.literal("fallback")),
     interruptionText: v.optional(v.string()),
+    dayEndText: v.optional(v.string()),
   },
   returns: player,
   handler: async (ctx, args) => {
@@ -332,6 +336,16 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
 
     const now = new Date().toISOString();
     const previousResponses = existingPlayer.firstRevealTextResponses ?? [];
+
+    if (
+      previousResponses.some(
+        (response: { classification: string }) =>
+          response.classification === "END_DAY",
+      )
+    ) {
+      throw new ConvexError("Today's active play has already ended.");
+    }
+
     const responseRecord = {
       id: `${args.dailyGameId}:${existingPlayer.id}:first-reveal-text-response:${previousResponses.length + 1}`,
       inputText: args.responseText,
@@ -342,10 +356,14 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
       ...(args.interruptionText
         ? { interruptionText: args.interruptionText }
         : {}),
+      ...(args.dayEndText ? { dayEndText: args.dayEndText } : {}),
     };
     const firstRevealTextResponses = [...previousResponses, responseRecord];
 
-    if (args.classification === "DEFERRED") {
+    if (
+      args.classification === "DEFERRED" ||
+      args.classification === "END_DAY"
+    ) {
       await ctx.db.patch(existingPlayer._id, {
         firstRevealTextResponses,
         updatedAt: now,

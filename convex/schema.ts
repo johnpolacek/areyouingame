@@ -42,11 +42,13 @@ const firstRevealTextResponse = v.object({
     v.literal("YES"),
     v.literal("NO"),
     v.literal("DEFERRED"),
+    v.literal("END_DAY"),
   ),
   model: v.string(),
   source: v.union(v.literal("ai"), v.literal("fallback")),
   submittedAt: v.string(),
   interruptionText: v.optional(v.string()),
+  dayEndText: v.optional(v.string()),
 });
 
 const firstPostChoiceAction = v.object({
