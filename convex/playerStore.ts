@@ -493,7 +493,6 @@ export const resetPlayerDayForUserGame = mutationGeneric({
       firstMoveReveal: undefined,
       openingResponse: undefined,
       openingResponseSubmittedAt: undefined,
-      publicGameplayAgreementAcceptedAt: undefined,
       updatedAt: now,
     });
 
