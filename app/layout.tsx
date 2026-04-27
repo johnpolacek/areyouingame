@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rethink_Sans, Rubik_80s_Fade, Stalinist_One } from "next/font/google";
 import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
+import { CommandEnterSubmit } from "./command-enter-submit";
 import "./globals.css";
 
 const rethinkSans = Rethink_Sans({
@@ -37,6 +38,7 @@ export default function RootLayout({
         className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950`}
       >
         <ClerkProvider>
+          <CommandEnterSubmit />
           <Show when="signed-in">
             <div
               className="fixed top-5 right-5 z-10 inline-flex"
