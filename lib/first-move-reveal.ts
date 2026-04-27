@@ -34,6 +34,8 @@ export async function generateFirstMoveReveal({
         "Favor direct impact over description; cut setup, explanation, and atmospheric padding.",
         "Use the player's stated situation as true context and do not contradict it.",
         "Choose a plausible delivery mode: phone buzz, screen takeover, ambient audio, or connected-device interruption.",
+        "All screens in the scene, including TVs, phones, computers, tablets, watches, kiosks, and connected displays, must show the fixed YES/NO reveal message.",
+        "Do not say a screen turns black, goes dark, blanks out, or loses signal unless it immediately displays the message.",
         "Do not include or paraphrase the fixed YES/NO reveal copy.",
       ].join(" "),
       prompt: [
@@ -89,8 +91,8 @@ function createFallbackSceneIntro(openingResponse: string): string[] {
   const situation = limitWords(openingResponse || "where you said you were", 12);
 
   return [
-    `Here, in the middle of ${situation}, every nearby screen goes dark.`,
-    "Then one message appears, too calm to be human and too direct to ignore.",
+    `Here, in the middle of ${situation}, every nearby screen shows the same message.`,
+    "The words are too calm to be human and too direct to ignore.",
   ];
 }
 
