@@ -5,6 +5,7 @@ import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
 } from "./narrative-voice";
+import { getOpenAINarrativeModel } from "./openai-models";
 import type { DailyPlayer, FirstMoveReveal } from "./player-store";
 
 const revealCopy = {
@@ -25,7 +26,7 @@ export async function generateFirstMoveReveal({
   localGameStart: string;
   player: DailyPlayer;
 }): Promise<FirstMoveReveal> {
-  const model = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+  const model = getOpenAINarrativeModel();
   const generatedAt = new Date().toISOString();
 
   try {

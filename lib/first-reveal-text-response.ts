@@ -4,6 +4,10 @@ import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
 } from "./narrative-voice";
+import {
+  getOpenAIClassifierModel,
+  getOpenAINarrativeModel,
+} from "./openai-models";
 import type {
   DailyPlayer,
   FirstRevealTextClassification,
@@ -23,7 +27,7 @@ export async function classifyFirstRevealTextResponse({
   player: DailyPlayer;
   responseText: string;
 }): Promise<FirstRevealTextClassificationResult> {
-  const model = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+  const model = getOpenAIClassifierModel();
   const { text } = await generateText({
     model: openai(model),
     system: [
@@ -81,13 +85,14 @@ async function createInterruptionText({
 
   try {
     const { text } = await generateText({
-      model: openai(process.env.OPENAI_MODEL || "gpt-5.4-mini"),
+      model: openai(getOpenAINarrativeModel()),
       system: createPlayerFacingNarrativePrompt([
         ...narrativeOutputShapePresets.twoCinematicSentences,
         "Return only the immediate narrative response to the player's deferred action.",
-        "The central YES/NO message has hijacked the player's screens and remains unresolved.",
+        "The central YES/NO message has hijacked the player's available devices and remains unresolved.",
         "Treat the deferred action as real and consequential in the scene, not as an invalid input.",
         "If the player checks or gets a device, that device should show the same unresolved message.",
+        "If the player uses a landline, receiver, intercom, radio, or other audio-only device, it should audibly say the same unresolved message.",
         "If the player wakes, calls, tells, or shows someone, let that person encounter the same unresolved message through the player's device or nearby screen.",
         "Keep the pressure active until the player clearly agrees or refuses.",
         "Do not quote the player's action back.",
@@ -138,6 +143,18 @@ function createFallbackInterruptionText(responseText: string): string {
     .trim()
     .replace(/\s+/g, " ")
     .toLowerCase();
+
+  if (
+    /\b(landline|land line|receiver|corded phone|home phone)\b/.test(
+      normalizedAction,
+    )
+  ) {
+    return "The landline clicks alive before a dial tone can settle. A calm voice says the same message into the room.";
+  }
+
+  if (/\b(radio|intercom|speaker|speakers)\b/.test(normalizedAction)) {
+    return "The speaker crackles once, then steadies into a voice too calm for the room. It says the same message aloud.";
+  }
 
   if (/\b(phone|cell)\b/.test(normalizedAction)) {
     return "You pick up your phone, looking for the ordinary internet behind the glass. The same message is already there, waiting on the screen.";
