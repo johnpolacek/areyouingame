@@ -155,6 +155,12 @@ const deletePlayerForUserGameRef = makeFunctionReference<
   boolean
 >("playerStore:deletePlayerForUserGame");
 
+const resetPlayerDayForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs,
+  boolean
+>("playerStore:resetPlayerDayForUserGame");
+
 export function validatePlayerDraft(input: unknown): PlayerDraftInput {
   if (!input || typeof input !== "object") {
     throw new Error("Character draft is required.");
@@ -360,6 +366,17 @@ export async function deletePlayerForUserGame(
   dailyGameId: string,
 ): Promise<boolean> {
   return await fetchMutation(deletePlayerForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+  });
+}
+
+export async function resetPlayerDayForUserGame(
+  clerkUserId: string,
+  dailyGameId: string,
+): Promise<boolean> {
+  return await fetchMutation(resetPlayerDayForUserGameRef, {
     backendSecret: getBackendSecret(),
     clerkUserId,
     dailyGameId,

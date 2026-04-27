@@ -450,6 +450,39 @@ export const deletePlayerForUserGame = mutationGeneric({
   },
 });
 
+export const resetPlayerDayForUserGame = mutationGeneric({
+  args: authenticatedArgs,
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayer(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer) {
+      return false;
+    }
+
+    const now = new Date().toISOString();
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstDecision: undefined,
+      firstRevealTextResponses: undefined,
+      firstPostChoiceAction: undefined,
+      firstMoveReveal: undefined,
+      openingResponse: undefined,
+      openingResponseSubmittedAt: undefined,
+      publicGameplayAgreementAcceptedAt: undefined,
+      updatedAt: now,
+    });
+
+    return true;
+  },
+});
+
 async function ensureDailyGame(
   ctx: any,
   game: {
