@@ -1,6 +1,10 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import type { DailyGame } from "./daily-game";
+import {
+  createPlayerFacingNarrativePrompt,
+  narrativeOutputShapePresets,
+} from "./narrative-voice";
 import type { DailyPlayer, FirstMoveReveal } from "./player-store";
 
 const revealCopy = {
@@ -25,25 +29,19 @@ export async function generateFirstMoveReveal({
   const generatedAt = new Date().toISOString();
 
   try {
+    const deliveryDevice = getDeliveryDevice(player.openingResponse || "");
     const { text } = await generateText({
       model: openai(model),
-      system: [
-        "You write spare, dramatic first-contact game narration in first person.",
-        "Return only the scene intro as exactly two short paragraphs.",
-        "Each paragraph must be one sentence and no more than 18 words.",
-        "Every sentence must be present-tense first-person POV from inside the player character.",
-        "Every sentence must include I, me, my, or mine.",
-        "Do not address the player by name.",
-        "Favor direct impact over description; cut setup, explanation, and atmospheric padding.",
-        "Use only details explicitly present in the player's opening response.",
-        "Do not invent cities, public places, nearby people, kiosks, phones, or other devices.",
-        "If the player names a device or screen, make that exact device display the fixed YES/NO reveal message.",
-        "If no device or screen is named, use my phone as the minimal delivery mode.",
-        "Do not mention city-wide, worldwide, every-screen, or public synchronized displays.",
-        "Do not say there is only one possible answer.",
-        "Do not say a screen turns black, goes dark, blanks out, or loses signal.",
-        "Do not include or paraphrase the fixed YES/NO reveal copy.",
-      ].join(" "),
+      system: createPlayerFacingNarrativePrompt([
+        ...narrativeOutputShapePresets.twoCinematicSentences,
+        "Return only the scene intro.",
+        "The first sentence should establish the player's immediate ordinary moment.",
+        "The second sentence should make the message arrive through the chosen delivery device.",
+        `Chosen delivery device: ${deliveryDevice.label}.`,
+        "Use that delivery device only.",
+        "Do not introduce any other device or screen.",
+        "If the chosen delivery device is a screen, it may flicker or turn black only if the message immediately appears.",
+      ]),
       prompt: [
         `Daily game id: ${dailyGame.id}`,
         `Shared event time for this player: ${localGameStart}`,
@@ -51,7 +49,7 @@ export async function generateFirstMoveReveal({
       ].join("\n"),
     });
     const sceneIntro = normalizeSceneIntro(text);
-    const safeSceneIntro = isFirstPersonSceneIntro(sceneIntro)
+    const safeSceneIntro = isSafeSceneIntro(sceneIntro, deliveryDevice)
       ? sceneIntro
       : [];
 
@@ -89,63 +87,170 @@ function normalizeSceneIntro(text: string): string[] {
     .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .slice(0, 2)
-    .map((paragraph) => limitWords(paragraph, 18).slice(0, 180));
+    .map((paragraph) => limitWords(paragraph, 22).slice(0, 200));
 }
 
-function isFirstPersonSceneIntro(sceneIntro: string[]): boolean {
+function isSafeSceneIntro(
+  sceneIntro: string[],
+  deliveryDevice: DeliveryDevice,
+): boolean {
   if (sceneIntro.length !== 2) {
     return false;
   }
 
-  return sceneIntro.every((paragraph) => {
-    const normalized = paragraph.toLowerCase();
+  const normalized = sceneIntro.join(" ").toLowerCase();
 
-    return (
-      /\b(i|me|my|mine)\b/.test(normalized) &&
-      !/\b(you|your|city|town|kiosk|public|nearby|every screen|all screens|worldwide|global|one answer)\b/.test(
-        normalized,
-      )
-    );
-  });
+  return (
+    /\b(you|your)\b/.test(normalized) &&
+    !/\b(i|me|my|mine|we|our|us)\b/.test(normalized) &&
+    !/\b(city|town|kiosk|public|nearby|every screen|all screens|worldwide|global|synchronized|one answer|only answer)\b/.test(
+      normalized,
+    ) &&
+    !mentionsUnsupportedDevice(normalized, deliveryDevice)
+  );
 }
 
 function createFallbackSceneIntro(openingResponse: string): string[] {
-  const deliveryMode = getFallbackDeliveryMode(openingResponse);
+  const deliveryDevice = getDeliveryDevice(openingResponse);
+
+  if (deliveryDevice.kind === "tv") {
+    return [
+      "You are sitting back with the TV on when the picture flickers out.",
+      "For one breath it feels like a power outage, then bright lettering cuts through the black.",
+    ];
+  }
+
+  if (deliveryDevice.kind === "laptop") {
+    return [
+      "You are at your computer when the screen stutters and the room seems to hold its breath.",
+      "The display drops to black, then bright lettering burns through where your work had been.",
+    ];
+  }
+
+  if (deliveryDevice.kind === "tablet") {
+    return [
+      "You are holding the tablet when the glass flickers cold under your fingers.",
+      "The screen falls black for a second, then bright lettering surfaces through it.",
+    ];
+  }
+
+  if (deliveryDevice.kind === "watch") {
+    return [
+      "You feel your watch pulse against your wrist at the edge of the ordinary moment.",
+      "Its tiny screen goes black, then bright lettering appears with impossible calm.",
+    ];
+  }
+
+  if (deliveryDevice.kind === "screen") {
+    return [
+      "You are facing the screen when its image shivers and cuts away.",
+      "For one breath it looks broken, then bright lettering pushes through the black.",
+    ];
+  }
 
   return [
-    `I look up as ${deliveryMode} shows the message.`,
-    "I feel the room narrow around me as the words wait for my answer.",
+    "You feel your phone shift in your hand before the ordinary moment can continue.",
+    "The screen flickers black, then bright lettering appears as if it has been waiting.",
   ];
 }
 
-function getFallbackDeliveryMode(openingResponse: string): string {
+type DeliveryDevice = {
+  kind: "tv" | "phone" | "laptop" | "tablet" | "watch" | "screen";
+  label: string;
+  allowedTerms: RegExp[];
+};
+
+function getDeliveryDevice(openingResponse: string): DeliveryDevice {
   const response = openingResponse.toLowerCase();
 
   if (/\b(tv|television)\b/.test(response)) {
-    return "my TV";
+    return {
+      kind: "tv",
+      label: "the TV",
+      allowedTerms: [/\btv\b/, /\btelevision\b/, /\bscreen\b/, /\bpicture\b/],
+    };
   }
 
   if (/\b(phone|cell)\b/.test(response)) {
-    return "my phone";
+    return {
+      kind: "phone",
+      label: "the phone",
+      allowedTerms: [/\bphone\b/, /\bcell\b/, /\bscreen\b/],
+    };
   }
 
   if (/\b(laptop|computer|monitor)\b/.test(response)) {
-    return "my computer";
+    return {
+      kind: "laptop",
+      label: "the computer",
+      allowedTerms: [
+        /\blaptop\b/,
+        /\bcomputer\b/,
+        /\bmonitor\b/,
+        /\bscreen\b/,
+        /\bdisplay\b/,
+      ],
+    };
   }
 
   if (/\b(tablet|ipad)\b/.test(response)) {
-    return "my tablet";
+    return {
+      kind: "tablet",
+      label: "the tablet",
+      allowedTerms: [/\btablet\b/, /\bipad\b/, /\bscreen\b/, /\bglass\b/],
+    };
   }
 
   if (/\b(watch)\b/.test(response)) {
-    return "my watch";
+    return {
+      kind: "watch",
+      label: "the watch",
+      allowedTerms: [/\bwatch\b/, /\bwrist\b/, /\bscreen\b/],
+    };
   }
 
   if (/\bscreen\b/.test(response)) {
-    return "my screen";
+    return {
+      kind: "screen",
+      label: "the screen",
+      allowedTerms: [/\bscreen\b/, /\bdisplay\b/],
+    };
   }
 
-  return "my phone";
+  return {
+    kind: "phone",
+    label: "the phone",
+    allowedTerms: [/\bphone\b/, /\bcell\b/, /\bscreen\b/],
+  };
+}
+
+function mentionsUnsupportedDevice(
+  normalizedText: string,
+  deliveryDevice: DeliveryDevice,
+): boolean {
+  const deviceTerms = [
+    "tv",
+    "television",
+    "phone",
+    "cell",
+    "laptop",
+    "computer",
+    "monitor",
+    "tablet",
+    "ipad",
+    "watch",
+    "kiosk",
+  ];
+
+  return deviceTerms.some((term) => {
+    if (!new RegExp(`\\b${term}\\b`).test(normalizedText)) {
+      return false;
+    }
+
+    return !deliveryDevice.allowedTerms.some((allowedTerm) =>
+      allowedTerm.test(term),
+    );
+  });
 }
 
 function createRevealId(dailyGameId: string, playerId: string): string {
