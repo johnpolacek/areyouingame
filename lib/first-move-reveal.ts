@@ -28,39 +28,44 @@ export async function generateFirstMoveReveal({
     const { text } = await generateText({
       model: openai(model),
       system: [
-        "You write spare, dramatic first-contact game narration.",
+        "You write spare, dramatic first-contact game narration in first person.",
         "Return only the scene intro as exactly two short paragraphs.",
         "Each paragraph must be one sentence and no more than 18 words.",
+        "Every sentence must be present-tense first-person POV from inside the player character.",
+        "Every sentence must include I, me, my, or mine.",
+        "Do not address the player by name.",
         "Favor direct impact over description; cut setup, explanation, and atmospheric padding.",
-        "Use the player's stated situation as true context and do not contradict it.",
-        "Choose a plausible delivery mode: phone buzz, screen takeover, ambient audio, or connected-device interruption.",
-        "All screens in the scene, including TVs, phones, computers, tablets, watches, kiosks, and connected displays, must show the fixed YES/NO reveal message.",
-        "Do not say a screen turns black, goes dark, blanks out, or loses signal unless it immediately displays the message.",
+        "Use only details explicitly present in the player's opening response.",
+        "Do not invent cities, public places, nearby people, kiosks, phones, or other devices.",
+        "If the player names a device or screen, make that exact device display the fixed YES/NO reveal message.",
+        "If no device or screen is named, use my phone as the minimal delivery mode.",
+        "Do not mention city-wide, worldwide, every-screen, or public synchronized displays.",
+        "Do not say there is only one possible answer.",
+        "Do not say a screen turns black, goes dark, blanks out, or loses signal.",
         "Do not include or paraphrase the fixed YES/NO reveal copy.",
       ].join(" "),
       prompt: [
         `Daily game id: ${dailyGame.id}`,
         `Shared event time for this player: ${localGameStart}`,
-        `Player name: ${player.name}`,
-        `Player home/base location: ${player.location}`,
-        `Player occupation: ${player.occupation}`,
-        `Player bio: ${player.bio}`,
         `Player opening location/activity response: ${player.openingResponse}`,
       ].join("\n"),
     });
     const sceneIntro = normalizeSceneIntro(text);
+    const safeSceneIntro = isFirstPersonSceneIntro(sceneIntro)
+      ? sceneIntro
+      : [];
 
     return {
       id: createRevealId(dailyGame.id, player.id),
       sceneIntro:
-        sceneIntro.length > 0
-          ? sceneIntro
+        safeSceneIntro.length > 0
+          ? safeSceneIntro
           : createFallbackSceneIntro(player.openingResponse || ""),
       revealCopy,
       status: "yes_no_pending",
       generatedAt,
       model,
-      source: sceneIntro.length > 0 ? "ai" : "fallback",
+      source: safeSceneIntro.length > 0 ? "ai" : "fallback",
     };
   } catch {
     return {
@@ -87,13 +92,60 @@ function normalizeSceneIntro(text: string): string[] {
     .map((paragraph) => limitWords(paragraph, 18).slice(0, 180));
 }
 
+function isFirstPersonSceneIntro(sceneIntro: string[]): boolean {
+  if (sceneIntro.length !== 2) {
+    return false;
+  }
+
+  return sceneIntro.every((paragraph) => {
+    const normalized = paragraph.toLowerCase();
+
+    return (
+      /\b(i|me|my|mine)\b/.test(normalized) &&
+      !/\b(you|your|city|town|kiosk|public|nearby|every screen|all screens|worldwide|global|one answer)\b/.test(
+        normalized,
+      )
+    );
+  });
+}
+
 function createFallbackSceneIntro(openingResponse: string): string[] {
-  const situation = limitWords(openingResponse || "where you said you were", 12);
+  const deliveryMode = getFallbackDeliveryMode(openingResponse);
 
   return [
-    `Here, in the middle of ${situation}, every nearby screen shows the same message.`,
-    "The words are too calm to be human and too direct to ignore.",
+    `I look up as ${deliveryMode} shows the message.`,
+    "I feel the room narrow around me as the words wait for my answer.",
   ];
+}
+
+function getFallbackDeliveryMode(openingResponse: string): string {
+  const response = openingResponse.toLowerCase();
+
+  if (/\b(tv|television)\b/.test(response)) {
+    return "my TV";
+  }
+
+  if (/\b(phone|cell)\b/.test(response)) {
+    return "my phone";
+  }
+
+  if (/\b(laptop|computer|monitor)\b/.test(response)) {
+    return "my computer";
+  }
+
+  if (/\b(tablet|ipad)\b/.test(response)) {
+    return "my tablet";
+  }
+
+  if (/\b(watch)\b/.test(response)) {
+    return "my watch";
+  }
+
+  if (/\bscreen\b/.test(response)) {
+    return "my screen";
+  }
+
+  return "my phone";
 }
 
 function createRevealId(dailyGameId: string, playerId: string): string {
