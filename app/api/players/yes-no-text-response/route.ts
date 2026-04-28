@@ -50,6 +50,7 @@ export async function POST(request: Request) {
       classification.classification === "NO"
         ? await createFirstChoiceConsequence({
             choice: classification.classification,
+            finalResponseText: responseText,
             player: existingPlayer,
           })
         : undefined;

@@ -17,16 +17,18 @@ export type FirstChoiceConsequence = Pick<
 
 export async function createFirstChoiceConsequence({
   choice,
+  finalResponseText,
   player,
 }: {
   choice: YesNoChoice;
+  finalResponseText?: string;
   player: DailyPlayer;
 }): Promise<FirstChoiceConsequence> {
   if (choice === "YES") {
     return createYesConsequence();
   }
 
-  return await createNoConsequence(player);
+  return await createNoConsequence({ finalResponseText, player });
 }
 
 function createYesConsequence(): FirstChoiceConsequence {
@@ -39,11 +41,18 @@ function createYesConsequence(): FirstChoiceConsequence {
   };
 }
 
-async function createNoConsequence(
-  player: DailyPlayer,
-): Promise<FirstChoiceConsequence> {
+async function createNoConsequence({
+  finalResponseText,
+  player,
+}: {
+  finalResponseText?: string;
+  player: DailyPlayer;
+}): Promise<FirstChoiceConsequence> {
   const model = getOpenAINarrativeModel();
-  const fallbackBody = createFallbackNoConsequenceBody(player.openingResponse);
+  const fallbackBody = createFallbackNoConsequenceBody({
+    finalResponseText,
+    player,
+  });
 
   try {
     const { text } = await generateText({
@@ -52,7 +61,9 @@ async function createNoConsequence(
         ...narrativeOutputShapePresets.twoCinematicSentences,
         "Return only the immediate consequence of the player choosing NO.",
         "The message should disappear and the player's ordinary day should resume.",
-        "Base the resumed ordinary moment on the player's opening location and activity response.",
+        "Base the resumed ordinary moment on the player's opening response, previous unresolved actions, and final response.",
+        "If previous unresolved actions or the final response moved the player to another device or room, acknowledge that immediate context before returning to normal.",
+        "Include the most recent physical interaction when it matters, such as a phone going quiet, a receiver being set down, or a screen returning.",
         "Convert first-person player input into second-person narration.",
         "Do not quote the player's opening response.",
         "Do not mention the game, the answer, the choice, refusal, records, a door, or an invitation.",
@@ -62,6 +73,8 @@ async function createNoConsequence(
         `Player saved location: ${player.location}`,
         `Player opening location/activity response: ${player.openingResponse || "unknown"}`,
         `Opening reveal scene: ${(player.firstMoveReveal?.sceneIntro ?? []).join(" ")}`,
+        `Previous unresolved actions and responses: ${formatPreviousUnresolvedActions(player)}`,
+        `Final response text: ${finalResponseText || "NO button selected"}`,
       ].join("\n"),
     });
     const body = normalizeNoConsequenceBody(text);
@@ -106,28 +119,94 @@ function isSafeNoConsequenceBody(text: string): boolean {
   );
 }
 
-function createFallbackNoConsequenceBody(openingResponse?: string): string {
-  const normalized = openingResponse?.trim().replace(/\s+/g, " ").toLowerCase();
+function createFallbackNoConsequenceBody({
+  finalResponseText,
+  player,
+}: {
+  finalResponseText?: string;
+  player: DailyPlayer;
+}): string {
+  const opening = normalizeForFallback(player.openingResponse);
+  const recentActionText = normalizeForFallback(
+    [
+      ...(player.firstRevealTextResponses ?? []).map(
+        (response) => response.inputText,
+      ),
+      finalResponseText,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
 
   if (
-    normalized &&
-    /\b(couch|sofa)\b/.test(normalized) &&
-    /\blaptop\b/.test(normalized)
+    recentActionText &&
+    /\b(landline|land line|receiver|corded phone|home phone)\b/.test(
+      recentActionText,
+    )
+  ) {
+    if (/\b(couch|sofa)\b/.test(opening) && /\blaptop\b/.test(opening)) {
+      return "The message disappears. The landline goes quiet in your hand, and the couch, laptop, and half-finished work wait exactly where you left them.";
+    }
+
+    return "The message disappears. The landline goes quiet in your hand, and the room settles back around the ordinary day you left behind.";
+  }
+
+  if (
+    recentActionText &&
+    /\b(phone|cell)\b/.test(recentActionText) &&
+    !/\b(landline|land line|receiver|corded phone|home phone)\b/.test(
+      recentActionText,
+    )
+  ) {
+    if (/\b(couch|sofa)\b/.test(opening) && /\blaptop\b/.test(opening)) {
+      return "The message disappears. Your phone returns to ordinary glass in your hand, with the couch and laptop waiting where the day left them.";
+    }
+
+    return "The message disappears. Your phone returns to ordinary glass in your hand, and the day resumes around the room you were already in.";
+  }
+
+  if (
+    opening &&
+    /\b(couch|sofa)\b/.test(opening) &&
+    /\blaptop\b/.test(opening)
   ) {
     return "The message disappears. You are back on the couch, working on your laptop, and the day resumes around the ordinary work in front of you.";
   }
 
-  if (normalized && /\blaptop|computer|desk|work\b/.test(normalized)) {
+  if (opening && /\blaptop|computer|desk|work\b/.test(opening)) {
     return "The message disappears. You are back with your work, and the day resumes around the ordinary screen in front of you.";
   }
 
-  if (normalized && /\btv|television|movie|show\b/.test(normalized)) {
+  if (opening && /\btv|television|movie|show\b/.test(opening)) {
     return "The message disappears. You are back where you were, watching the room settle around the screen as the day resumes.";
   }
 
-  if (normalized && /\bbed|sleep|asleep|sleeping\b/.test(normalized)) {
+  if (opening && /\bbed|sleep|asleep|sleeping\b/.test(opening)) {
     return "The message disappears. You are back in the quiet of the room, and the day resumes from the rest you were trying to keep.";
   }
 
   return "The message disappears. Everything returns to normal, and the day resumes around whatever you were doing before it arrived.";
+}
+
+function formatPreviousUnresolvedActions(player: DailyPlayer): string {
+  const actions = (player.firstRevealTextResponses ?? [])
+    .filter((response) => response.classification === "DEFERRED")
+    .map((response) =>
+      [
+        `Player action: ${response.inputText.trim()}`,
+        response.interruptionText
+          ? `Narrative result: ${response.interruptionText.trim()}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .filter(Boolean)
+    .slice(-5);
+
+  return actions.length > 0 ? actions.join(" | ") : "none";
+}
+
+function normalizeForFallback(text?: string): string {
+  return text?.trim().replace(/\s+/g, " ").toLowerCase() ?? "";
 }

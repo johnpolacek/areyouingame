@@ -287,7 +287,7 @@ export function FirstMoveReveal({
             className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
             htmlFor="first-reveal-text-response"
           >
-            What will you do?
+            What do you do next?
           </label>
           <textarea
             id="first-reveal-text-response"
@@ -417,7 +417,7 @@ export function FirstChoiceConsequence({
             className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
             htmlFor="first-post-choice-action"
           >
-            What will you do?
+            What do you do next?
           </label>
           <textarea
             id="first-post-choice-action"
