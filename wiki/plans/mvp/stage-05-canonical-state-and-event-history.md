@@ -38,3 +38,4 @@ Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is 
 ## Assumptions
 
 - A visible skip option would weaken the central threshold. Deferral should be expressed through open text actions that the game interprets and answers, not through a third button.
+- The first YES/NO answer is a current branch state rather than an irreversible identity. Later canonical state should allow NO players to switch to YES and should allow YES players to lose, destroy, refuse, or reject the orb, potentially returning to unconnected play or entering a separate rejected/disconnected category.

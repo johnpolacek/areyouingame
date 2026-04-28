@@ -192,3 +192,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 05 Unit 04 with a YES-specific connected-path action route, AI SDK narration boundary, and Convex-owned structured state for waiting, package delivery, optional unboxing, and orb reveal.
 - Added deterministic connected-path turn progression so early YES turns remain dominated by global takeover speculation before drone/package delivery becomes eligible, with drastic player movement able to delay delivery.
 - Extended append-only gameplay events for connected-path starts, resolved turns, package receipt, and orb reveal while keeping the UI transcript prose-only with no delivery status chips.
+
+## [2026-04-28] planning | record branch switching direction
+
+- Clarified that the first YES/NO answer is an initial branch state, not a permanent player identity.
+- Recorded that later units should support NO players switching to YES and YES players losing, destroying, refusing, or rejecting the orb, potentially returning to unconnected play or entering a rejected/disconnected category.

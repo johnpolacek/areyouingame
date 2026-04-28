@@ -1,6 +1,6 @@
 # Stage 05, Unit 04: First YES Connected Path, Drone, And Orb
 
-Define the first connected-path continuation after the player answers YES.
+Define the first connected-path continuation after the player initially answers YES.
 
 Status: completed.
 
@@ -28,6 +28,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 
 - NO/unconnected social-feed investigation, which belongs to Stage 05 Unit 03.
 - Full connected hive-mind cognition, shared awareness, or advanced ASI interface design.
+- Later branch switching, including NO players switching to YES, YES players destroying or rejecting the orb, and any resulting rejected/disconnected category.
 - Complete drone logistics simulation for all locations.
 - Real device, geolocation, delivery, camera, map, or notification integrations.
 - Full global MUD engine breadth.
@@ -36,7 +37,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 
 ## Acceptance Criteria
 
-- A player who has submitted a final YES choice enters a YES-specific continuation path.
+- A player who has submitted an initial YES choice enters a YES-specific continuation path.
 - YES players are not routed through the NO/unconnected public-feed continuation as the default path.
 - The system can represent whether the drone/package/orb state is pending, arrived, opened, or acted on.
 - The first YES-path response is grounded in the player's immediate context and Day 1 storyline context.
@@ -55,6 +56,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 - Do not make model prose the source of enforceable connected state. Store physical delivery/orb state as structured Convex fields.
 - Delivery is deterministic by connected-path turn count: the first two YES turns stay in the public speculation/waiting period, the third turn can receive the package unless the submitted action plausibly prevents delivery, and a later open/unbox action reveals the orb.
 - The package should feel small, minimal, sleek, physical, and plausible rather than magical.
+- The first YES/NO answer is an initial branch marker, not a permanent player ontology. Later units should support players changing course, including NO players switching to YES and YES players losing, destroying, refusing, or rejecting the orb in ways that may move them back toward NO/unconnected or into a distinct rejected/disconnected category.
 
 ## Implementation Notes
 
@@ -77,4 +79,4 @@ Clarified product direction: the YES branch initially shares the same early-worl
 
 ## Manual Steps
 
-- Later units should decide how NO players discover unboxing footage through public sources and what happens after a YES player places or refuses to place the orb.
+- Later units should decide how NO players discover unboxing footage through public sources, how NO players can switch to YES, and what happens after a YES player places, refuses, destroys, or rejects the orb.
