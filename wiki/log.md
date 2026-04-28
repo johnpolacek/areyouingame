@@ -168,3 +168,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 05 Unit 02 with a Convex-backed Day 1 storyline context table and source-derived context seed.
 - Added helpers that assemble player-progress-based current phase, public reports, rumors, official narratives, social-feed signals, and player-known facts into an LLM-ready gameplay context payload.
 - Updated the first post-choice action route to load or create Day 1 context and return the structured gameplay context for the submitted action.
+
+## [2026-04-28] planning | split NO and YES post-choice continuations
+
+- Revised Stage 05 Unit 03 to be explicitly NO/unconnected-first, centered on the first simulated public-feed investigation response after refusal.
+- Recorded that simulated X-like feed UI should be fictional and in-world, with no real Twitter/X access and no default deleted/vanishing-post beat.
+- Added Stage 05 Unit 04 as the separate planned YES/connected path for drone delivery, package state, orb discovery, and first connected-path event history.
