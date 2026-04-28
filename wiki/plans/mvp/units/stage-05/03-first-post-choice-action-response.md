@@ -10,7 +10,7 @@ After the player chooses NO, the game should not stop at the first post-choice t
 
 This unit is explicitly NO/unconnected-first. The motivating action is: `I go to my twitter/x feed to see if anyone else just had a similar experience.` The continuation should treat this as an in-world information-seeking action by an unconnected player using ordinary public channels. The prompt can provide fixed Day 1 media context for surfaces such as Twitter/X, Bluesky, news feeds, Facebook, news broadcasts, and the generic public web when that context matches the player's action, but it must not call, scrape, quote, or imply access to real external services.
 
-Media context should be source material for the LLM, not a custom rendered feed UI in this unit. The response prose should match the player's language: if they say Twitter/X, the narration can say Twitter/X; if they say Bluesky, news feed, Facebook, or news broadcast, the response should use that surface. Do not use deleted or vanishing posts as a default beat; that is not established world truth for this unit.
+Media context should be source material for the LLM, not a custom rendered feed UI in this unit. The response prose should match the player's language: if they say Twitter/X, the narration can say Twitter/X; if they say Bluesky, news feed, Facebook, or news broadcast, the response should use that surface. At first there may be little or nothing useful because people need a minute or two to recover, screenshot, type, and post; then the trickle should quickly become a firehose. Do not use deleted or vanishing posts as a default beat; that is not established world truth for this unit.
 
 ## Scope
 
@@ -21,6 +21,7 @@ Media context should be source material for the LLM, not a custom rendered feed 
 - Render the generated response under the selected `NO` heading in a compact transcript, followed by the next open action textarea.
 - Provide fixed Day 1 media context to the LLM for relevant feed, public-web, or broadcast actions.
 - Keep the response open-world: players may attempt anything, and the LLM should adjudicate the action against directives and context even when no canned media context applies.
+- Support short fictional post/broadcast fragments in the generated prose and render quote-prefixed paragraphs as blockquotes.
 - Persist the generated response so refreshes return to the same continuation state.
 - Append an append-only event-history record for the resolved turn.
 - Store enough structured state to support later canonical world/memory expansion without making narrative copy the source of enforceable truth.
@@ -55,6 +56,7 @@ Media context should be source material for the LLM, not a custom rendered feed 
 - The system records an append-only event for the submitted action and generated result.
 - The event record distinguishes player-authored action text from model-authored narrative response.
 - The event record includes structured player-visible facts separately from narrative prose.
+- Structured player-visible facts are stored for future turns and event history, but are not rendered as a separate player-facing list below the transcript.
 - If generation fails, no fallback response is persisted; the UI shows a retryable error message.
 
 ## Data And State Notes
@@ -75,7 +77,8 @@ Media context should be source material for the LLM, not a custom rendered feed 
 - Added a narrow append-only `gameplayEvents` table and first event type, `post_choice_turn_resolved`, for the first resolved NO/unconnected turn.
 - Added an AI SDK generation boundary for the first NO post-choice response that receives player context, Day 1 storyline context, and fixed Day 1 media source material for relevant public-feed, social, news, and broadcast actions.
 - Updated the protected first post-choice action route so generation succeeds before Convex state is mutated. Generation failure returns a retryable error and does not persist fallback copy.
-- Updated the post-choice UI to keep the large selected `NO` heading, render a compact transcript with the submitted action and generated response, and show a quiet disabled next-action textarea.
+- Updated the post-choice UI to keep the large selected `NO` heading, render a compact transcript with the submitted action and generated response, render quote-prefixed generated paragraphs as blockquotes, and show a quiet disabled next-action textarea.
+- Removed the separate player-facing display of structured player-visible facts; those facts remain stored for event history and later turn context.
 - YES players are not routed through this NO-focused continuation. The YES path remains planned separately in Stage 05 Unit 04.
 
 ## Verification

@@ -180,3 +180,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Implemented Stage 05 Unit 03 with an AI SDK response boundary for the first NO/unconnected post-choice action, grounded in player state and Day 1 storyline context.
 - Added resolved-turn metadata to Convex player state and introduced append-only `gameplayEvents` with `post_choice_turn_resolved`.
 - Updated the post-choice UI to render a compact transcript and quiet disabled next-action textarea after the first resolved turn.
+
+## [2026-04-28] polish | tune first public-feed response
+
+- Removed the separate player-facing list of structured player-visible facts below the first resolved NO turn.
+- Tuned the media context to start with sparse or empty early results before public posting accelerates into a firehose.
+- Added support for quote-prefixed generated paragraphs to render as blockquote-style fictional posts or broadcast fragments.

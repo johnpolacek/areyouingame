@@ -420,7 +420,7 @@ export function FirstChoiceConsequence({
               {firstPostChoiceAction.responseText
                 .split(/\n{2,}/)
                 .map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
+                  <TranscriptParagraph key={paragraph} text={paragraph} />
                 ))}
             </div>
           ) : null}
@@ -469,14 +469,6 @@ export function FirstChoiceConsequence({
         <NextTurnPendingForm />
       ) : null}
 
-      {firstPostChoiceAction?.playerVisibleFacts?.length ? (
-        <ul className="grid w-full gap-2 text-left text-xs leading-5 font-medium tracking-[0.08em] text-amber-200/70 uppercase">
-          {firstPostChoiceAction.playerVisibleFacts.map((fact) => (
-            <li key={fact}>{fact}</li>
-          ))}
-        </ul>
-      ) : null}
-
       {error ? (
         <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
           {error}
@@ -484,6 +476,20 @@ export function FirstChoiceConsequence({
       ) : null}
     </section>
   );
+}
+
+function TranscriptParagraph({ text }: { text: string }) {
+  const trimmed = text.trim();
+
+  if (trimmed.startsWith(">")) {
+    return (
+      <blockquote className="border-l border-amber-200/35 pl-4 text-sm leading-6 text-amber-50/75 italic">
+        {trimmed.replace(/^>\s?/, "")}
+      </blockquote>
+    );
+  }
+
+  return <p>{text}</p>;
 }
 
 function NextTurnPendingForm() {
