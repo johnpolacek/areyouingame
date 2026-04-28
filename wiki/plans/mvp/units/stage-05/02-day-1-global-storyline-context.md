@@ -2,7 +2,7 @@
 
 Create the shared Day 1 storyline context that constrains LLM gameplay orchestration for all players.
 
-Status: planned.
+Status: completed.
 
 ## Product Intent
 
@@ -55,6 +55,14 @@ The source Day 1 arc is: Shock -> Verification -> First Choice -> First Conseque
 - World truth and canonical state remain distinct from narrative copy. The LLM may narrate from context but does not become the source of truth.
 - S3 remains reserved for later approved narrative-memory bundles, recap snapshots, exports, and audit artifacts.
 
+## Implementation Notes
+
+- Added a Convex-backed `day1StorylineContexts` table keyed by daily game id.
+- Added a static source-derived Day 1 context seed in `lib/day-1-storyline-context.ts`.
+- Added helpers to load or create today's Day 1 context and build an LLM-ready gameplay context payload.
+- Current phase is assembled from player progress for the first implementation, not wall-clock automation.
+- The first post-choice action route now loads/creates Day 1 context and returns the structured payload with the submitted action response.
+
 ## Verification
 
 - Test Day 1 context can be loaded for today's daily game.
@@ -70,3 +78,5 @@ The source Day 1 arc is: Shock -> Verification -> First Choice -> First Conseque
 - Confirm whether the first current-phase rule should be based on player progress only, or player progress plus elapsed time from the daily event start.
 - Tune the early social-feed examples so they feel like plausible public confusion rather than exposition.
 - Confirm whether Day 1 context should initially live as static app constants, Convex-seeded data, or an operator-editable artifact.
+
+Resolved for first implementation: use player-progress-based phase selection and static app constants seeded into Convex.

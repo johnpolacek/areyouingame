@@ -162,3 +162,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Inserted Stage 05 Unit 02 for defining shared Day 1 global storyline context before post-choice continuation generation.
 - Renumbered the first post-choice action response plan to Stage 05 Unit 03 and updated it to consume Day 1 global storyline context.
 - Updated the MVP current status and Stage 05 unit list so the next execution unit is Day 1 global storyline context.
+
+## [2026-04-28] implementation | add Day 1 storyline context
+
+- Implemented Stage 05 Unit 02 with a Convex-backed Day 1 storyline context table and source-derived context seed.
+- Added helpers that assemble player-progress-based current phase, public reports, rumors, official narratives, social-feed signals, and player-known facts into an LLM-ready gameplay context payload.
+- Updated the first post-choice action route to load or create Day 1 context and return the structured gameplay context for the submitted action.

@@ -70,6 +70,40 @@ const openingSceneContext = v.object({
   answeredAt: v.optional(v.string()),
 });
 
+const day1StorylinePhaseId = v.union(
+  v.literal("normalcy"),
+  v.literal("confusion_spread"),
+  v.literal("verification"),
+  v.literal("decision"),
+  v.literal("consequences_realization"),
+);
+
+const day1StorylinePhase = v.object({
+  id: day1StorylinePhaseId,
+  label: v.string(),
+  summary: v.string(),
+  playerExperience: v.string(),
+});
+
+const day1StorylineContext = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  dayNumber: v.literal(1),
+  phases: v.array(day1StorylinePhase),
+  globalTruth: v.array(v.string()),
+  publicReports: v.array(v.string()),
+  rumors: v.array(v.string()),
+  officialNarratives: v.array(v.string()),
+  regionalVariationNotes: v.array(v.string()),
+  socialFeedSignals: v.array(v.string()),
+  playerVisibleConstraints: v.array(v.string()),
+  externalContentPolicy: v.string(),
+  source: v.union(v.literal("static_source"), v.literal("fallback")),
+  sourceVersion: v.string(),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+});
+
 export default defineSchema({
   dailyGames: defineTable({
     dailyGameId: v.string(),
@@ -131,4 +165,9 @@ export default defineSchema({
   })
     .index("by_artifactType", ["artifactType"])
     .index("by_dailyGameId", ["dailyGameId"]),
+
+  day1StorylineContexts: defineTable(day1StorylineContext).index(
+    "by_dailyGameId",
+    ["dailyGameId"],
+  ),
 });

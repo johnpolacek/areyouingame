@@ -84,6 +84,40 @@ const openingSceneContext = v.object({
   answeredAt: v.optional(v.string()),
 });
 
+const day1StorylinePhaseId = v.union(
+  v.literal("normalcy"),
+  v.literal("confusion_spread"),
+  v.literal("verification"),
+  v.literal("decision"),
+  v.literal("consequences_realization"),
+);
+
+const day1StorylinePhase = v.object({
+  id: day1StorylinePhaseId,
+  label: v.string(),
+  summary: v.string(),
+  playerExperience: v.string(),
+});
+
+const day1StorylineContext = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  dayNumber: v.literal(1),
+  phases: v.array(day1StorylinePhase),
+  globalTruth: v.array(v.string()),
+  publicReports: v.array(v.string()),
+  rumors: v.array(v.string()),
+  officialNarratives: v.array(v.string()),
+  regionalVariationNotes: v.array(v.string()),
+  socialFeedSignals: v.array(v.string()),
+  playerVisibleConstraints: v.array(v.string()),
+  externalContentPolicy: v.string(),
+  source: v.union(v.literal("static_source"), v.literal("fallback")),
+  sourceVersion: v.string(),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+});
+
 const player = v.object({
   id: v.string(),
   clerkUserId: v.string(),
@@ -126,6 +160,67 @@ export const getPlayerForUserGame = queryGeneric({
     );
 
     return existingPlayer ? toDailyPlayer(existingPlayer) : null;
+  },
+});
+
+export const getDay1StorylineContextForDailyGame = queryGeneric({
+  args: {
+    backendSecret: v.string(),
+    dailyGameId: v.string(),
+  },
+  returns: v.union(day1StorylineContext, v.null()),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    return await findDay1StorylineContext(ctx, args.dailyGameId);
+  },
+});
+
+export const ensureDay1StorylineContextForDailyGame = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    dailyGameId: v.string(),
+    context: day1StorylineContext,
+  },
+  returns: day1StorylineContext,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (args.context.dailyGameId !== args.dailyGameId) {
+      throw new ConvexError("Storyline context daily game mismatch.");
+    }
+
+    const existingContext = await findDay1StorylineContext(
+      ctx,
+      args.dailyGameId,
+    );
+    const now = new Date().toISOString();
+
+    if (existingContext) {
+      await ctx.db.patch(existingContext._id, {
+        ...args.context,
+        createdAt: existingContext.createdAt,
+        updatedAt: now,
+      });
+
+      return {
+        ...args.context,
+        createdAt: existingContext.createdAt,
+        updatedAt: now,
+      };
+    }
+
+    await ctx.db.insert("day1StorylineContexts", {
+      ...args.context,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      ...args.context,
+      createdAt: now,
+      updatedAt: now,
+    };
   },
 });
 
@@ -625,6 +720,13 @@ async function findPlayer(
       q.eq("clerkUserId", clerkUserId).eq("dailyGameId", dailyGameId),
     )
     .unique();
+}
+
+async function findDay1StorylineContext(ctx: any, dailyGameId: string) {
+  return await ctx.db
+    .query("day1StorylineContexts")
+    .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+    .first();
 }
 
 async function findPlayerOrThrow(

@@ -1,4 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
+import {
+  buildDay1GameplayContextPayload,
+  getOrCreateDay1StorylineContextForDailyGame,
+} from "@/lib/day-1-storyline-context";
 import { getTodayGameForRequest } from "@/lib/daily-game";
 import {
   getPlayerForUserGame,
@@ -44,8 +48,15 @@ export async function POST(request: Request) {
       dailyGameId: todayGame.id,
       actionText,
     });
+    const day1StorylineContext =
+      await getOrCreateDay1StorylineContextForDailyGame(todayGame.id);
+    const day1GameplayContext = buildDay1GameplayContextPayload({
+      dailyGame: todayGame,
+      player,
+      storylineContext: day1StorylineContext,
+    });
 
-    return Response.json({ player });
+    return Response.json({ day1GameplayContext, player });
   } catch (error) {
     const message =
       error instanceof Error
