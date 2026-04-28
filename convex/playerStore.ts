@@ -179,7 +179,12 @@ export const getDay1StorylineContextForDailyGame = queryGeneric({
   handler: async (ctx, args) => {
     requireBackendSecret(args.backendSecret);
 
-    return await findDay1StorylineContext(ctx, args.dailyGameId);
+    const existingContext = await findDay1StorylineContext(
+      ctx,
+      args.dailyGameId,
+    );
+
+    return existingContext ? toDay1StorylineContext(existingContext) : null;
   },
 });
 
@@ -883,6 +888,27 @@ function toDailyPlayer(source: any) {
             source.publicGameplayAgreementAcceptedAt,
         }
       : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+  };
+}
+
+function toDay1StorylineContext(source: any) {
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    dayNumber: source.dayNumber,
+    phases: source.phases,
+    globalTruth: source.globalTruth,
+    publicReports: source.publicReports,
+    rumors: source.rumors,
+    officialNarratives: source.officialNarratives,
+    regionalVariationNotes: source.regionalVariationNotes,
+    socialFeedSignals: source.socialFeedSignals,
+    playerVisibleConstraints: source.playerVisibleConstraints,
+    externalContentPolicy: source.externalContentPolicy,
+    source: source.source,
+    sourceVersion: source.sourceVersion,
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
   };
