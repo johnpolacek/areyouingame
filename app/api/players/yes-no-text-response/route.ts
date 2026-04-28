@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { getTodayGameForRequest } from "@/lib/daily-game";
+import { createFirstChoiceConsequence } from "@/lib/first-choice-consequence";
 import { classifyFirstRevealTextResponse } from "@/lib/first-reveal-text-response";
 import {
   getPlayerForUserGame,
@@ -44,6 +45,14 @@ export async function POST(request: Request) {
       player: existingPlayer,
       responseText,
     });
+    const consequence =
+      classification.classification === "YES" ||
+      classification.classification === "NO"
+        ? await createFirstChoiceConsequence({
+            choice: classification.classification,
+            player: existingPlayer,
+          })
+        : undefined;
     const player = await submitFirstRevealTextResponseForUserGame({
       clerkUserId: userId,
       dailyGameId: todayGame.id,
@@ -53,6 +62,7 @@ export async function POST(request: Request) {
       source: classification.source,
       interruptionText: classification.interruptionText,
       dayEndText: classification.dayEndText,
+      consequence,
     });
 
     return Response.json({ player, classification: classification.classification });

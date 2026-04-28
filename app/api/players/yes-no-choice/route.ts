@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { getTodayGameForRequest } from "@/lib/daily-game";
+import { createFirstChoiceConsequence } from "@/lib/first-choice-consequence";
 import {
   getPlayerForUserGame,
   submitFirstDecisionForUserGame,
@@ -39,10 +40,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const consequence = await createFirstChoiceConsequence({
+      choice,
+      player: existingPlayer,
+    });
     const player = await submitFirstDecisionForUserGame({
       clerkUserId: userId,
       dailyGameId: todayGame.id,
       choice,
+      consequence,
     });
 
     return Response.json({ player });

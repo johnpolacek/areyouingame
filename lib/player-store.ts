@@ -149,6 +149,13 @@ const submitFirstDecisionForUserGameRef = makeFunctionReference<
   "mutation",
   AuthenticatedPlayerArgs & {
     choice: YesNoChoice;
+    consequence?: Pick<
+      FirstDecision,
+      | "consequenceTitle"
+      | "consequenceBody"
+      | "consequenceModel"
+      | "consequenceSource"
+    >;
   },
   DailyPlayer
 >("playerStore:submitFirstDecisionForUserGame");
@@ -162,6 +169,13 @@ const submitFirstRevealTextResponseForUserGameRef = makeFunctionReference<
     source: "ai" | "fallback";
     interruptionText?: string;
     dayEndText?: string;
+    consequence?: Pick<
+      FirstDecision,
+      | "consequenceTitle"
+      | "consequenceBody"
+      | "consequenceModel"
+      | "consequenceSource"
+    >;
   },
   DailyPlayer
 >("playerStore:submitFirstRevealTextResponseForUserGame");
@@ -347,16 +361,25 @@ export async function submitFirstDecisionForUserGame({
   clerkUserId,
   dailyGameId,
   choice,
+  consequence,
 }: {
   clerkUserId: string;
   dailyGameId: string;
   choice: YesNoChoice;
+  consequence?: Pick<
+    FirstDecision,
+    | "consequenceTitle"
+    | "consequenceBody"
+    | "consequenceModel"
+    | "consequenceSource"
+  >;
 }): Promise<DailyPlayer> {
   return await fetchMutation(submitFirstDecisionForUserGameRef, {
     backendSecret: getBackendSecret(),
     clerkUserId,
     dailyGameId,
     choice,
+    ...(consequence ? { consequence } : {}),
   });
 }
 
@@ -369,6 +392,7 @@ export async function submitFirstRevealTextResponseForUserGame({
   source,
   interruptionText,
   dayEndText,
+  consequence,
 }: {
   clerkUserId: string;
   dailyGameId: string;
@@ -378,6 +402,13 @@ export async function submitFirstRevealTextResponseForUserGame({
   source: "ai" | "fallback";
   interruptionText?: string;
   dayEndText?: string;
+  consequence?: Pick<
+    FirstDecision,
+    | "consequenceTitle"
+    | "consequenceBody"
+    | "consequenceModel"
+    | "consequenceSource"
+  >;
 }): Promise<DailyPlayer> {
   return await fetchMutation(submitFirstRevealTextResponseForUserGameRef, {
     backendSecret: getBackendSecret(),
@@ -389,6 +420,7 @@ export async function submitFirstRevealTextResponseForUserGame({
     source,
     ...(interruptionText ? { interruptionText } : {}),
     ...(dayEndText ? { dayEndText } : {}),
+    ...(consequence ? { consequence } : {}),
   });
 }
 

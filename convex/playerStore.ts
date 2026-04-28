@@ -27,6 +27,13 @@ const firstMoveReveal = v.object({
   source: v.union(v.literal("ai"), v.literal("fallback")),
 });
 
+const firstDecisionConsequence = v.object({
+  consequenceTitle: v.string(),
+  consequenceBody: v.string(),
+  consequenceModel: v.string(),
+  consequenceSource: v.union(v.literal("ai"), v.literal("fallback")),
+});
+
 const firstDecision = v.object({
   id: v.string(),
   choice: v.union(v.literal("YES"), v.literal("NO")),
@@ -325,6 +332,7 @@ export const submitFirstDecisionForUserGame = mutationGeneric({
   args: {
     ...authenticatedArgs,
     choice: v.union(v.literal("YES"), v.literal("NO")),
+    consequence: v.optional(firstDecisionConsequence),
   },
   returns: player,
   handler: async (ctx, args) => {
@@ -347,9 +355,9 @@ export const submitFirstDecisionForUserGame = mutationGeneric({
     const now = new Date().toISOString();
     const firstDecisionRecord = createFirstDecision({
       choice: args.choice,
+      consequence: args.consequence,
       dailyGameId: args.dailyGameId,
       firstMoveReveal: existingPlayer.firstMoveReveal,
-      openingResponse: existingPlayer.openingResponse,
       playerId: existingPlayer.id,
       submittedAt: now,
     });
@@ -381,6 +389,7 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
     source: v.union(v.literal("ai"), v.literal("fallback")),
     interruptionText: v.optional(v.string()),
     dayEndText: v.optional(v.string()),
+    consequence: v.optional(firstDecisionConsequence),
   },
   returns: player,
   handler: async (ctx, args) => {
@@ -448,9 +457,9 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
 
     const firstDecisionRecord = createFirstDecision({
       choice: args.classification,
+      consequence: args.consequence,
       dailyGameId: args.dailyGameId,
       firstMoveReveal: existingPlayer.firstMoveReveal,
-      openingResponse: existingPlayer.openingResponse,
       playerId: existingPlayer.id,
       submittedAt: now,
     });
@@ -642,13 +651,19 @@ function requireBackendSecret(secret: string) {
 
 function createFirstDecision({
   choice,
+  consequence: providedConsequence,
   dailyGameId,
   firstMoveReveal,
-  openingResponse,
   playerId,
   submittedAt,
 }: {
   choice: "YES" | "NO";
+  consequence?: {
+    consequenceTitle: string;
+    consequenceBody: string;
+    consequenceModel: string;
+    consequenceSource: "ai" | "fallback";
+  };
   dailyGameId: string;
   firstMoveReveal: {
     id: string;
@@ -656,62 +671,38 @@ function createFirstDecision({
     model: string;
     source: "ai" | "fallback";
   };
-  openingResponse?: string;
   playerId: string;
   submittedAt: string;
 }) {
-  const consequence =
-    choice === "YES"
+  const resolvedConsequence =
+    providedConsequence ??
+    (choice === "YES"
       ? {
           consequenceTitle: "The invitation accepts you.",
           consequenceBody:
             "A private channel opens for today's game. The next move is now waiting on the other side of your answer.",
+          consequenceModel: "deterministic-stage-05",
+          consequenceSource: "fallback" as const,
         }
       : {
           consequenceTitle: "",
-          consequenceBody: createNoConsequenceBody(openingResponse),
-        };
+          consequenceBody:
+            "The message disappears. Everything returns to normal, and the day resumes around whatever you were doing before it arrived.",
+          consequenceModel: "deterministic-stage-05",
+          consequenceSource: "fallback" as const,
+        });
 
   return {
     id: `${dailyGameId}:${playerId}:first-decision`,
     choice,
     status: "first_choice_submitted" as const,
-    ...consequence,
-    consequenceModel: "deterministic-stage-05",
-    consequenceSource: "fallback" as const,
+    ...resolvedConsequence,
     revealId: firstMoveReveal.id,
     revealGeneratedAt: firstMoveReveal.generatedAt,
     revealModel: firstMoveReveal.model,
     revealSource: firstMoveReveal.source,
     submittedAt,
   };
-}
-
-function createNoConsequenceBody(openingResponse?: string) {
-  const openingMoment = summarizeOpeningMoment(openingResponse);
-
-  if (!openingMoment) {
-    return "The message disappears. Everything returns to normal, and the day resumes around whatever you were doing before it arrived.";
-  }
-
-  return `The message disappears. Everything returns to normal: ${openingMoment}. The interruption is gone, and the day resumes from there.`;
-}
-
-function summarizeOpeningMoment(openingResponse?: string) {
-  const normalized = openingResponse?.trim().replace(/\s+/g, " ");
-
-  if (!normalized) {
-    return "";
-  }
-
-  const withoutTrailingPunctuation = normalized.replace(/[.!?]+$/, "");
-  const maxLength = 180;
-
-  if (withoutTrailingPunctuation.length <= maxLength) {
-    return withoutTrailingPunctuation;
-  }
-
-  return `${withoutTrailingPunctuation.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
 function toDailyPlayer(source: any) {
