@@ -150,3 +150,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Updated stale MVP status notes so Stage 05 Unit 01 is recorded as completed rather than the next execution unit.
 - Marked Stage 01 and its initial units as completed in the stage-level plan pages.
 - Recorded that the next MVP planning pass should choose between defining Stage 05 Unit 02 or moving directly to Stage 06 Unit 01.
+
+## [2026-04-28] planning | add first post-choice continuation unit
+
+- Added Stage 05 Unit 02 for resolving the player's first post-choice action into a persisted narrative response and next action prompt.
+- Used the NO-branch Twitter/X-feed action as the motivating example for in-world social-signal adjudication without real external social-network access.
+- Updated the MVP current status and Stage 05 unit list so Stage 05 Unit 02 is the next execution unit.

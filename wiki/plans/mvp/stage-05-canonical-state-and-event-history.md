@@ -6,7 +6,7 @@ Expand the production backend into deeper authoritative world and player state, 
 
 ## Current Status
 
-Active product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. The stage needs its next decision-complete unit before deeper canonical state, events, and narrative memory work continues.
+Active product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is planned next to resolve that first post-choice action into a persisted narrative response, minimal event history, and a next action prompt.
 
 ## Scope
 
@@ -16,7 +16,7 @@ Active product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the
 ## Units
 
 - [Stage 05, Unit 01: Text YES/NO Response And Deferred Interruptions](units/stage-05/01-text-yes-no-response-and-deferred-interruptions.md) - completed.
-- Additional Stage 05 units - not yet planned.
+- [Stage 05, Unit 02: First Post-Choice Action Response](units/stage-05/02-first-post-choice-action-response.md) - planned.
 
 ## Acceptance Criteria
 
