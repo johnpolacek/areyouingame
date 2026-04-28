@@ -271,6 +271,10 @@ function getActivePhaseIdsForPlayer(
     return ["confusion_spread", "verification"];
   }
 
+  if (player.firstConnectedPath) {
+    return ["confusion_spread", "verification"];
+  }
+
   return ["consequences_realization", "confusion_spread"];
 }
 
@@ -303,6 +307,19 @@ function getPlayerKnownFacts(player: DailyPlayer): string[] {
     );
   }
 
+  if (player.firstConnectedPath) {
+    knownFacts.push(
+      `The player's connected path delivery status is ${player.firstConnectedPath.deliveryStatus}.`,
+    );
+
+    if (player.firstConnectedPath.turns.length > 0) {
+      const lastTurn =
+        player.firstConnectedPath.turns[player.firstConnectedPath.turns.length - 1];
+
+      knownFacts.push(`Most recent connected path action: ${lastTurn.actionText}`);
+    }
+  }
+
   return knownFacts;
 }
 
@@ -326,6 +343,12 @@ function getRecentPlayerEvents(player: DailyPlayer): string[] {
   if (player.firstPostChoiceAction) {
     events.push(
       `First post-choice action submitted at ${player.firstPostChoiceAction.submittedAt}.`,
+    );
+  }
+
+  if (player.firstConnectedPath) {
+    events.push(
+      `Connected path updated at ${player.firstConnectedPath.updatedAt}.`,
     );
   }
 

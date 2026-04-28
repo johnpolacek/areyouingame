@@ -2,13 +2,15 @@
 
 Define the first connected-path continuation after the player answers YES.
 
-Status: planned.
+Status: completed.
 
 ## Product Intent
 
 The YES branch is not a mirror of the NO/unconnected continuation. A YES answer starts a distinct physical and canonical path: the player has accepted connection, a drone-delivered package may arrive within roughly one hour, the package contains a smooth orb, and the orb instruction can move the player toward becoming connected.
 
 This unit should design and implement the first playable connected-path spine without forcing all connected-state complexity into the NO-focused first continuation. The immediate aftermath of YES may still feel much like ordinary reality at first: nothing happens right away, the world resumes, and only then does the drone/package/orb path begin to escalate. The player should feel the consequences of having accepted something real before the system expands into full connected cognition, coordination, or ASI-mediated capability.
+
+Clarified product direction: the YES branch initially shares the same early-world feel as NO. For the first few moves, nothing directly physical happens to the player. The global takeover of screens, audio, internet services, and phone lines dominates public attention; speculation accelerates; YES players are likely in the minority and may wonder what their answer changed. Drone and package reports should only become personally actionable after that waiting period unless the player takes a drastic action that plausibly disrupts delivery.
 
 ## Scope
 
@@ -20,6 +22,7 @@ This unit should design and implement the first playable connected-path spine wi
 - Append event-history records for meaningful YES-path transitions.
 - Render the YES branch under the large selected `YES` heading with a compact transcript and next action textarea.
 - Preserve the physicality and timing of the drone/package/orb path without prematurely simulating full connected cognition.
+- Let the first YES continuation proceed through the waiting period, deterministic package delivery eligibility, and optional unboxing into orb reveal.
 
 ## Out Of Scope
 
@@ -41,6 +44,7 @@ This unit should design and implement the first playable connected-path spine wi
 - Duplicate submissions do not create multiple drone/package/orb arrivals for the same player/day.
 - Event history records meaningful YES-path transitions separately from player-facing narrative prose.
 - The UI keeps the large selected `YES` heading for this unit and renders a compact transcript underneath.
+- The UI does not expose delivery/orb status chips; structured state remains backend-owned while the player sees prose and the open action form.
 
 ## Data And State Notes
 
@@ -49,6 +53,16 @@ This unit should design and implement the first playable connected-path spine wi
 - Suggested event types may include `connected_path_started`, `drone_delivery_observed`, `package_received`, `orb_revealed`, and `connected_path_turn_resolved`, but the implementation can use a narrower first event model if that better matches the schema.
 - The source premise says a YES answer leads to a drone-delivered package within roughly one hour. Treat this as canonical direction, but decide in implementation how much of that hour is simulated in the first playable unit.
 - Do not make model prose the source of enforceable connected state. Store physical delivery/orb state as structured Convex fields.
+- Delivery is deterministic by connected-path turn count: the first two YES turns stay in the public speculation/waiting period, the third turn can receive the package unless the submitted action plausibly prevents delivery, and a later open/unbox action reveals the orb.
+- The package should feel small, minimal, sleek, physical, and plausible rather than magical.
+
+## Implementation Notes
+
+- Added a YES-specific `firstConnectedPath` record on the Convex player with structured delivery, package, orb, turn-count, turn transcript, and timestamp fields.
+- Added a Clerk-protected first connected-path action route that loads Day 1 storyline context, computes deterministic connected-path transitions before generation, and sends those transitions to the AI SDK narrative boundary as canonical constraints.
+- Added event-history support for `connected_path_started`, `connected_path_turn_resolved`, `package_received`, and `orb_revealed`, with player action text, generated response text, player-visible facts, model metadata, and structured connected-path state stored separately.
+- Updated the post-choice UI so YES players keep the large selected `YES` heading, see compact transcript turns, continue acting through the same textarea, and stop at orb reveal without showing status chips.
+- Preserved the NO/unconnected continuation route separately; YES players no longer hit the NO-focused first post-choice endpoint.
 
 ## Verification
 
@@ -63,6 +77,4 @@ This unit should design and implement the first playable connected-path spine wi
 
 ## Manual Steps
 
-- Decide whether the first YES-path unit should begin immediately after acceptance or after an in-world wait toward the drone delivery.
-- Tune the drone/package/orb tone so it feels logistical, physical, and plausible rather than magical.
-- Decide how much of the first connected-state experience should happen before the player chooses what to do with the orb.
+- Later units should decide how NO players discover unboxing footage through public sources and what happens after a YES player places or refuses to place the orb.

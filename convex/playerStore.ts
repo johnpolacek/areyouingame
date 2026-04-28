@@ -78,6 +78,56 @@ const firstPostChoiceAction = v.object({
   resolvedAt: v.optional(v.string()),
 });
 
+const connectedDeliveryStatus = v.union(
+  v.literal("pending"),
+  v.literal("delivered"),
+);
+
+const connectedPackageStatus = v.union(
+  v.literal("not_arrived"),
+  v.literal("available"),
+  v.literal("opened"),
+);
+
+const connectedOrbStatus = v.union(
+  v.literal("unknown"),
+  v.literal("revealed"),
+);
+
+const firstConnectedPathTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  responseText: v.string(),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  deliveryStatus: connectedDeliveryStatus,
+  packageStatus: connectedPackageStatus,
+  orbStatus: connectedOrbStatus,
+  resolvedAt: v.string(),
+});
+
+const firstConnectedPath = v.object({
+  id: v.string(),
+  status: v.union(
+    v.literal("pre_delivery"),
+    v.literal("package_available"),
+    v.literal("orb_revealed"),
+  ),
+  deliveryStatus: connectedDeliveryStatus,
+  packageStatus: connectedPackageStatus,
+  orbStatus: connectedOrbStatus,
+  turnCount: v.number(),
+  turns: v.array(firstConnectedPathTurn),
+  startedAt: v.string(),
+  deliveredAt: v.optional(v.string()),
+  openedAt: v.optional(v.string()),
+  updatedAt: v.string(),
+});
+
 const openingSceneContext = v.object({
   id: v.string(),
   scope: v.literal("opening_scene"),
@@ -133,6 +183,7 @@ const player = v.object({
   firstDecision: v.optional(firstDecision),
   firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
   firstPostChoiceAction: v.optional(firstPostChoiceAction),
+  firstConnectedPath: v.optional(firstConnectedPath),
   firstMoveReveal: v.optional(firstMoveReveal),
   openingSceneContext: v.optional(openingSceneContext),
   openingResponse: v.optional(v.string()),
@@ -664,6 +715,156 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
   },
 });
 
+export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    actionText: v.string(),
+    responseText: v.string(),
+    responseModel: v.string(),
+    responseSource: v.literal("ai"),
+    actionKind: v.string(),
+    playerVisibleFacts: v.array(v.string()),
+    storylineContextSourceVersion: v.string(),
+    expectedTurnNumber: v.number(),
+    status: v.union(
+      v.literal("pre_delivery"),
+      v.literal("package_available"),
+      v.literal("orb_revealed"),
+    ),
+    deliveryStatus: connectedDeliveryStatus,
+    packageStatus: connectedPackageStatus,
+    orbStatus: connectedOrbStatus,
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (!args.actionText.trim()) {
+      throw new ConvexError("Action text is required.");
+    }
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.firstDecision) {
+      throw new ConvexError("YES/NO choice is required first.");
+    }
+
+    if (existingPlayer.firstDecision.choice !== "YES") {
+      throw new ConvexError("Connected path is only available after YES.");
+    }
+
+    const existingPath = existingPlayer.firstConnectedPath;
+    const existingTurns = existingPath?.turns ?? [];
+
+    if (existingTurns.length >= args.expectedTurnNumber) {
+      return toDailyPlayer(existingPlayer);
+    }
+
+    if (existingTurns.length !== args.expectedTurnNumber - 1) {
+      throw new ConvexError("Connected path turn is out of order.");
+    }
+
+    const now = new Date().toISOString();
+    const turnRecord = {
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-connected-path-turn:${args.expectedTurnNumber}`,
+      turnNumber: args.expectedTurnNumber,
+      actionText: args.actionText,
+      responseText: args.responseText,
+      responseModel: args.responseModel,
+      responseSource: args.responseSource,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      deliveryStatus: args.deliveryStatus,
+      packageStatus: args.packageStatus,
+      orbStatus: args.orbStatus,
+      resolvedAt: now,
+    };
+    const wasDelivered = existingPath?.deliveryStatus === "delivered";
+    const wasOrbRevealed = existingPath?.orbStatus === "revealed";
+    const firstConnectedPathRecord = {
+      id:
+        existingPath?.id ??
+        `${args.dailyGameId}:${existingPlayer.id}:first-connected-path`,
+      status: args.status,
+      deliveryStatus: args.deliveryStatus,
+      packageStatus: args.packageStatus,
+      orbStatus: args.orbStatus,
+      turnCount: args.expectedTurnNumber,
+      turns: [...existingTurns, turnRecord],
+      startedAt: existingPath?.startedAt ?? now,
+      ...(existingPath?.deliveredAt
+        ? { deliveredAt: existingPath.deliveredAt }
+        : args.deliveryStatus === "delivered"
+          ? { deliveredAt: now }
+          : {}),
+      ...(existingPath?.openedAt
+        ? { openedAt: existingPath.openedAt }
+        : args.orbStatus === "revealed"
+          ? { openedAt: now }
+          : {}),
+      updatedAt: now,
+    };
+    const baseEvent = {
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      clerkUserId: args.clerkUserId,
+      sourceTurnId: turnRecord.id,
+      selectedChoice: existingPlayer.firstDecision.choice,
+      playerActionText: args.actionText,
+      narrativeResponseText: args.responseText,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      connectedDeliveryStatus: args.deliveryStatus,
+      connectedPackageStatus: args.packageStatus,
+      connectedOrbStatus: args.orbStatus,
+      model: args.responseModel,
+      source: args.responseSource,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      createdAt: now,
+    };
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstConnectedPath: firstConnectedPathRecord,
+      updatedAt: now,
+    });
+    await ctx.db.insert("gameplayEvents", {
+      ...baseEvent,
+      id: `${turnRecord.id}:connected-path-turn-resolved`,
+      eventType:
+        args.expectedTurnNumber === 1
+          ? ("connected_path_started" as const)
+          : ("connected_path_turn_resolved" as const),
+    });
+
+    if (!wasDelivered && args.deliveryStatus === "delivered") {
+      await ctx.db.insert("gameplayEvents", {
+        ...baseEvent,
+        id: `${turnRecord.id}:package-received`,
+        eventType: "package_received" as const,
+      });
+    }
+
+    if (!wasOrbRevealed && args.orbStatus === "revealed") {
+      await ctx.db.insert("gameplayEvents", {
+        ...baseEvent,
+        id: `${turnRecord.id}:orb-revealed`,
+        eventType: "orb_revealed" as const,
+      });
+    }
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      firstConnectedPath: firstConnectedPathRecord,
+      updatedAt: now,
+    });
+  },
+});
+
 export const deletePlayerForUserGame = mutationGeneric({
   args: authenticatedArgs,
   returns: v.boolean(),
@@ -708,6 +909,7 @@ export const resetPlayerDayForUserGame = mutationGeneric({
       firstDecision: undefined,
       firstRevealTextResponses: undefined,
       firstPostChoiceAction: undefined,
+      firstConnectedPath: undefined,
       firstMoveReveal: undefined,
       openingSceneContext: undefined,
       openingResponse: undefined,
@@ -825,7 +1027,7 @@ function createFirstDecision({
       ? {
           consequenceTitle: "The invitation accepts you.",
           consequenceBody:
-            "A private channel opens for today's game. The next move is now waiting on the other side of your answer.",
+            "For a moment, nothing obvious happens. The world resumes around your answer, and the first consequence is having to wait inside it.",
           consequenceModel: "deterministic-stage-05",
           consequenceSource: "fallback" as const,
         }
@@ -869,6 +1071,9 @@ function toDailyPlayer(source: any) {
       : {}),
     ...(source.firstPostChoiceAction
       ? { firstPostChoiceAction: source.firstPostChoiceAction }
+      : {}),
+    ...(source.firstConnectedPath
+      ? { firstConnectedPath: source.firstConnectedPath }
       : {}),
     ...(source.firstMoveReveal
       ? { firstMoveReveal: source.firstMoveReveal }

@@ -6,7 +6,7 @@ Expand the production backend into deeper authoritative world and player state, 
 
 ## Current Status
 
-Active product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is completed: shared Day 1 global storyline context is available to constrain later player turns. Stage 05 Unit 03 is completed: the first NO/unconnected post-choice action resolves into a persisted narrative response with append-only event history. Stage 05 Unit 04 is planned next for the first YES/connected drone, package, and orb path.
+Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is completed: shared Day 1 global storyline context is available to constrain later player turns. Stage 05 Unit 03 is completed: the first NO/unconnected post-choice action resolves into a persisted narrative response with append-only event history. Stage 05 Unit 04 is completed: the first YES/connected path persists deterministic waiting, package delivery eligibility, optional unboxing, orb reveal, and connected-path event history.
 
 ## Scope
 
@@ -18,7 +18,7 @@ Active product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the
 - [Stage 05, Unit 01: Text YES/NO Response And Deferred Interruptions](units/stage-05/01-text-yes-no-response-and-deferred-interruptions.md) - completed.
 - [Stage 05, Unit 02: Day 1 Global Storyline Context](units/stage-05/02-day-1-global-storyline-context.md) - completed.
 - [Stage 05, Unit 03: First NO/Unconnected Post-Choice Action Response](units/stage-05/03-first-post-choice-action-response.md) - completed.
-- [Stage 05, Unit 04: First YES Connected Path, Drone, And Orb](units/stage-05/04-first-yes-connected-path-drone-and-orb.md) - planned.
+- [Stage 05, Unit 04: First YES Connected Path, Drone, And Orb](units/stage-05/04-first-yes-connected-path-drone-and-orb.md) - completed.
 
 ## Acceptance Criteria
 

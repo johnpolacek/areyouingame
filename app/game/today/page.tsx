@@ -41,6 +41,7 @@ export default async function TodaysGamePage() {
       {player.firstDecision ? (
         <FirstChoiceConsequence
           decision={player.firstDecision}
+          firstConnectedPath={player.firstConnectedPath}
           firstPostChoiceAction={player.firstPostChoiceAction}
         />
       ) : player.firstMoveReveal ? (

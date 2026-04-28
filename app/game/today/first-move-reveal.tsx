@@ -6,6 +6,7 @@ import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
   FirstDecision,
+  FirstConnectedPath,
   FirstPostChoiceAction,
   FirstMoveReveal as FirstMoveRevealState,
   FirstRevealTextResponse,
@@ -19,6 +20,7 @@ type FirstMoveRevealProps = {
 
 type FirstChoiceConsequenceProps = {
   decision: FirstDecision;
+  firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
 };
 
@@ -330,6 +332,7 @@ export function FirstMoveReveal({
 
 export function FirstChoiceConsequence({
   decision,
+  firstConnectedPath,
   firstPostChoiceAction,
 }: FirstChoiceConsequenceProps) {
   const router = useRouter();
@@ -341,11 +344,24 @@ export function FirstChoiceConsequence({
   const hasResolvedFirstTurn = Boolean(firstPostChoiceAction?.responseText);
   const isNoPathReadyForFirstAction =
     decision.choice === "NO" && !firstPostChoiceAction;
+  const isConnectedPathComplete =
+    firstConnectedPath?.orbStatus === "revealed";
+  const isYesPathReadyForAction =
+    decision.choice === "YES" && !isConnectedPathComplete;
+  const connectedPathTurns = firstConnectedPath?.turns ?? [];
+  const actionFormPlaceholder =
+    decision.choice === "YES"
+      ? firstConnectedPath?.packageStatus === "available"
+        ? "Open the package, leave it closed, hide it, call someone, or try anything else."
+        : "Act in the world while you wait to learn what YES changed."
+      : "Act in the world now that the answer has been given.";
+  const actionFormDisabled =
+    isSubmittingAction || (!isNoPathReadyForFirstAction && !isYesPathReadyForAction);
 
   async function submitAction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isSubmittingAction || !isNoPathReadyForFirstAction) {
+    if (actionFormDisabled) {
       return;
     }
 
@@ -360,7 +376,11 @@ export function FirstChoiceConsequence({
     setError("");
 
     try {
-      const response = await fetch("/api/players/first-post-choice-action", {
+      const endpoint =
+        decision.choice === "YES"
+          ? "/api/players/first-connected-path-action"
+          : "/api/players/first-post-choice-action";
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -425,7 +445,27 @@ export function FirstChoiceConsequence({
             </div>
           ) : null}
         </article>
-      ) : isNoPathReadyForFirstAction ? (
+      ) : connectedPathTurns.length > 0 ? (
+        <div className="grid w-full gap-4">
+          {connectedPathTurns.map((turn) => (
+            <article
+              className="grid w-full gap-4 rounded-md border border-amber-300/25 bg-black/35 px-4 py-4 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur"
+              key={turn.id}
+            >
+              <blockquote className="border-l border-amber-200/35 pl-3 text-sm leading-6 text-amber-50/70 italic">
+                {turn.actionText}
+              </blockquote>
+              <div className="grid gap-4 text-amber-100">
+                {turn.responseText.split(/\n{2,}/).map((paragraph) => (
+                  <TranscriptParagraph key={paragraph} text={paragraph} />
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      {isNoPathReadyForFirstAction || isYesPathReadyForAction ? (
         <form className="grid w-full gap-3 text-left" onSubmit={submitAction}>
           <label
             className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
@@ -441,7 +481,7 @@ export function FirstChoiceConsequence({
             maxLength={1200}
             rows={4}
             className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
-            placeholder="Act in the world now that the answer has been given."
+            placeholder={actionFormPlaceholder}
           />
           <div className="flex justify-end">
             <Button
@@ -461,11 +501,9 @@ export function FirstChoiceConsequence({
             </Button>
           </div>
         </form>
-      ) : (
-        <NextTurnPendingForm />
-      )}
+      ) : null}
 
-      {hasResolvedFirstTurn ? (
+      {hasResolvedFirstTurn || isConnectedPathComplete ? (
         <NextTurnPendingForm />
       ) : null}
 

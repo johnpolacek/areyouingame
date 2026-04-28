@@ -186,3 +186,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Removed the separate player-facing list of structured player-visible facts below the first resolved NO turn.
 - Tuned the media context to start with sparse or empty early results before public posting accelerates into a firehose.
 - Added support for quote-prefixed generated paragraphs to render as blockquote-style fictional posts or broadcast fragments.
+
+## [2026-04-28] implementation | add first YES connected path
+
+- Implemented Stage 05 Unit 04 with a YES-specific connected-path action route, AI SDK narration boundary, and Convex-owned structured state for waiting, package delivery, optional unboxing, and orb reveal.
+- Added deterministic connected-path turn progression so early YES turns remain dominated by global takeover speculation before drone/package delivery becomes eligible, with drastic player movement able to delay delivery.
+- Extended append-only gameplay events for connected-path starts, resolved turns, package receipt, and orb reveal while keeping the UI transcript prose-only with no delivery status chips.

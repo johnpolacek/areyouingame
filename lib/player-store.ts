@@ -19,6 +19,7 @@ export type DailyPlayer = PlayerDraftInput & {
   firstDecision?: FirstDecision;
   firstRevealTextResponses?: FirstRevealTextResponse[];
   firstPostChoiceAction?: FirstPostChoiceAction;
+  firstConnectedPath?: FirstConnectedPath;
   firstMoveReveal?: FirstMoveReveal;
   openingSceneContext?: OpeningSceneContextQuestion;
   openingResponse?: string;
@@ -85,6 +86,44 @@ export type FirstPostChoiceAction = {
   playerVisibleFacts?: string[];
   storylineContextSourceVersion?: string;
   resolvedAt?: string;
+};
+
+export type ConnectedDeliveryStatus = "pending" | "delivered";
+export type ConnectedPackageStatus = "not_arrived" | "available" | "opened";
+export type ConnectedOrbStatus = "unknown" | "revealed";
+export type FirstConnectedPathStatus =
+  | "pre_delivery"
+  | "package_available"
+  | "orb_revealed";
+
+export type FirstConnectedPathTurn = {
+  id: string;
+  turnNumber: number;
+  actionText: string;
+  responseText: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  deliveryStatus: ConnectedDeliveryStatus;
+  packageStatus: ConnectedPackageStatus;
+  orbStatus: ConnectedOrbStatus;
+  resolvedAt: string;
+};
+
+export type FirstConnectedPath = {
+  id: string;
+  status: FirstConnectedPathStatus;
+  deliveryStatus: ConnectedDeliveryStatus;
+  packageStatus: ConnectedPackageStatus;
+  orbStatus: ConnectedOrbStatus;
+  turnCount: number;
+  turns: FirstConnectedPathTurn[];
+  startedAt: string;
+  deliveredAt?: string;
+  openedAt?: string;
+  updatedAt: string;
 };
 
 export type OpeningSceneContextQuestion = {
@@ -200,6 +239,25 @@ const submitFirstPostChoiceActionForUserGameRef = makeFunctionReference<
   },
   DailyPlayer
 >("playerStore:submitFirstPostChoiceActionForUserGame");
+
+const submitFirstConnectedPathTurnForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    actionText: string;
+    responseText: string;
+    responseModel: string;
+    responseSource: "ai";
+    actionKind: string;
+    playerVisibleFacts: string[];
+    storylineContextSourceVersion: string;
+    expectedTurnNumber: number;
+    status: FirstConnectedPathStatus;
+    deliveryStatus: ConnectedDeliveryStatus;
+    packageStatus: ConnectedPackageStatus;
+    orbStatus: ConnectedOrbStatus;
+  },
+  DailyPlayer
+>("playerStore:submitFirstConnectedPathTurnForUserGame");
 
 const deletePlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -441,6 +499,10 @@ export function validateFirstPostChoiceAction(input: unknown): string {
   return readRequiredString(input, "Action text", 1200);
 }
 
+export function validateFirstConnectedPathAction(input: unknown): string {
+  return readRequiredString(input, "Action text", 1200);
+}
+
 export async function submitFirstPostChoiceActionForUserGame({
   clerkUserId,
   dailyGameId,
@@ -473,6 +535,56 @@ export async function submitFirstPostChoiceActionForUserGame({
     actionKind,
     playerVisibleFacts,
     storylineContextSourceVersion,
+  });
+}
+
+export async function submitFirstConnectedPathTurnForUserGame({
+  clerkUserId,
+  dailyGameId,
+  actionText,
+  responseText,
+  responseModel,
+  responseSource,
+  actionKind,
+  playerVisibleFacts,
+  storylineContextSourceVersion,
+  expectedTurnNumber,
+  status,
+  deliveryStatus,
+  packageStatus,
+  orbStatus,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  actionText: string;
+  responseText: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  expectedTurnNumber: number;
+  status: FirstConnectedPathStatus;
+  deliveryStatus: ConnectedDeliveryStatus;
+  packageStatus: ConnectedPackageStatus;
+  orbStatus: ConnectedOrbStatus;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(submitFirstConnectedPathTurnForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    actionText,
+    responseText,
+    responseModel,
+    responseSource,
+    actionKind,
+    playerVisibleFacts,
+    storylineContextSourceVersion,
+    expectedTurnNumber,
+    status,
+    deliveryStatus,
+    packageStatus,
+    orbStatus,
   });
 }
 

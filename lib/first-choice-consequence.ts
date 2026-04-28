@@ -35,7 +35,7 @@ function createYesConsequence(): FirstChoiceConsequence {
   return {
     consequenceTitle: "The invitation accepts you.",
     consequenceBody:
-      "A private channel opens for today's game. The next move is now waiting on the other side of your answer.",
+      "For a moment, nothing obvious happens. The world resumes around your answer, and the first consequence is having to wait inside it.",
     consequenceModel: "deterministic-stage-05",
     consequenceSource: "fallback",
   };

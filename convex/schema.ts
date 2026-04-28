@@ -64,6 +64,56 @@ const firstPostChoiceAction = v.object({
   resolvedAt: v.optional(v.string()),
 });
 
+const connectedDeliveryStatus = v.union(
+  v.literal("pending"),
+  v.literal("delivered"),
+);
+
+const connectedPackageStatus = v.union(
+  v.literal("not_arrived"),
+  v.literal("available"),
+  v.literal("opened"),
+);
+
+const connectedOrbStatus = v.union(
+  v.literal("unknown"),
+  v.literal("revealed"),
+);
+
+const firstConnectedPathTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  responseText: v.string(),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  deliveryStatus: connectedDeliveryStatus,
+  packageStatus: connectedPackageStatus,
+  orbStatus: connectedOrbStatus,
+  resolvedAt: v.string(),
+});
+
+const firstConnectedPath = v.object({
+  id: v.string(),
+  status: v.union(
+    v.literal("pre_delivery"),
+    v.literal("package_available"),
+    v.literal("orb_revealed"),
+  ),
+  deliveryStatus: connectedDeliveryStatus,
+  packageStatus: connectedPackageStatus,
+  orbStatus: connectedOrbStatus,
+  turnCount: v.number(),
+  turns: v.array(firstConnectedPathTurn),
+  startedAt: v.string(),
+  deliveredAt: v.optional(v.string()),
+  openedAt: v.optional(v.string()),
+  updatedAt: v.string(),
+});
+
 const openingSceneContext = v.object({
   id: v.string(),
   scope: v.literal("opening_scene"),
@@ -133,6 +183,7 @@ export default defineSchema({
     firstDecision: v.optional(firstDecision),
     firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
     firstPostChoiceAction: v.optional(firstPostChoiceAction),
+    firstConnectedPath: v.optional(firstConnectedPath),
     firstMoveReveal: v.optional(firstMoveReveal),
     openingSceneContext: v.optional(openingSceneContext),
     openingResponse: v.optional(v.string()),
@@ -183,13 +234,22 @@ export default defineSchema({
     dailyGameId: v.string(),
     playerId: v.string(),
     clerkUserId: v.string(),
-    eventType: v.literal("post_choice_turn_resolved"),
+    eventType: v.union(
+      v.literal("post_choice_turn_resolved"),
+      v.literal("connected_path_started"),
+      v.literal("connected_path_turn_resolved"),
+      v.literal("package_received"),
+      v.literal("orb_revealed"),
+    ),
     sourceTurnId: v.string(),
     selectedChoice: v.union(v.literal("YES"), v.literal("NO")),
     playerActionText: v.string(),
     narrativeResponseText: v.string(),
     actionKind: v.string(),
     playerVisibleFacts: v.array(v.string()),
+    connectedDeliveryStatus: v.optional(connectedDeliveryStatus),
+    connectedPackageStatus: v.optional(connectedPackageStatus),
+    connectedOrbStatus: v.optional(connectedOrbStatus),
     model: v.string(),
     source: v.literal("ai"),
     storylineContextSourceVersion: v.string(),
