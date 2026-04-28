@@ -156,3 +156,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added Stage 05 Unit 02 for resolving the player's first post-choice action into a persisted narrative response and next action prompt.
 - Used the NO-branch Twitter/X-feed action as the motivating example for in-world social-signal adjudication without real external social-network access.
 - Updated the MVP current status and Stage 05 unit list so Stage 05 Unit 02 is the next execution unit.
+
+## [2026-04-28] planning | add Day 1 storyline context prerequisite
+
+- Inserted Stage 05 Unit 02 for defining shared Day 1 global storyline context before post-choice continuation generation.
+- Renumbered the first post-choice action response plan to Stage 05 Unit 03 and updated it to consume Day 1 global storyline context.
+- Updated the MVP current status and Stage 05 unit list so the next execution unit is Day 1 global storyline context.
