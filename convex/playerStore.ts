@@ -349,6 +349,7 @@ export const submitFirstDecisionForUserGame = mutationGeneric({
       choice: args.choice,
       dailyGameId: args.dailyGameId,
       firstMoveReveal: existingPlayer.firstMoveReveal,
+      openingResponse: existingPlayer.openingResponse,
       playerId: existingPlayer.id,
       submittedAt: now,
     });
@@ -449,6 +450,7 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
       choice: args.classification,
       dailyGameId: args.dailyGameId,
       firstMoveReveal: existingPlayer.firstMoveReveal,
+      openingResponse: existingPlayer.openingResponse,
       playerId: existingPlayer.id,
       submittedAt: now,
     });
@@ -642,6 +644,7 @@ function createFirstDecision({
   choice,
   dailyGameId,
   firstMoveReveal,
+  openingResponse,
   playerId,
   submittedAt,
 }: {
@@ -653,6 +656,7 @@ function createFirstDecision({
     model: string;
     source: "ai" | "fallback";
   };
+  openingResponse?: string;
   playerId: string;
   submittedAt: string;
 }) {
@@ -664,9 +668,8 @@ function createFirstDecision({
             "A private channel opens for today's game. The next move is now waiting on the other side of your answer.",
         }
       : {
-          consequenceTitle: "The door stays closed.",
-          consequenceBody:
-            "The signal fades, but the game records your refusal. Today continues with that answer held in place.",
+          consequenceTitle: "",
+          consequenceBody: createNoConsequenceBody(openingResponse),
         };
 
   return {
@@ -682,6 +685,33 @@ function createFirstDecision({
     revealSource: firstMoveReveal.source,
     submittedAt,
   };
+}
+
+function createNoConsequenceBody(openingResponse?: string) {
+  const openingMoment = summarizeOpeningMoment(openingResponse);
+
+  if (!openingMoment) {
+    return "The message disappears. Everything returns to normal, and the day resumes around whatever you were doing before it arrived.";
+  }
+
+  return `The message disappears. Everything returns to normal: ${openingMoment}. The interruption is gone, and the day resumes from there.`;
+}
+
+function summarizeOpeningMoment(openingResponse?: string) {
+  const normalized = openingResponse?.trim().replace(/\s+/g, " ");
+
+  if (!normalized) {
+    return "";
+  }
+
+  const withoutTrailingPunctuation = normalized.replace(/[.!?]+$/, "");
+  const maxLength = 180;
+
+  if (withoutTrailingPunctuation.length <= maxLength) {
+    return withoutTrailingPunctuation;
+  }
+
+  return `${withoutTrailingPunctuation.slice(0, maxLength - 3).trimEnd()}...`;
 }
 
 function toDailyPlayer(source: any) {

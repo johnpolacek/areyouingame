@@ -395,11 +395,13 @@ export function FirstChoiceConsequence({
         >
           {decision.choice}
         </h1>
-        <p
-          className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12"
-        >
-          {decision.consequenceTitle}
-        </p>
+        {decision.consequenceTitle ? (
+          <p
+            className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12"
+          >
+            {decision.consequenceTitle}
+          </p>
+        ) : null}
         <p className="mx-auto max-w-xl text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8">
           {decision.consequenceBody}
         </p>
