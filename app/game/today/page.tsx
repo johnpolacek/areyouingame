@@ -13,7 +13,7 @@ import {
   FirstMoveReveal,
   FirstMoveRevealPending,
 } from "./first-move-reveal";
-import { OpeningPrompt } from "./opening-prompt";
+import { OpeningPrompt, OpeningSceneContextPrompt } from "./opening-prompt";
 
 export default async function TodaysGamePage() {
   const { userId } = await auth.protect();
@@ -48,6 +48,8 @@ export default async function TodaysGamePage() {
           firstRevealTextResponses={player.firstRevealTextResponses}
           reveal={player.firstMoveReveal}
         />
+      ) : player.openingSceneContext?.status === "question_pending" ? (
+        <OpeningSceneContextPrompt question={player.openingSceneContext} />
       ) : player.openingResponseSubmittedAt && player.openingResponse ? (
         <FirstMoveRevealPending />
       ) : player.publicGameplayAgreementAcceptedAt ? (

@@ -27,6 +27,7 @@ Completed product-spine stage. Current player/gameplay state now uses the produc
 - The first game prompt uses the player's name, local rendering of the shared event time, and player location.
 - The first game prompt asks where the player is and what they are doing.
 - The player's first response is submitted and stored before a later reveal ending with `A new way of being is available. Connection. Understanding. Freedom. Are you in?`
+- If the first response lacks a necessary immediate scene fact, the game may ask one in-world scene-context question before the reveal. That answer is temporary scene context, not durable character memory.
 - The YES or NO choice is captured on the reveal screen, not the player creation form or first location/activity prompt.
 - The current gameplay path is migrated off local storage before the selected YES or NO choice is added.
 - The selected YES or NO choice is persisted exactly once for the player/day in the production backend before deeper state and memory systems are introduced.

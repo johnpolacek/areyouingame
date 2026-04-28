@@ -37,6 +37,13 @@ export async function POST() {
       );
     }
 
+    if (player.openingSceneContext?.status === "question_pending") {
+      return Response.json(
+        { error: "Opening scene context is required first." },
+        { status: 400 },
+      );
+    }
+
     const localGameStart = formatGameStartForTimeZone(
       todayGame.eventStartsAtIso,
       player.timeZone,

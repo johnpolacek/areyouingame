@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { OpeningSceneContextQuestion } from "@/lib/player-store";
 
 type OpeningPromptProps = {
   eventStartsAtIso: string;
@@ -107,6 +108,103 @@ export function OpeningPrompt({
           <LoaderCircleIcon aria-hidden="true" className="size-5 animate-spin" />
         ) : (
           "Send"
+        )}
+      </Button>
+    </form>
+  );
+}
+
+export function OpeningSceneContextPrompt({
+  question,
+}: {
+  question: OpeningSceneContextQuestion;
+}) {
+  const router = useRouter();
+  const [answer, setAnswer] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const canSend = answer.trim().length > 0 && !isSubmitting;
+
+  async function submitAnswer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!canSend) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const submitRequest = await fetch("/api/players/opening-scene-context", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          answerText: answer.trim(),
+        }),
+      });
+      const result = (await submitRequest.json()) as { error?: string };
+
+      if (!submitRequest.ok) {
+        throw new Error(result.error || "Unable to send answer.");
+      }
+
+      router.refresh();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to send answer.",
+      );
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form
+      aria-labelledby="opening-scene-context-question"
+      onSubmit={submitAnswer}
+      className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-7 text-center"
+    >
+      <div className="grid gap-4">
+        <p className="text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8">
+          The game needs one detail before the moment can continue.
+        </p>
+        <p
+          id="opening-scene-context-question"
+          className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12"
+        >
+          {question.promptText}
+        </p>
+      </div>
+
+      <textarea
+        autoFocus
+        className="min-h-32 w-full resize-none rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-base font-medium tracking-normal text-amber-50 shadow-2xl shadow-black/35 outline-none backdrop-blur-md transition placeholder:text-amber-700 focus:border-amber-200/70 focus:ring-2 focus:ring-amber-500/20 sm:min-h-40 sm:text-lg"
+        name="opening-scene-context-answer"
+        onChange={(event) => setAnswer(event.target.value)}
+        placeholder="I..."
+        readOnly={isSubmitting}
+        value={answer}
+      />
+
+      {error ? (
+        <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+          {error}
+        </p>
+      ) : null}
+
+      <Button
+        className="h-12 w-full max-w-sm border border-amber-200/70 bg-gradient-to-b from-amber-500 to-amber-950 px-6 font-accent text-[0.84rem] font-normal tracking-[0.06em] text-amber-50 uppercase shadow-2xl shadow-black/60 backdrop-blur-md hover:brightness-[1.15] disabled:brightness-75 sm:h-14"
+        disabled={!canSend}
+        type="submit"
+      >
+        {isSubmitting ? (
+          <LoaderCircleIcon aria-hidden="true" className="size-5 animate-spin" />
+        ) : (
+          "Continue"
         )}
       </Button>
     </form>

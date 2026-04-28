@@ -20,6 +20,7 @@ export type DailyPlayer = PlayerDraftInput & {
   firstRevealTextResponses?: FirstRevealTextResponse[];
   firstPostChoiceAction?: FirstPostChoiceAction;
   firstMoveReveal?: FirstMoveReveal;
+  openingSceneContext?: OpeningSceneContextQuestion;
   openingResponse?: string;
   openingResponseSubmittedAt?: string;
   publicGameplayAgreementAcceptedAt?: string;
@@ -79,6 +80,19 @@ export type FirstPostChoiceAction = {
   submittedAt: string;
 };
 
+export type OpeningSceneContextQuestion = {
+  id: string;
+  scope: "opening_scene";
+  status: "question_pending" | "answered";
+  promptText: string;
+  reason: string;
+  source: "ai" | "fallback";
+  model?: string;
+  answerText?: string;
+  createdAt: string;
+  answeredAt?: string;
+};
+
 type AuthenticatedPlayerArgs = {
   backendSecret: string;
   clerkUserId: string;
@@ -110,9 +124,18 @@ const submitOpeningResponseForUserGameRef = makeFunctionReference<
   "mutation",
   AuthenticatedPlayerArgs & {
     openingResponse: string;
+    openingSceneContext?: OpeningSceneContextQuestion;
   },
   DailyPlayer
 >("playerStore:submitOpeningResponseForUserGame");
+
+const answerOpeningSceneContextForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    answerText: string;
+  },
+  DailyPlayer
+>("playerStore:answerOpeningSceneContextForUserGame");
 
 const saveFirstMoveRevealForUserGameRef = makeFunctionReference<
   "mutation",
@@ -241,10 +264,12 @@ export function validateOpeningResponse(input: unknown): string {
 export async function submitOpeningResponseForUserGame({
   clerkUserId,
   dailyGameId,
+  openingSceneContext,
   openingResponse,
 }: {
   clerkUserId: string;
   dailyGameId: string;
+  openingSceneContext?: OpeningSceneContextQuestion | null;
   openingResponse: string;
 }): Promise<DailyPlayer> {
   return await fetchMutation(submitOpeningResponseForUserGameRef, {
@@ -252,6 +277,28 @@ export async function submitOpeningResponseForUserGame({
     clerkUserId,
     dailyGameId,
     openingResponse,
+    ...(openingSceneContext ? { openingSceneContext } : {}),
+  });
+}
+
+export function validateOpeningSceneContextAnswer(input: unknown): string {
+  return readRequiredString(input, "Answer", 240);
+}
+
+export async function answerOpeningSceneContextForUserGame({
+  answerText,
+  clerkUserId,
+  dailyGameId,
+}: {
+  answerText: string;
+  clerkUserId: string;
+  dailyGameId: string;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(answerOpeningSceneContextForUserGameRef, {
+    answerText,
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
   });
 }
 

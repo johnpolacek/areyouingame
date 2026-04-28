@@ -44,12 +44,16 @@ export async function generateFirstMoveReveal({
         "Use saved player location only to infer local time-of-day or private atmosphere.",
         "Do not name, imply, or expand the saved location unless the opening response names it.",
         "If the chosen delivery device is a screen, it may flicker or turn black only if the message immediately appears.",
+        "If scene context says the character was asleep or unaware and gives a wake time, begin when the character wakes or first plausibly perceives the changed world.",
+        "Do not force the player awake at the event time.",
+        "Do not invent a nearby phone, alarm, spouse, or device location unless provided by player state.",
       ]),
       prompt: [
         `Daily game id: ${dailyGame.id}`,
         `Shared event time for this player: ${localGameStart}`,
         `Saved player location: ${player.location}`,
         `Player opening location/activity response: ${player.openingResponse}`,
+        `Temporary scene context: ${formatOpeningSceneContext(player)}`,
       ].join("\n"),
     });
     const sceneIntro = normalizeSceneIntro(text);
@@ -67,7 +71,7 @@ export async function generateFirstMoveReveal({
       sceneIntro:
         safeSceneIntro.length > 0
           ? safeSceneIntro
-          : createFallbackSceneIntro(player.openingResponse || ""),
+          : createFallbackSceneIntro(player),
       revealCopy,
       status: "yes_no_pending",
       generatedAt,
@@ -77,7 +81,7 @@ export async function generateFirstMoveReveal({
   } catch {
     return {
       id: createRevealId(dailyGame.id, player.id),
-      sceneIntro: createFallbackSceneIntro(player.openingResponse || ""),
+      sceneIntro: createFallbackSceneIntro(player),
       revealCopy,
       status: "yes_no_pending",
       generatedAt,
@@ -85,6 +89,20 @@ export async function generateFirstMoveReveal({
       source: "fallback",
     };
   }
+}
+
+function formatOpeningSceneContext(player: DailyPlayer): string {
+  const context = player.openingSceneContext;
+
+  if (!context || context.status !== "answered" || !context.answerText) {
+    return "none";
+  }
+
+  return [
+    `Question: ${context.promptText}`,
+    `Answer: ${context.answerText}`,
+    "Use this only as temporary scene context for the current opening beat, not as durable character routine.",
+  ].join(" ");
 }
 
 function normalizeSceneIntro(text: string): string[] {
@@ -131,8 +149,23 @@ function isSafeSceneIntro({
   );
 }
 
-function createFallbackSceneIntro(openingResponse: string): string[] {
+function createFallbackSceneIntro(player: DailyPlayer): string[] {
+  const openingResponse = player.openingResponse || "";
   const deliveryDevice = getDeliveryDevice(openingResponse);
+  const openingSceneContext = player.openingSceneContext;
+
+  if (
+    openingSceneContext?.status === "answered" &&
+    openingSceneContext.answerText &&
+    /\b(asleep|sleeping|sleep|in bed|passed out|unconscious)\b/i.test(
+      openingResponse,
+    )
+  ) {
+    return [
+      "You sleep through the beginning of it, waking later into the morning you described.",
+      "The room is still ordinary at first, until the changed world waits for you to notice it.",
+    ];
+  }
 
   if (deliveryDevice.kind === "tv") {
     return [

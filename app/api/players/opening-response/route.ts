@@ -1,6 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
-import { getTodayGameForRequest } from "@/lib/daily-game";
 import {
+  formatGameStartForTimeZone,
+  getTodayGameForRequest,
+} from "@/lib/daily-game";
+import { createOpeningSceneContextQuestion } from "@/lib/opening-scene-context";
+import {
+  getPlayerForUserGame,
   submitOpeningResponseForUserGame,
   validateOpeningResponse,
 } from "@/lib/player-store";
@@ -18,9 +23,25 @@ export async function POST(request: Request) {
     const body = (await request.json()) as { openingResponse?: unknown };
     const openingResponse = validateOpeningResponse(body.openingResponse);
     const todayGame = await getTodayGameForRequest();
+    const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
+
+    if (!existingPlayer) {
+      return Response.json({ error: "Player not found." }, { status: 404 });
+    }
+
+    const localGameStart = formatGameStartForTimeZone(
+      todayGame.eventStartsAtIso,
+      existingPlayer.timeZone,
+    );
+    const openingSceneContext = await createOpeningSceneContextQuestion({
+      localGameStart,
+      openingResponse,
+      player: existingPlayer,
+    });
     const player = await submitOpeningResponseForUserGame({
       clerkUserId: userId,
       dailyGameId: todayGame.id,
+      openingSceneContext,
       openingResponse,
     });
 

@@ -64,6 +64,19 @@ const firstPostChoiceAction = v.object({
   submittedAt: v.string(),
 });
 
+const openingSceneContext = v.object({
+  id: v.string(),
+  scope: v.literal("opening_scene"),
+  status: v.union(v.literal("question_pending"), v.literal("answered")),
+  promptText: v.string(),
+  reason: v.string(),
+  source: v.union(v.literal("ai"), v.literal("fallback")),
+  model: v.optional(v.string()),
+  answerText: v.optional(v.string()),
+  createdAt: v.string(),
+  answeredAt: v.optional(v.string()),
+});
+
 const player = v.object({
   id: v.string(),
   clerkUserId: v.string(),
@@ -73,6 +86,7 @@ const player = v.object({
   firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
   firstPostChoiceAction: v.optional(firstPostChoiceAction),
   firstMoveReveal: v.optional(firstMoveReveal),
+  openingSceneContext: v.optional(openingSceneContext),
   openingResponse: v.optional(v.string()),
   openingResponseSubmittedAt: v.optional(v.string()),
   publicGameplayAgreementAcceptedAt: v.optional(v.string()),
@@ -177,6 +191,7 @@ export const submitOpeningResponseForUserGame = mutationGeneric({
   args: {
     ...authenticatedArgs,
     openingResponse: v.string(),
+    openingSceneContext: v.optional(openingSceneContext),
   },
   returns: player,
   handler: async (ctx, args) => {
@@ -199,6 +214,9 @@ export const submitOpeningResponseForUserGame = mutationGeneric({
     const now = new Date().toISOString();
 
     await ctx.db.patch(existingPlayer._id, {
+      ...(args.openingSceneContext
+        ? { openingSceneContext: args.openingSceneContext }
+        : {}),
       openingResponse: args.openingResponse,
       openingResponseSubmittedAt: now,
       updatedAt: now,
@@ -206,8 +224,59 @@ export const submitOpeningResponseForUserGame = mutationGeneric({
 
     return toDailyPlayer({
       ...existingPlayer,
+      ...(args.openingSceneContext
+        ? { openingSceneContext: args.openingSceneContext }
+        : {}),
       openingResponse: args.openingResponse,
       openingResponseSubmittedAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+export const answerOpeningSceneContextForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    answerText: v.string(),
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (!args.answerText.trim()) {
+      throw new ConvexError("Answer is required.");
+    }
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.openingSceneContext) {
+      throw new ConvexError("Opening scene context question is not pending.");
+    }
+
+    if (existingPlayer.openingSceneContext.status === "answered") {
+      return toDailyPlayer(existingPlayer);
+    }
+
+    const now = new Date().toISOString();
+    const openingSceneContextRecord = {
+      ...existingPlayer.openingSceneContext,
+      status: "answered" as const,
+      answerText: args.answerText,
+      answeredAt: now,
+    };
+
+    await ctx.db.patch(existingPlayer._id, {
+      openingSceneContext: openingSceneContextRecord,
+      updatedAt: now,
+    });
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      openingSceneContext: openingSceneContextRecord,
       updatedAt: now,
     });
   },
@@ -491,6 +560,7 @@ export const resetPlayerDayForUserGame = mutationGeneric({
       firstRevealTextResponses: undefined,
       firstPostChoiceAction: undefined,
       firstMoveReveal: undefined,
+      openingSceneContext: undefined,
       openingResponse: undefined,
       openingResponseSubmittedAt: undefined,
       updatedAt: now,
@@ -636,6 +706,9 @@ function toDailyPlayer(source: any) {
       : {}),
     ...(source.firstMoveReveal
       ? { firstMoveReveal: source.firstMoveReveal }
+      : {}),
+    ...(source.openingSceneContext
+      ? { openingSceneContext: source.openingSceneContext }
       : {}),
     ...(source.openingResponse
       ? { openingResponse: source.openingResponse }

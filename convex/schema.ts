@@ -57,6 +57,19 @@ const firstPostChoiceAction = v.object({
   submittedAt: v.string(),
 });
 
+const openingSceneContext = v.object({
+  id: v.string(),
+  scope: v.literal("opening_scene"),
+  status: v.union(v.literal("question_pending"), v.literal("answered")),
+  promptText: v.string(),
+  reason: v.string(),
+  source: v.union(v.literal("ai"), v.literal("fallback")),
+  model: v.optional(v.string()),
+  answerText: v.optional(v.string()),
+  createdAt: v.string(),
+  answeredAt: v.optional(v.string()),
+});
+
 export default defineSchema({
   dailyGames: defineTable({
     dailyGameId: v.string(),
@@ -80,6 +93,7 @@ export default defineSchema({
     firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
     firstPostChoiceAction: v.optional(firstPostChoiceAction),
     firstMoveReveal: v.optional(firstMoveReveal),
+    openingSceneContext: v.optional(openingSceneContext),
     openingResponse: v.optional(v.string()),
     openingResponseSubmittedAt: v.optional(v.string()),
     publicGameplayAgreementAcceptedAt: v.optional(v.string()),

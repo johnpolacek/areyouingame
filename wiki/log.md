@@ -138,3 +138,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Extended the first reveal text loop with an `END_DAY` classification for plausible sleep/rest/wait-until-morning actions.
 - Preserved the core YES/NO pending invariant while allowing active play to close for the current daily session without forcing another interruption.
 - Updated Stage 05 Unit 01 notes so end-day deferral is documented as a pending-state closure rather than a third final choice.
+
+## [2026-04-28] implementation | add opening scene context questions
+
+- Added temporary opening scene context so the game can ask one immediate in-world question when the first response lacks a fact needed to proceed.
+- Stored opening scene-context answers separately from durable character memory; wake-time answers guide the current reveal without becoming long-term routine canon.
+- Updated the first-move reveal prompt and fallback so sleeping characters are not forced awake at the event time or assigned an invented nearby phone.
