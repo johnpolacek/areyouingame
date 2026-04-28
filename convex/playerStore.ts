@@ -69,6 +69,13 @@ const firstPostChoiceAction = v.object({
   id: v.string(),
   actionText: v.string(),
   submittedAt: v.string(),
+  responseText: v.optional(v.string()),
+  responseModel: v.optional(v.string()),
+  responseSource: v.optional(v.literal("ai")),
+  actionKind: v.optional(v.string()),
+  playerVisibleFacts: v.optional(v.array(v.string())),
+  storylineContextSourceVersion: v.optional(v.string()),
+  resolvedAt: v.optional(v.string()),
 });
 
 const openingSceneContext = v.object({
@@ -578,6 +585,12 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
   args: {
     ...authenticatedArgs,
     actionText: v.string(),
+    responseText: v.string(),
+    responseModel: v.string(),
+    responseSource: v.literal("ai"),
+    actionKind: v.string(),
+    playerVisibleFacts: v.array(v.string()),
+    storylineContextSourceVersion: v.string(),
   },
   returns: player,
   handler: async (ctx, args) => {
@@ -598,7 +611,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
     }
 
     if (existingPlayer.firstPostChoiceAction) {
-      throw new ConvexError("First post-choice action has already been submitted.");
+      return toDailyPlayer(existingPlayer);
     }
 
     const now = new Date().toISOString();
@@ -606,12 +619,37 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       id: `${args.dailyGameId}:${existingPlayer.id}:first-post-choice-action`,
       actionText: args.actionText,
       submittedAt: now,
+      responseText: args.responseText,
+      responseModel: args.responseModel,
+      responseSource: args.responseSource,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      resolvedAt: now,
+    };
+    const eventRecord = {
+      id: `${args.dailyGameId}:${existingPlayer.id}:post-choice-turn-resolved`,
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      clerkUserId: args.clerkUserId,
+      eventType: "post_choice_turn_resolved" as const,
+      sourceTurnId: firstPostChoiceActionRecord.id,
+      selectedChoice: existingPlayer.firstDecision.choice,
+      playerActionText: args.actionText,
+      narrativeResponseText: args.responseText,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      model: args.responseModel,
+      source: args.responseSource,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      createdAt: now,
     };
 
     await ctx.db.patch(existingPlayer._id, {
       firstPostChoiceAction: firstPostChoiceActionRecord,
       updatedAt: now,
     });
+    await ctx.db.insert("gameplayEvents", eventRecord);
 
     return toDailyPlayer({
       ...existingPlayer,

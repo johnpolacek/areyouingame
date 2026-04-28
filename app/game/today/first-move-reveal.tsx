@@ -338,11 +338,14 @@ export function FirstChoiceConsequence({
   const [error, setError] = useState("");
   const choiceClass =
     decision.choice === "YES" ? "text-emerald-200" : "text-red-300";
+  const hasResolvedFirstTurn = Boolean(firstPostChoiceAction?.responseText);
+  const isNoPathReadyForFirstAction =
+    decision.choice === "NO" && !firstPostChoiceAction;
 
   async function submitAction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isSubmittingAction || firstPostChoiceAction) {
+    if (isSubmittingAction || !isNoPathReadyForFirstAction) {
       return;
     }
 
@@ -408,10 +411,21 @@ export function FirstChoiceConsequence({
       </div>
 
       {firstPostChoiceAction ? (
-        <blockquote className="w-full rounded-md border border-amber-300/25 bg-black/35 px-4 py-3 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur">
-          {firstPostChoiceAction.actionText}
-        </blockquote>
-      ) : (
+        <article className="grid w-full gap-4 rounded-md border border-amber-300/25 bg-black/35 px-4 py-4 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur">
+          <blockquote className="border-l border-amber-200/35 pl-3 text-sm leading-6 text-amber-50/70 italic">
+            {firstPostChoiceAction.actionText}
+          </blockquote>
+          {firstPostChoiceAction.responseText ? (
+            <div className="grid gap-4 text-amber-100">
+              {firstPostChoiceAction.responseText
+                .split(/\n{2,}/)
+                .map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+            </div>
+          ) : null}
+        </article>
+      ) : isNoPathReadyForFirstAction ? (
         <form className="grid w-full gap-3 text-left" onSubmit={submitAction}>
           <label
             className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
@@ -447,7 +461,21 @@ export function FirstChoiceConsequence({
             </Button>
           </div>
         </form>
+      ) : (
+        <NextTurnPendingForm />
       )}
+
+      {hasResolvedFirstTurn ? (
+        <NextTurnPendingForm />
+      ) : null}
+
+      {firstPostChoiceAction?.playerVisibleFacts?.length ? (
+        <ul className="grid w-full gap-2 text-left text-xs leading-5 font-medium tracking-[0.08em] text-amber-200/70 uppercase">
+          {firstPostChoiceAction.playerVisibleFacts.map((fact) => (
+            <li key={fact}>{fact}</li>
+          ))}
+        </ul>
+      ) : null}
 
       {error ? (
         <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
@@ -455,5 +483,35 @@ export function FirstChoiceConsequence({
         </p>
       ) : null}
     </section>
+  );
+}
+
+function NextTurnPendingForm() {
+  return (
+    <form className="grid w-full gap-3 text-left" aria-disabled="true">
+      <label
+        className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+        htmlFor="next-post-choice-action"
+      >
+        What do you do next?
+      </label>
+      <textarea
+        id="next-post-choice-action"
+        disabled
+        rows={4}
+        className="min-h-32 resize-y rounded-md border border-amber-300/20 bg-black/30 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/20 outline-none backdrop-blur-md placeholder:text-amber-100/35 disabled:cursor-not-allowed disabled:opacity-60"
+        placeholder="The line stays open."
+      />
+      <div className="flex justify-end">
+        <Button
+          disabled
+          type="button"
+          variant="ghost"
+          className="!h-11 !rounded-[3px] border border-amber-300/30 bg-amber-300/5 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase"
+        >
+          Continue
+        </Button>
+      </div>
+    </form>
   );
 }

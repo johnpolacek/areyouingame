@@ -78,6 +78,13 @@ export type FirstPostChoiceAction = {
   id: string;
   actionText: string;
   submittedAt: string;
+  responseText?: string;
+  responseModel?: string;
+  responseSource?: "ai";
+  actionKind?: string;
+  playerVisibleFacts?: string[];
+  storylineContextSourceVersion?: string;
+  resolvedAt?: string;
 };
 
 export type OpeningSceneContextQuestion = {
@@ -184,6 +191,12 @@ const submitFirstPostChoiceActionForUserGameRef = makeFunctionReference<
   "mutation",
   AuthenticatedPlayerArgs & {
     actionText: string;
+    responseText: string;
+    responseModel: string;
+    responseSource: "ai";
+    actionKind: string;
+    playerVisibleFacts: string[];
+    storylineContextSourceVersion: string;
   },
   DailyPlayer
 >("playerStore:submitFirstPostChoiceActionForUserGame");
@@ -432,16 +445,34 @@ export async function submitFirstPostChoiceActionForUserGame({
   clerkUserId,
   dailyGameId,
   actionText,
+  responseText,
+  responseModel,
+  responseSource,
+  actionKind,
+  playerVisibleFacts,
+  storylineContextSourceVersion,
 }: {
   clerkUserId: string;
   dailyGameId: string;
   actionText: string;
+  responseText: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
 }): Promise<DailyPlayer> {
   return await fetchMutation(submitFirstPostChoiceActionForUserGameRef, {
     backendSecret: getBackendSecret(),
     clerkUserId,
     dailyGameId,
     actionText,
+    responseText,
+    responseModel,
+    responseSource,
+    actionKind,
+    playerVisibleFacts,
+    storylineContextSourceVersion,
   });
 }
 

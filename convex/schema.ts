@@ -55,6 +55,13 @@ const firstPostChoiceAction = v.object({
   id: v.string(),
   actionText: v.string(),
   submittedAt: v.string(),
+  responseText: v.optional(v.string()),
+  responseModel: v.optional(v.string()),
+  responseSource: v.optional(v.literal("ai")),
+  actionKind: v.optional(v.string()),
+  playerVisibleFacts: v.optional(v.array(v.string())),
+  storylineContextSourceVersion: v.optional(v.string()),
+  resolvedAt: v.optional(v.string()),
 });
 
 const openingSceneContext = v.object({
@@ -170,4 +177,25 @@ export default defineSchema({
     "by_dailyGameId",
     ["dailyGameId"],
   ),
+
+  gameplayEvents: defineTable({
+    id: v.string(),
+    dailyGameId: v.string(),
+    playerId: v.string(),
+    clerkUserId: v.string(),
+    eventType: v.literal("post_choice_turn_resolved"),
+    sourceTurnId: v.string(),
+    selectedChoice: v.union(v.literal("YES"), v.literal("NO")),
+    playerActionText: v.string(),
+    narrativeResponseText: v.string(),
+    actionKind: v.string(),
+    playerVisibleFacts: v.array(v.string()),
+    model: v.string(),
+    source: v.literal("ai"),
+    storylineContextSourceVersion: v.string(),
+    createdAt: v.string(),
+  })
+    .index("by_dailyGameId", ["dailyGameId"])
+    .index("by_playerId", ["playerId"])
+    .index("by_clerkUserId", ["clerkUserId"]),
 });

@@ -4,6 +4,7 @@ import {
   getOrCreateDay1StorylineContextForDailyGame,
 } from "@/lib/day-1-storyline-context";
 import { getTodayGameForRequest } from "@/lib/daily-game";
+import { createFirstNoPostChoiceActionResponse } from "@/lib/first-post-choice-action-response";
 import {
   getPlayerForUserGame,
   submitFirstPostChoiceActionForUserGame,
@@ -37,23 +38,41 @@ export async function POST(request: Request) {
     }
 
     if (existingPlayer.firstPostChoiceAction) {
+      return Response.json({ player: existingPlayer });
+    }
+
+    if (existingPlayer.firstDecision.choice !== "NO") {
       return Response.json(
-        { error: "First post-choice action has already been submitted." },
-        { status: 409 },
+        { error: "The YES path continues in a later turn." },
+        { status: 400 },
       );
     }
 
-    const player = await submitFirstPostChoiceActionForUserGame({
-      clerkUserId: userId,
-      dailyGameId: todayGame.id,
-      actionText,
-    });
     const day1StorylineContext =
       await getOrCreateDay1StorylineContextForDailyGame(todayGame.id);
     const day1GameplayContext = buildDay1GameplayContextPayload({
       dailyGame: todayGame,
-      player,
+      player: existingPlayer,
       storylineContext: day1StorylineContext,
+    });
+    const generatedResponse = await createFirstNoPostChoiceActionResponse({
+      actionText,
+      dailyGame: todayGame,
+      day1GameplayContext,
+      storylineContext: day1StorylineContext,
+      player: existingPlayer,
+    });
+    const player = await submitFirstPostChoiceActionForUserGame({
+      clerkUserId: userId,
+      dailyGameId: todayGame.id,
+      actionText,
+      responseText: generatedResponse.responseText,
+      responseModel: generatedResponse.responseModel,
+      responseSource: generatedResponse.responseSource,
+      actionKind: generatedResponse.actionKind,
+      playerVisibleFacts: generatedResponse.playerVisibleFacts,
+      storylineContextSourceVersion:
+        generatedResponse.storylineContextSourceVersion,
     });
 
     return Response.json({ day1GameplayContext, player });

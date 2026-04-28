@@ -172,5 +172,11 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 ## [2026-04-28] planning | split NO and YES post-choice continuations
 
 - Revised Stage 05 Unit 03 to be explicitly NO/unconnected-first, centered on the first simulated public-feed investigation response after refusal.
-- Recorded that simulated X-like feed UI should be fictional and in-world, with no real Twitter/X access and no default deleted/vanishing-post beat.
+- Recorded that fixed Day 1 media context should be provided to the LLM when relevant, with no real external social/news access, no custom feed UI in the first unit, and no default deleted/vanishing-post beat.
 - Added Stage 05 Unit 04 as the separate planned YES/connected path for drone delivery, package state, orb discovery, and first connected-path event history.
+
+## [2026-04-28] implementation | resolve first NO post-choice turn
+
+- Implemented Stage 05 Unit 03 with an AI SDK response boundary for the first NO/unconnected post-choice action, grounded in player state and Day 1 storyline context.
+- Added resolved-turn metadata to Convex player state and introduced append-only `gameplayEvents` with `post_choice_turn_resolved`.
+- Updated the post-choice UI to render a compact transcript and quiet disabled next-action textarea after the first resolved turn.

@@ -8,7 +8,7 @@ Status: planned.
 
 The YES branch is not a mirror of the NO/unconnected continuation. A YES answer starts a distinct physical and canonical path: the player has accepted connection, a drone-delivered package may arrive within roughly one hour, the package contains a smooth orb, and the orb instruction can move the player toward becoming connected.
 
-This unit should design and implement the first playable connected-path spine without forcing all connected-state complexity into the NO-focused first continuation. The player should feel the consequences of having accepted something real before the system expands into full connected cognition, coordination, or ASI-mediated capability.
+This unit should design and implement the first playable connected-path spine without forcing all connected-state complexity into the NO-focused first continuation. The immediate aftermath of YES may still feel much like ordinary reality at first: nothing happens right away, the world resumes, and only then does the drone/package/orb path begin to escalate. The player should feel the consequences of having accepted something real before the system expands into full connected cognition, coordination, or ASI-mediated capability.
 
 ## Scope
 
