@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LoaderCircleIcon } from "lucide-react";
 import { pendingDraftStorageKey } from "@/lib/character-draft";
 
 type JoinFlowProps = {
@@ -10,12 +9,9 @@ type JoinFlowProps = {
   successHref: string;
 };
 
-type ClaimState = "claiming" | "missing-draft" | "error";
-
 export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
   const router = useRouter();
-  const [state, setState] = useState<ClaimState>("claiming");
-  const [message, setMessage] = useState("Creating your character...");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -24,8 +20,6 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
       const rawDraft = window.sessionStorage.getItem(pendingDraftStorageKey);
 
       if (!rawDraft) {
-        setState("missing-draft");
-        setMessage("No pending character draft was found.");
         router.replace(fallbackHref);
         return;
       }
@@ -53,8 +47,7 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
           return;
         }
 
-        setState("error");
-        setMessage(
+        setErrorMessage(
           error instanceof Error
             ? error.message
             : "Unable to create character.",
@@ -69,20 +62,23 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
     };
   }, [fallbackHref, router, successHref]);
 
+  if (!errorMessage) {
+    return (
+      <main
+        aria-busy="true"
+        aria-label="Joining game"
+        className="min-h-screen bg-black"
+      />
+    );
+  }
+
   return (
     <main className="grid min-h-screen place-items-center bg-black px-5 py-16 text-amber-50">
       <div className="flex max-w-md flex-col items-center gap-4 text-center">
-        {state === "claiming" ? (
-          <LoaderCircleIcon
-            aria-hidden="true"
-            className="animate-spin text-amber-300"
-            data-icon="inline-start"
-          />
-        ) : null}
         <h1 className="font-accent text-xl tracking-normal text-amber-300">
-          {state === "error" ? "Character Creation Paused" : "Joining Game"}
+          Character Creation Paused
         </h1>
-        <p className="text-sm leading-6 text-amber-100/80">{message}</p>
+        <p className="text-sm leading-6 text-amber-100/80">{errorMessage}</p>
       </div>
     </main>
   );
