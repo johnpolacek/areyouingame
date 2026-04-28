@@ -1,5 +1,7 @@
 # Stage 01, Unit 01: Lock Initial Stack Decisions
 
+Status: completed.
+
 Lock the greenfield scaffold stack before any prerequisite checks or file generation.
 - Stack: Next.js web runtime, TypeScript, pnpm, Convex canonical backend for live state, S3 flat-file artifact storage, AI SDK LLM boundary.
 - UI/testing baseline: Tailwind CSS, shadcn/ui, Base UI primitives, Vitest for logic, Playwright for app smoke checks.

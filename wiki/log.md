@@ -144,3 +144,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added temporary opening scene context so the game can ask one immediate in-world question when the first response lacks a fact needed to proceed.
 - Stored opening scene-context answers separately from durable character memory; wake-time answers guide the current reveal without becoming long-term routine canon.
 - Updated the first-move reveal prompt and fallback so sleeping characters are not forced awake at the event time or assigned an invented nearby phone.
+
+## [2026-04-28] planning | refresh MVP stage status
+
+- Updated stale MVP status notes so Stage 05 Unit 01 is recorded as completed rather than the next execution unit.
+- Marked Stage 01 and its initial units as completed in the stage-level plan pages.
+- Recorded that the next MVP planning pass should choose between defining Stage 05 Unit 02 or moving directly to Stage 06 Unit 01.

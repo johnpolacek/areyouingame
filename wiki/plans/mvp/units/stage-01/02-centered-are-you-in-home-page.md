@@ -1,5 +1,7 @@
 # Stage 01, Unit 02: Centered Are You In Home Page
 
+Status: completed.
+
 Create the first visible app surface: a basic page that renders only a centered `Are You In?` heading.
 - Route: the root homepage route.
 - Content: a single `h1` with the exact text `Are You In?`.

@@ -6,7 +6,7 @@ Establish the executable foundation before scaffold work: lock the initial stack
 
 ## Current Status
 
-Active stage for the current execution slice.
+Completed stage.
 
 ## Scope
 
@@ -15,26 +15,23 @@ Active stage for the current execution slice.
 
 ## Units
 
-- [Stage 01, Unit 01: Lock Initial Stack Decisions](units/stage-01/01-lock-initial-stack-decisions.md) - planned.
-- [Stage 01, Unit 02: Centered Are You In Home Page](units/stage-01/02-centered-are-you-in-home-page.md) - planned.
+- [Stage 01, Unit 01: Lock Initial Stack Decisions](units/stage-01/01-lock-initial-stack-decisions.md) - completed.
+- [Stage 01, Unit 02: Centered Are You In Home Page](units/stage-01/02-centered-are-you-in-home-page.md) - completed.
 
 ## Acceptance Criteria
 
-- This stage stays intentionally narrow for the first planning pass.
-- The linked units provide decision-complete execution contracts that can be built and verified now.
-- Later units for this stage are expected to be added incrementally after the current slice lands.
+- This stage stayed intentionally narrow for the first planning pass.
+- The linked units provided decision-complete execution contracts for the initial stack lock and smallest visible app surface.
 
 ## Verification
 
-- Review the linked unit plans for consistent scope, verification, and manual steps.
-- Confirm the stage and unit links resolve inside `wiki/plans/mvp/`.
+- Confirmed the stage and unit links resolve inside `wiki/plans/mvp/`.
+- Stage completion is reflected by the later implementation log entries for the locked stack and centered homepage.
 
 ## Manual Steps
 
-- Execute the linked unit first.
-- Revisit this stage after the current slice lands to decide whether another unit should be planned.
+- No active manual steps.
 
 ## Assumptions
 
-- This stage is the current active planning slice.
-- Future units for this stage should be added incrementally instead of being generated up front.
+- Later scaffold or stack changes should be planned in the stage where they affect active product work, not by reopening this initial setup stage by default.

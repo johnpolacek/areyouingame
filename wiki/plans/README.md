@@ -12,4 +12,4 @@ This folder contains durable implementation plans for the project. It is the gat
 
 ## Current Tracks
 
-- Add `mvp/` when the project has a numbered roadmap to deliver.
+- [`mvp/`](mvp/README.md) - active numbered roadmap for the AreYouIn MVP.
