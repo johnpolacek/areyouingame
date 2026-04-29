@@ -1025,9 +1025,9 @@ function createFirstDecision({
     providedConsequence ??
     (choice === "YES"
       ? {
-          consequenceTitle: "The invitation accepts you.",
+          consequenceTitle: "",
           consequenceBody:
-            "For a moment, nothing obvious happens. The world resumes around your answer, and the first consequence is having to wait inside it.",
+            "The message clears. Nothing obvious arrives to replace it, and the day resumes around whatever you were doing before it appeared.",
           consequenceModel: "deterministic-stage-05",
           consequenceSource: "fallback" as const,
         }
