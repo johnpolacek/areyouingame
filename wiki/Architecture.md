@@ -32,8 +32,9 @@ AreYouIn is organized around daily shared game instances.
 - Account creation or sign-in happens before player creation.
 - A player is one-per-user-per-day-game.
 - The player creation form collects name, age, location, occupation, and bio.
-- Each daily game has a stable date id and may retain a generated event-start artifact for later world simulation, but the first player-facing scene prompt uses the current local time when rendered.
-- After character creation, the first game screen uses the player's name, current local time, and player location to ask: `Hi John, it is <current-local-time> in <player-location>. Where are you and what are you doing?`
+- Each daily game has a stable date id based on the user's/browser's local date, not the character location.
+- The first player-facing scene prompt uses the user's/browser's current local time when rendered, while still naming the character's in-world location.
+- After character creation, the first game screen uses the player's name, user-local current time, and character location to ask: `Hi John, it is <user-current-local-time> in <player-location>. Where are you and what are you doing?`
 - The YES or NO choice must not appear in player creation or in the first location/activity prompt. It is reserved for a later reveal after the player has entered the scene.
 - The YES/NO reveal supports explicit `YES` and `NO` buttons plus an open text response. Open text can be classified as `YES`, `NO`, or deferred/no obvious choice.
 - Deferred reveal responses do not complete the central decision and should not be stored as a third final choice. They keep the decision pending while recording the attempted action and returning another interruption that repeats the demand for yes or no.

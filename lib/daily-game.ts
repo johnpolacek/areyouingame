@@ -135,7 +135,7 @@ export async function getTodayGameDestination(
   };
 }
 
-async function getRequestTimeZone(): Promise<string | null> {
+export async function getRequestTimeZone(): Promise<string | null> {
   const cookieStore = await cookies();
   const cookieTimeZone = cookieStore.get(playerTimeZoneCookieName)?.value;
   const decodedTimeZone = decodeCookieValue(cookieTimeZone);

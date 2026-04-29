@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import {
   formatCurrentTimeForTimeZone,
+  getRequestTimeZone,
   getTodayGameForRequest,
 } from "@/lib/daily-game";
 import { createOpeningSceneContextQuestion } from "@/lib/opening-scene-context";
@@ -22,14 +23,15 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { openingResponse?: unknown };
     const openingResponse = validateOpeningResponse(body.openingResponse);
-    const todayGame = await getTodayGameForRequest();
+    const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
+    const todayGame = await getTodayGameForRequest(new Date(), requestTimeZone);
     const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
 
     if (!existingPlayer) {
       return Response.json({ error: "Player not found." }, { status: 404 });
     }
 
-    const localGameStart = formatCurrentTimeForTimeZone(existingPlayer.timeZone);
+    const localGameStart = formatCurrentTimeForTimeZone(requestTimeZone);
     const openingSceneContext = await createOpeningSceneContextQuestion({
       localGameStart,
       openingResponse,

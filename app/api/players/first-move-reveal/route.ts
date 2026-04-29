@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import {
   formatCurrentTimeForTimeZone,
+  getRequestTimeZone,
   getTodayGameForRequest,
 } from "@/lib/daily-game";
 import { generateFirstMoveReveal } from "@/lib/first-move-reveal";
@@ -19,7 +20,8 @@ export async function POST() {
   }
 
   try {
-    const todayGame = await getTodayGameForRequest();
+    const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
+    const todayGame = await getTodayGameForRequest(new Date(), requestTimeZone);
     const player = await getPlayerForUserGame(userId, todayGame.id);
 
     if (!player) {
@@ -44,7 +46,7 @@ export async function POST() {
       );
     }
 
-    const localGameStart = formatCurrentTimeForTimeZone(player.timeZone);
+    const localGameStart = formatCurrentTimeForTimeZone(requestTimeZone);
     const reveal = await generateFirstMoveReveal({
       dailyGame: todayGame,
       localGameStart,

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { HeroBackgroundVideo } from "../../hero-background-video";
 import {
   formatCurrentTimeForTimeZone,
+  getRequestTimeZone,
   getTodayGameForRequest,
 } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
@@ -18,7 +19,8 @@ import { OpeningPrompt, OpeningSceneContextPrompt } from "./opening-prompt";
 export default async function TodaysGamePage() {
   const { userId } = await auth.protect();
 
-  const todayGame = await getTodayGameForRequest();
+  const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
+  const todayGame = await getTodayGameForRequest(new Date(), requestTimeZone);
   const player = await getPlayerForUserGame(userId, todayGame.id);
 
   if (!player) {
@@ -27,7 +29,7 @@ export default async function TodaysGamePage() {
 
   const currentTime = new Date();
   const localGameStart = formatCurrentTimeForTimeZone(
-    player.timeZone,
+    requestTimeZone,
     currentTime,
   );
 
