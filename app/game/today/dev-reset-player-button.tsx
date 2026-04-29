@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCcwIcon, RotateCcwIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { pendingDraftStorageKey } from "@/lib/character-draft";
+import {
+  getBrowserTimeZone,
+  pendingDraftStorageKey,
+  persistBrowserTimeZoneCookie,
+} from "@/lib/character-draft";
 
 type ResetMode = "day" | "full";
 
@@ -19,6 +23,7 @@ export function DevResetPlayerButton() {
     }
 
     setResettingMode(mode);
+    persistBrowserTimeZoneCookie();
 
     try {
       const response = await fetch("/api/dev/reset-player", {
@@ -26,7 +31,7 @@ export function DevResetPlayerButton() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({ browserTimeZone: getBrowserTimeZone(), mode }),
       });
 
       if (!response.ok) {

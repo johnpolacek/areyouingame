@@ -219,3 +219,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Updated opening-scene and first-reveal generation context to refer to current local time rather than game start time.
 - Corrected the current-time source to use the user's/browser's request timezone, not the character location or stored player timezone, and reaffirmed that today's game id follows the user-local date.
 - Added a client-side browser-time correction for the opening prompt so the visible clock still uses the user's actual browser timezone when the server has fallen back to UTC.
+
+## [2026-04-28] fix | reset current user-local day
+
+- Updated the development reset control to send the browser timezone to the reset API.
+- Updated day reset and full reset to target the user-local daily game id and reroll that same user-local day rather than falling back to UTC.

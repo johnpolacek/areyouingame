@@ -47,8 +47,9 @@ export async function getTodayGameForRequest(
 
 export async function rerollTodayGameForRequest(
   now = new Date(),
+  timeZone?: string,
 ): Promise<DailyGame> {
-  const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
+  const requestTimeZone = timeZone ?? (await getRequestTimeZone()) ?? "UTC";
   const todayGame = getTodayGame(now, requestTimeZone);
   const cookieStore = await cookies();
   const currentEventStartsAt =
