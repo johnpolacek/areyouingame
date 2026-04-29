@@ -66,6 +66,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 - Updated the post-choice UI so YES players keep the large selected `YES` heading, see compact transcript turns, continue acting through the same textarea, and stop at orb reveal without showing status chips.
 - Preserved the NO/unconnected continuation route separately; YES players no longer hit the NO-focused first post-choice endpoint.
 - Tuned YES waiting-period public-feed/news/broadcast actions to support short fictional blockquote fragments, matching the NO path transcript rendering.
+- Refactored the early post-choice narration layer so NO and pre-delivery YES share media context, public-feed timing, external-content policy, blockquote guidance, and response normalization while keeping branch-specific Convex state separate.
 
 ## Verification
 

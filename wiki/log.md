@@ -207,3 +207,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Tuned the first YES connected-path narration prompt so waiting-period checks of X, social feeds, public web, news, or broadcasts can include short fictional blockquote fragments.
 - Kept the external-content boundary explicit: these are simulated in-world fragments, not real scraped posts or broadcasts.
+
+## [2026-04-28] refactor | share early post-choice narration
+
+- Extracted shared early post-choice turn generation for NO and pre-delivery YES, including Day 1 media context, public-feed timing, fictional blockquote guidance, external-content policy, JSON parsing, and response normalization.
+- Kept branch-specific Convex state and YES delivery/orb transitions separate while reducing prompt drift between early NO and YES turns.
