@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { playerTimeZoneCookieName } from "./character-draft";
 import { getPlayerForUserGame } from "./player-store";
 
 export type DailyGame = {
@@ -15,8 +16,8 @@ export type TodayGameDestination = {
 const EVENT_MINUTE_BUCKETS = 24 * 4;
 const devGameTimeCookieName = "areyouin-dev-game-time";
 
-export function getTodayGame(now = new Date()): DailyGame {
-  const dateId = getGlobalDateId(now);
+export function getTodayGame(now = new Date(), timeZone = "UTC"): DailyGame {
+  const dateId = getDateIdForTimeZone(now, timeZone);
   const eventStartsAt = getEventStartsAt(dateId);
 
   return createDailyGame(dateId, eventStartsAt);
@@ -24,8 +25,10 @@ export function getTodayGame(now = new Date()): DailyGame {
 
 export async function getTodayGameForRequest(
   now = new Date(),
+  timeZone?: string,
 ): Promise<DailyGame> {
-  const todayGame = getTodayGame(now);
+  const requestTimeZone = timeZone ?? (await getRequestTimeZone()) ?? "UTC";
+  const todayGame = getTodayGame(now, requestTimeZone);
 
   if (process.env.NODE_ENV !== "development") {
     return todayGame;
@@ -45,7 +48,8 @@ export async function getTodayGameForRequest(
 export async function rerollTodayGameForRequest(
   now = new Date(),
 ): Promise<DailyGame> {
-  const todayGame = getTodayGame(now);
+  const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
+  const todayGame = getTodayGame(now, requestTimeZone);
   const cookieStore = await cookies();
   const currentEventStartsAt =
     readDevGameTimeCookie(
@@ -101,6 +105,24 @@ export function formatGameStartForTimeZone(
   }
 }
 
+export function formatPlayerGameStartForTimeZone({
+  createdAt,
+  publicGameplayAgreementAcceptedAt,
+  timeZone,
+}: {
+  createdAt: string;
+  publicGameplayAgreementAcceptedAt?: string;
+  timeZone: string;
+}): string {
+  const gameStartedAt = new Date(publicGameplayAgreementAcceptedAt ?? createdAt);
+
+  try {
+    return formatLocalGameStart(gameStartedAt, timeZone);
+  } catch {
+    return formatLocalGameStart(gameStartedAt, "UTC");
+  }
+}
+
 export async function getTodayGameDestination(
   clerkUserId: string,
   dailyGameId: string,
@@ -120,8 +142,63 @@ export async function getTodayGameDestination(
   };
 }
 
-function getGlobalDateId(date: Date): string {
+async function getRequestTimeZone(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const cookieTimeZone = cookieStore.get(playerTimeZoneCookieName)?.value;
+  const decodedTimeZone = decodeCookieValue(cookieTimeZone);
+
+  return isValidTimeZone(decodedTimeZone) ? decodedTimeZone : null;
+}
+
+function getDateIdForTimeZone(date: Date, timeZone: string): string {
+  if (timeZone === "UTC") {
+    return date.toISOString().slice(0, 10);
+  }
+
+  try {
+    const parts = new Intl.DateTimeFormat("en", {
+      day: "2-digit",
+      month: "2-digit",
+      timeZone,
+      year: "numeric",
+    }).formatToParts(date);
+    const year = getDatePart(parts, "year");
+    const month = getDatePart(parts, "month");
+    const day = getDatePart(parts, "day");
+
+    if (year && month && day) {
+      return `${year}-${month}-${day}`;
+    }
+  } catch {
+    // Fall back to the UTC date if the browser timezone is malformed.
+  }
+
   return date.toISOString().slice(0, 10);
+}
+
+function isValidTimeZone(timeZone: string | undefined): timeZone is string {
+  if (!timeZone) {
+    return false;
+  }
+
+  try {
+    new Intl.DateTimeFormat("en", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function decodeCookieValue(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function getEventStartsAt(dateId: string): Date {

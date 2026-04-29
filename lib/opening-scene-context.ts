@@ -35,7 +35,7 @@ export async function createOpeningSceneContextQuestion({
       prompt: [
         `Player name: ${player.name}`,
         `Player location: ${player.location}`,
-        `Event time rendered for player: ${localGameStart}`,
+        `Game start time rendered for the player: ${localGameStart}`,
         `Opening response: ${openingResponse}`,
       ].join("\n"),
     });

@@ -1,6 +1,5 @@
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
-import { deriveTimeZoneFromLocation } from "./character-draft";
 import type { DailyGame } from "./daily-game";
 
 export type PlayerDraftInput = {
@@ -285,10 +284,7 @@ export function validatePlayerDraft(input: unknown): PlayerDraftInput {
     bio: readRequiredString(source.bio, "Bio", 800),
     timeZone: "",
   };
-  draft.timeZone = deriveTimeZoneFromLocation(
-    draft.location,
-    readOptionalString(source.timeZone, 80) || "UTC",
-  );
+  draft.timeZone = readOptionalString(source.timeZone, 80) || "UTC";
 
   return draft;
 }

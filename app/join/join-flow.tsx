@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { pendingDraftStorageKey } from "@/lib/character-draft";
+import {
+  pendingDraftStorageKey,
+  persistBrowserTimeZoneCookie,
+} from "@/lib/character-draft";
 
 type JoinFlowProps = {
   fallbackHref: string;
@@ -17,6 +20,8 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
     let isMounted = true;
 
     async function claimPendingDraft() {
+      persistBrowserTimeZoneCookie();
+
       const rawDraft = window.sessionStorage.getItem(pendingDraftStorageKey);
 
       if (!rawDraft) {

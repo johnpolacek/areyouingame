@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button";
 import type { OpeningSceneContextQuestion } from "@/lib/player-store";
 
 type OpeningPromptProps = {
-  eventStartsAtIso: string;
+  gameStartedAtIso: string;
   localGameStart: string;
   playerLocation: string;
   playerName: string;
 };
 
 export function OpeningPrompt({
-  eventStartsAtIso,
+  gameStartedAtIso,
   localGameStart,
   playerLocation,
   playerName,
@@ -75,7 +75,7 @@ export function OpeningPrompt({
           className="text-base leading-7 font-medium text-amber-100 text-balance sm:text-lg sm:leading-8"
         >
           Hi {playerName}, it is{" "}
-          <time dateTime={eventStartsAtIso}>{localGameStart}</time> in{" "}
+          <time dateTime={gameStartedAtIso}>{localGameStart}</time> in{" "}
           {playerLocation}.
         </p>
         <p className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12">

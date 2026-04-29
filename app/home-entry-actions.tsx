@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getDraftTimeZone, pendingDraftStorageKey } from "@/lib/character-draft";
+import {
+  getDraftTimeZone,
+  pendingDraftStorageKey,
+  persistBrowserTimeZoneCookie,
+} from "@/lib/character-draft";
 import { cn } from "@/lib/utils";
 import {
   CharacterSetupForm,
@@ -32,6 +36,10 @@ export function HomeEntryActions({
   const shouldShowAuthActions = showAuthActions || showLocalAuthActions;
   const canCreateAccount = isCompleteDraft(draft);
 
+  useEffect(() => {
+    persistBrowserTimeZoneCookie();
+  }, []);
+
   function updateDraft(field: CharacterDraftField, value: string) {
     setDraft((currentDraft) => ({
       ...currentDraft,
@@ -53,7 +61,7 @@ export function HomeEntryActions({
         location: draft.location.trim(),
         occupation: draft.occupation.trim(),
         bio: draft.bio.trim(),
-        timeZone: getDraftTimeZone(draft.location),
+        timeZone: getDraftTimeZone(),
       }),
     );
   }

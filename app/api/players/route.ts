@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { draft?: unknown };
     const draft = validatePlayerDraft(body.draft);
-    const todayGame = await getTodayGameForRequest();
+    const todayGame = await getTodayGameForRequest(new Date(), draft.timeZone);
     const player = await createPlayerForUserGame({
       clerkUserId: userId,
       dailyGame: todayGame,

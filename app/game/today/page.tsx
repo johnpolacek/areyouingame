@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { HeroBackgroundVideo } from "../../hero-background-video";
 import {
-  formatGameStartForTimeZone,
+  formatPlayerGameStartForTimeZone,
   getTodayGameForRequest,
 } from "../../../lib/daily-game";
 import { getPlayerForUserGame } from "../../../lib/player-store";
@@ -25,10 +25,7 @@ export default async function TodaysGamePage() {
     redirect("/player/new");
   }
 
-  const localGameStart = formatGameStartForTimeZone(
-    todayGame.eventStartsAtIso,
-    player.timeZone,
-  );
+  const localGameStart = formatPlayerGameStartForTimeZone(player);
 
   return (
     <main className="relative isolate grid min-h-svh place-items-center overflow-hidden bg-black px-5 py-16 text-amber-50 sm:p-8">
@@ -55,7 +52,9 @@ export default async function TodaysGamePage() {
         <FirstMoveRevealPending />
       ) : player.publicGameplayAgreementAcceptedAt ? (
         <OpeningPrompt
-          eventStartsAtIso={todayGame.eventStartsAtIso}
+          gameStartedAtIso={
+            player.publicGameplayAgreementAcceptedAt ?? player.createdAt
+          }
           localGameStart={localGameStart}
           playerLocation={player.location}
           playerName={player.name}

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import {
-  formatGameStartForTimeZone,
+  formatPlayerGameStartForTimeZone,
   getTodayGameForRequest,
 } from "@/lib/daily-game";
 import { generateFirstMoveReveal } from "@/lib/first-move-reveal";
@@ -44,10 +44,7 @@ export async function POST() {
       );
     }
 
-    const localGameStart = formatGameStartForTimeZone(
-      todayGame.eventStartsAtIso,
-      player.timeZone,
-    );
+    const localGameStart = formatPlayerGameStartForTimeZone(player);
     const reveal = await generateFirstMoveReveal({
       dailyGame: todayGame,
       localGameStart,

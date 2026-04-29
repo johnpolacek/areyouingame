@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getDraftTimeZone, pendingDraftStorageKey } from "@/lib/character-draft";
+import {
+  getDraftTimeZone,
+  pendingDraftStorageKey,
+  persistBrowserTimeZoneCookie,
+} from "@/lib/character-draft";
 import {
   CharacterSetupForm,
   type CharacterDraft,
@@ -30,6 +34,8 @@ export function NewPlayerForm({
   const canCreatePlayer = isCompleteDraft(draft) && !isSubmitting;
 
   useEffect(() => {
+    persistBrowserTimeZoneCookie();
+
     const rawDraft = window.sessionStorage.getItem(pendingDraftStorageKey);
 
     if (!rawDraft) {
@@ -84,7 +90,7 @@ export function NewPlayerForm({
             location: draft.location.trim(),
             occupation: draft.occupation.trim(),
             bio: draft.bio.trim(),
-            timeZone: getDraftTimeZone(draft.location),
+            timeZone: getDraftTimeZone(),
           },
         }),
       });
