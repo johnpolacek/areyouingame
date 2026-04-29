@@ -311,12 +311,38 @@ function getPlayerKnownFacts(player: DailyPlayer): string[] {
     knownFacts.push(
       `The player's connected path delivery status is ${player.firstConnectedPath.deliveryStatus}.`,
     );
+    knownFacts.push(
+      `The player's connected path package status is ${player.firstConnectedPath.packageStatus}.`,
+    );
+    knownFacts.push(
+      `The player's connected path orb status is ${player.firstConnectedPath.orbStatus}.`,
+    );
+
+    const orbLifecycle =
+      player.firstConnectedPath.orbLifecycle ??
+      (player.firstConnectedPath.packageStatus === "opened" &&
+      player.firstConnectedPath.orbStatus === "revealed"
+        ? "orb_delivered"
+        : undefined);
+
+    if (orbLifecycle) {
+      knownFacts.push(`The player's orb lifecycle is ${orbLifecycle}.`);
+    }
 
     if (player.firstConnectedPath.turns.length > 0) {
       const lastTurn =
         player.firstConnectedPath.turns[player.firstConnectedPath.turns.length - 1];
 
       knownFacts.push(`Most recent connected path action: ${lastTurn.actionText}`);
+    }
+
+    if ((player.firstConnectedPath.orbDecisionTurns ?? []).length > 0) {
+      const orbDecisionTurns = player.firstConnectedPath.orbDecisionTurns ?? [];
+      const lastOrbDecisionTurn = orbDecisionTurns[orbDecisionTurns.length - 1];
+
+      knownFacts.push(
+        `Most recent orb decision action: ${lastOrbDecisionTurn.actionText}`,
+      );
     }
   }
 
@@ -350,6 +376,14 @@ function getRecentPlayerEvents(player: DailyPlayer): string[] {
     events.push(
       `Connected path updated at ${player.firstConnectedPath.updatedAt}.`,
     );
+
+    if (player.firstConnectedPath.orbAcceptedAt) {
+      events.push(`Orb accepted at ${player.firstConnectedPath.orbAcceptedAt}.`);
+    }
+
+    if (player.firstConnectedPath.orbLostAt) {
+      events.push(`Orb lost at ${player.firstConnectedPath.orbLostAt}.`);
+    }
   }
 
   return events;

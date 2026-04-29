@@ -344,14 +344,27 @@ export function FirstChoiceConsequence({
   const hasResolvedFirstTurn = Boolean(firstPostChoiceAction?.responseText);
   const isNoPathReadyForFirstAction =
     decision.choice === "NO" && !firstPostChoiceAction;
+  const currentOrbLifecycle =
+    firstConnectedPath?.orbLifecycle ??
+    (firstConnectedPath?.packageStatus === "opened" &&
+    firstConnectedPath.orbStatus === "revealed"
+      ? "orb_delivered"
+      : undefined);
+  const isOrbDecisionAvailable =
+    firstConnectedPath?.packageStatus === "opened" &&
+    firstConnectedPath.orbStatus === "revealed" &&
+    currentOrbLifecycle === "orb_delivered";
   const isConnectedPathComplete =
-    firstConnectedPath?.orbStatus === "revealed";
+    currentOrbLifecycle === "orb_accepted" || currentOrbLifecycle === "orb_lost";
   const isYesPathReadyForAction =
     decision.choice === "YES" && !isConnectedPathComplete;
   const connectedPathTurns = firstConnectedPath?.turns ?? [];
+  const orbDecisionTurns = firstConnectedPath?.orbDecisionTurns ?? [];
   const actionFormPlaceholder =
     decision.choice === "YES"
-      ? firstConnectedPath?.packageStatus === "available"
+      ? isOrbDecisionAvailable
+        ? "Place it on your forehead, refuse it, destroy it, hide it, ask chat, or try anything else."
+        : firstConnectedPath?.packageStatus === "available"
         ? "Open the package, leave it closed, hide it, call someone, or try anything else."
         : "Act in the world while you wait to learn what YES changed."
       : "Act in the world now that the answer has been given.";
@@ -378,7 +391,9 @@ export function FirstChoiceConsequence({
     try {
       const endpoint =
         decision.choice === "YES"
-          ? "/api/players/first-connected-path-action"
+          ? isOrbDecisionAvailable
+            ? "/api/players/first-orb-decision-action"
+            : "/api/players/first-connected-path-action"
           : "/api/players/first-post-choice-action";
       const response = await fetch(endpoint, {
         method: "POST",
@@ -447,7 +462,7 @@ export function FirstChoiceConsequence({
         </article>
       ) : connectedPathTurns.length > 0 ? (
         <div className="grid w-full gap-4">
-          {connectedPathTurns.map((turn) => (
+          {[...connectedPathTurns, ...orbDecisionTurns].map((turn) => (
             <article
               className="grid w-full gap-4 rounded-md border border-amber-300/25 bg-black/35 px-4 py-4 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur"
               key={turn.id}

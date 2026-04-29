@@ -90,6 +90,10 @@ export type FirstPostChoiceAction = {
 export type ConnectedDeliveryStatus = "pending" | "delivered";
 export type ConnectedPackageStatus = "not_arrived" | "available" | "opened";
 export type ConnectedOrbStatus = "unknown" | "revealed";
+export type ConnectedOrbLifecycle =
+  | "orb_delivered"
+  | "orb_accepted"
+  | "orb_lost";
 export type FirstConnectedPathStatus =
   | "pre_delivery"
   | "package_available"
@@ -111,17 +115,35 @@ export type FirstConnectedPathTurn = {
   resolvedAt: string;
 };
 
+export type FirstOrbDecisionTurn = {
+  id: string;
+  turnNumber: number;
+  actionText: string;
+  responseText: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  orbLifecycle: ConnectedOrbLifecycle;
+  resolvedAt: string;
+};
+
 export type FirstConnectedPath = {
   id: string;
   status: FirstConnectedPathStatus;
   deliveryStatus: ConnectedDeliveryStatus;
   packageStatus: ConnectedPackageStatus;
   orbStatus: ConnectedOrbStatus;
+  orbLifecycle?: ConnectedOrbLifecycle;
   turnCount: number;
   turns: FirstConnectedPathTurn[];
+  orbDecisionTurns?: FirstOrbDecisionTurn[];
   startedAt: string;
   deliveredAt?: string;
   openedAt?: string;
+  orbAcceptedAt?: string;
+  orbLostAt?: string;
   updatedAt: string;
 };
 
@@ -257,6 +279,22 @@ const submitFirstConnectedPathTurnForUserGameRef = makeFunctionReference<
   },
   DailyPlayer
 >("playerStore:submitFirstConnectedPathTurnForUserGame");
+
+const submitFirstOrbDecisionTurnForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    actionText: string;
+    responseText: string;
+    responseModel: string;
+    responseSource: "ai";
+    actionKind: string;
+    playerVisibleFacts: string[];
+    storylineContextSourceVersion: string;
+    expectedTurnNumber: number;
+    orbLifecycle: ConnectedOrbLifecycle;
+  },
+  DailyPlayer
+>("playerStore:submitFirstOrbDecisionTurnForUserGame");
 
 const deletePlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -499,6 +537,10 @@ export function validateFirstConnectedPathAction(input: unknown): string {
   return readRequiredString(input, "Action text", 1200);
 }
 
+export function validateFirstOrbDecisionAction(input: unknown): string {
+  return readRequiredString(input, "Action text", 1200);
+}
+
 export async function submitFirstPostChoiceActionForUserGame({
   clerkUserId,
   dailyGameId,
@@ -581,6 +623,47 @@ export async function submitFirstConnectedPathTurnForUserGame({
     deliveryStatus,
     packageStatus,
     orbStatus,
+  });
+}
+
+export async function submitFirstOrbDecisionTurnForUserGame({
+  clerkUserId,
+  dailyGameId,
+  actionText,
+  responseText,
+  responseModel,
+  responseSource,
+  actionKind,
+  playerVisibleFacts,
+  storylineContextSourceVersion,
+  expectedTurnNumber,
+  orbLifecycle,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  actionText: string;
+  responseText: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  expectedTurnNumber: number;
+  orbLifecycle: ConnectedOrbLifecycle;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(submitFirstOrbDecisionTurnForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    actionText,
+    responseText,
+    responseModel,
+    responseSource,
+    actionKind,
+    playerVisibleFacts,
+    storylineContextSourceVersion,
+    expectedTurnNumber,
+    orbLifecycle,
   });
 }
 

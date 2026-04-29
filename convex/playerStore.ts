@@ -94,6 +94,12 @@ const connectedOrbStatus = v.union(
   v.literal("revealed"),
 );
 
+const connectedOrbLifecycle = v.union(
+  v.literal("orb_delivered"),
+  v.literal("orb_accepted"),
+  v.literal("orb_lost"),
+);
+
 const firstConnectedPathTurn = v.object({
   id: v.string(),
   turnNumber: v.number(),
@@ -110,6 +116,20 @@ const firstConnectedPathTurn = v.object({
   resolvedAt: v.string(),
 });
 
+const firstOrbDecisionTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  responseText: v.string(),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  orbLifecycle: connectedOrbLifecycle,
+  resolvedAt: v.string(),
+});
+
 const firstConnectedPath = v.object({
   id: v.string(),
   status: v.union(
@@ -120,11 +140,15 @@ const firstConnectedPath = v.object({
   deliveryStatus: connectedDeliveryStatus,
   packageStatus: connectedPackageStatus,
   orbStatus: connectedOrbStatus,
+  orbLifecycle: v.optional(connectedOrbLifecycle),
   turnCount: v.number(),
   turns: v.array(firstConnectedPathTurn),
+  orbDecisionTurns: v.optional(v.array(firstOrbDecisionTurn)),
   startedAt: v.string(),
   deliveredAt: v.optional(v.string()),
   openedAt: v.optional(v.string()),
+  orbAcceptedAt: v.optional(v.string()),
+  orbLostAt: v.optional(v.string()),
   updatedAt: v.string(),
 });
 
@@ -786,6 +810,10 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
     };
     const wasDelivered = existingPath?.deliveryStatus === "delivered";
     const wasOrbRevealed = existingPath?.orbStatus === "revealed";
+    const orbLifecycle =
+      args.packageStatus === "opened" && args.orbStatus === "revealed"
+        ? (existingPath?.orbLifecycle ?? ("orb_delivered" as const))
+        : existingPath?.orbLifecycle;
     const firstConnectedPathRecord = {
       id:
         existingPath?.id ??
@@ -794,8 +822,12 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       deliveryStatus: args.deliveryStatus,
       packageStatus: args.packageStatus,
       orbStatus: args.orbStatus,
+      ...(orbLifecycle ? { orbLifecycle } : {}),
       turnCount: args.expectedTurnNumber,
       turns: [...existingTurns, turnRecord],
+      ...(existingPath?.orbDecisionTurns
+        ? { orbDecisionTurns: existingPath.orbDecisionTurns }
+        : {}),
       startedAt: existingPath?.startedAt ?? now,
       ...(existingPath?.deliveredAt
         ? { deliveredAt: existingPath.deliveredAt }
@@ -807,6 +839,10 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
         : args.orbStatus === "revealed"
           ? { openedAt: now }
           : {}),
+      ...(existingPath?.orbAcceptedAt
+        ? { orbAcceptedAt: existingPath.orbAcceptedAt }
+        : {}),
+      ...(existingPath?.orbLostAt ? { orbLostAt: existingPath.orbLostAt } : {}),
       updatedAt: now,
     };
     const baseEvent = {
@@ -822,6 +858,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       connectedDeliveryStatus: args.deliveryStatus,
       connectedPackageStatus: args.packageStatus,
       connectedOrbStatus: args.orbStatus,
+      ...(orbLifecycle ? { connectedOrbLifecycle: orbLifecycle } : {}),
       model: args.responseModel,
       source: args.responseSource,
       storylineContextSourceVersion: args.storylineContextSourceVersion,
@@ -854,6 +891,147 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
         ...baseEvent,
         id: `${turnRecord.id}:orb-revealed`,
         eventType: "orb_revealed" as const,
+      });
+    }
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      firstConnectedPath: firstConnectedPathRecord,
+      updatedAt: now,
+    });
+  },
+});
+
+export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    actionText: v.string(),
+    responseText: v.string(),
+    responseModel: v.string(),
+    responseSource: v.literal("ai"),
+    actionKind: v.string(),
+    playerVisibleFacts: v.array(v.string()),
+    storylineContextSourceVersion: v.string(),
+    expectedTurnNumber: v.number(),
+    orbLifecycle: connectedOrbLifecycle,
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (!args.actionText.trim()) {
+      throw new ConvexError("Action text is required.");
+    }
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.firstDecision) {
+      throw new ConvexError("YES/NO choice is required first.");
+    }
+
+    if (existingPlayer.firstDecision.choice !== "YES") {
+      throw new ConvexError("Orb decision is only available after YES.");
+    }
+
+    const existingPath = existingPlayer.firstConnectedPath;
+
+    if (
+      !existingPath ||
+      existingPath.packageStatus !== "opened" ||
+      existingPath.orbStatus !== "revealed"
+    ) {
+      throw new ConvexError("The orb is not available yet.");
+    }
+
+    const currentLifecycle =
+      existingPath.orbLifecycle ?? ("orb_delivered" as const);
+
+    if (
+      currentLifecycle === "orb_accepted" ||
+      currentLifecycle === "orb_lost"
+    ) {
+      return toDailyPlayer(existingPlayer);
+    }
+
+    const existingOrbDecisionTurns = existingPath.orbDecisionTurns ?? [];
+
+    if (existingOrbDecisionTurns.length >= args.expectedTurnNumber) {
+      return toDailyPlayer(existingPlayer);
+    }
+
+    if (existingOrbDecisionTurns.length !== args.expectedTurnNumber - 1) {
+      throw new ConvexError("Orb decision turn is out of order.");
+    }
+
+    const now = new Date().toISOString();
+    const turnRecord = {
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-orb-decision-turn:${args.expectedTurnNumber}`,
+      turnNumber: args.expectedTurnNumber,
+      actionText: args.actionText,
+      responseText: args.responseText,
+      responseModel: args.responseModel,
+      responseSource: args.responseSource,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      orbLifecycle: args.orbLifecycle,
+      resolvedAt: now,
+    };
+    const firstConnectedPathRecord = {
+      ...existingPath,
+      orbLifecycle: args.orbLifecycle,
+      orbDecisionTurns: [...existingOrbDecisionTurns, turnRecord],
+      ...(args.orbLifecycle === "orb_accepted" ? { orbAcceptedAt: now } : {}),
+      ...(args.orbLifecycle === "orb_lost" ? { orbLostAt: now } : {}),
+      updatedAt: now,
+    };
+    const baseEvent = {
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      clerkUserId: args.clerkUserId,
+      sourceTurnId: turnRecord.id,
+      selectedChoice: existingPlayer.firstDecision.choice,
+      playerActionText: args.actionText,
+      narrativeResponseText: args.responseText,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      connectedDeliveryStatus: existingPath.deliveryStatus,
+      connectedPackageStatus: existingPath.packageStatus,
+      connectedOrbStatus: existingPath.orbStatus,
+      connectedOrbLifecycle: args.orbLifecycle,
+      model: args.responseModel,
+      source: args.responseSource,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      createdAt: now,
+    };
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstConnectedPath: firstConnectedPathRecord,
+      updatedAt: now,
+    });
+    await ctx.db.insert("gameplayEvents", {
+      ...baseEvent,
+      id: `${turnRecord.id}:orb-action-resolved`,
+      eventType: "orb_action_resolved" as const,
+    });
+
+    if (args.orbLifecycle === "orb_accepted") {
+      await ctx.db.insert("gameplayEvents", {
+        ...baseEvent,
+        id: `${turnRecord.id}:orb-accepted`,
+        eventType: "orb_accepted" as const,
+      });
+    }
+
+    if (args.orbLifecycle === "orb_lost") {
+      await ctx.db.insert("gameplayEvents", {
+        ...baseEvent,
+        id: `${turnRecord.id}:orb-lost`,
+        eventType: "orb_lost" as const,
       });
     }
 

@@ -220,6 +220,12 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Corrected the current-time source to use the user's/browser's request timezone, not the character location or stored player timezone, and reaffirmed that today's game id follows the user-local date.
 - Added a client-side browser-time correction for the opening prompt so the visible clock still uses the user's actual browser timezone when the server has fallen back to UTC.
 
+## [2026-04-28] implementation | add first orb decision
+
+- Added Stage 05 Unit 05 before daily lifecycle to define the first revealed-orb decision after a YES player opens the package.
+- Introduced the canonical `orbLifecycle` values `orb_delivered`, `orb_accepted`, and `orb_lost` while preserving delivery, package, and orb physical-detail fields.
+- Added orb-decision persistence, event-history types, deterministic acceptance/loss classification, and UI continuation through the revealed-orb decision.
+
 ## [2026-04-28] fix | reset current user-local day
 
 - Updated the development reset control to send the browser timezone to the reset API.

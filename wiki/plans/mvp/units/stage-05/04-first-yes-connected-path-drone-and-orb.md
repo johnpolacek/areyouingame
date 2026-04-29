@@ -28,7 +28,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 
 - NO/unconnected social-feed investigation, which belongs to Stage 05 Unit 03.
 - Full connected hive-mind cognition, shared awareness, or advanced ASI interface design.
-- Later branch switching, including NO players switching to YES, YES players destroying or rejecting the orb, and any resulting rejected/disconnected category.
+- Later branch switching, including NO players switching to YES. YES players destroying, rejecting, accepting, or losing the orb belongs to Stage 05 Unit 05.
 - Complete drone logistics simulation for all locations.
 - Real device, geolocation, delivery, camera, map, or notification integrations.
 - Full global MUD engine breadth.
@@ -84,4 +84,4 @@ Clarified product direction: the YES branch initially shares the same early-worl
 
 ## Manual Steps
 
-- Later units should decide how NO players discover unboxing footage through public sources, how NO players can switch to YES, and what happens after a YES player places, refuses, destroys, or rejects the orb.
+- Later units should decide how NO players discover unboxing footage through public sources and how NO players can switch to YES. Stage 05 Unit 05 covers the first YES-player orb acceptance/loss threshold.

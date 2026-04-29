@@ -80,6 +80,12 @@ const connectedOrbStatus = v.union(
   v.literal("revealed"),
 );
 
+const connectedOrbLifecycle = v.union(
+  v.literal("orb_delivered"),
+  v.literal("orb_accepted"),
+  v.literal("orb_lost"),
+);
+
 const firstConnectedPathTurn = v.object({
   id: v.string(),
   turnNumber: v.number(),
@@ -96,6 +102,20 @@ const firstConnectedPathTurn = v.object({
   resolvedAt: v.string(),
 });
 
+const firstOrbDecisionTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  responseText: v.string(),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  orbLifecycle: connectedOrbLifecycle,
+  resolvedAt: v.string(),
+});
+
 const firstConnectedPath = v.object({
   id: v.string(),
   status: v.union(
@@ -106,11 +126,15 @@ const firstConnectedPath = v.object({
   deliveryStatus: connectedDeliveryStatus,
   packageStatus: connectedPackageStatus,
   orbStatus: connectedOrbStatus,
+  orbLifecycle: v.optional(connectedOrbLifecycle),
   turnCount: v.number(),
   turns: v.array(firstConnectedPathTurn),
+  orbDecisionTurns: v.optional(v.array(firstOrbDecisionTurn)),
   startedAt: v.string(),
   deliveredAt: v.optional(v.string()),
   openedAt: v.optional(v.string()),
+  orbAcceptedAt: v.optional(v.string()),
+  orbLostAt: v.optional(v.string()),
   updatedAt: v.string(),
 });
 
@@ -240,6 +264,9 @@ export default defineSchema({
       v.literal("connected_path_turn_resolved"),
       v.literal("package_received"),
       v.literal("orb_revealed"),
+      v.literal("orb_action_resolved"),
+      v.literal("orb_accepted"),
+      v.literal("orb_lost"),
     ),
     sourceTurnId: v.string(),
     selectedChoice: v.union(v.literal("YES"), v.literal("NO")),
@@ -250,6 +277,7 @@ export default defineSchema({
     connectedDeliveryStatus: v.optional(connectedDeliveryStatus),
     connectedPackageStatus: v.optional(connectedPackageStatus),
     connectedOrbStatus: v.optional(connectedOrbStatus),
+    connectedOrbLifecycle: v.optional(connectedOrbLifecycle),
     model: v.string(),
     source: v.literal("ai"),
     storylineContextSourceVersion: v.string(),
