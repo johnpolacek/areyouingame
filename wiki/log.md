@@ -212,3 +212,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Extracted shared early post-choice turn generation for NO and pre-delivery YES, including Day 1 media context, public-feed timing, fictional blockquote guidance, external-content policy, JSON parsing, and response normalization.
 - Kept branch-specific Convex state and YES delivery/orb transitions separate while reducing prompt drift between early NO and YES turns.
+
+## [2026-04-28] fix | use current time in opening prompt
+
+- Changed the first player-facing location/activity prompt to render the current local time instead of the stale player creation or gameplay-agreement timestamp.
+- Updated opening-scene and first-reveal generation context to refer to current local time rather than game start time.

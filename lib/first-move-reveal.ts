@@ -41,7 +41,7 @@ export async function generateFirstMoveReveal({
         `Chosen delivery device: ${deliveryDevice.label}.`,
         "Use that delivery device only.",
         "Do not introduce any other device or screen.",
-        "Use the rendered event time for time-of-day.",
+        "Use the rendered current local time for time-of-day.",
         "Use saved player location only for private atmosphere, never to infer time-of-day.",
         "Do not name, imply, or expand the saved location unless the opening response names it.",
         "If the chosen delivery device is a screen, it may flicker or turn black only if the message immediately appears.",
@@ -51,7 +51,7 @@ export async function generateFirstMoveReveal({
       ]),
       prompt: [
         `Daily game id: ${dailyGame.id}`,
-        `Shared event time for this player: ${localGameStart}`,
+        `Current local time rendered for this player: ${localGameStart}`,
         `Saved player location: ${player.location}`,
         `Player opening location/activity response: ${player.openingResponse}`,
         `Temporary scene context: ${formatOpeningSceneContext(player)}`,

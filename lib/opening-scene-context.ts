@@ -29,13 +29,13 @@ export async function createOpeningSceneContextQuestion({
         "Ask only for ephemeral scene context, not durable biography.",
         "Do not ask if the answer would merely add color.",
         "Do not invent intimate facts, device locations, wakefulness, family members, house layout, or routines.",
-        "If the player is asleep or otherwise unaware at the event time, ask what time they wake up.",
+        "If the player is asleep or otherwise unaware at the current time, ask what time they wake up.",
         "Format: CONTINUE or ASK: <question>",
       ].join(" "),
       prompt: [
         `Player name: ${player.name}`,
         `Player location: ${player.location}`,
-        `Game start time rendered for the player: ${localGameStart}`,
+        `Current local time rendered for the player: ${localGameStart}`,
         `Opening response: ${openingResponse}`,
       ].join("\n"),
     });

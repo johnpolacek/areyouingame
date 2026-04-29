@@ -105,21 +105,14 @@ export function formatGameStartForTimeZone(
   }
 }
 
-export function formatPlayerGameStartForTimeZone({
-  createdAt,
-  publicGameplayAgreementAcceptedAt,
-  timeZone,
-}: {
-  createdAt: string;
-  publicGameplayAgreementAcceptedAt?: string;
-  timeZone: string;
-}): string {
-  const gameStartedAt = new Date(publicGameplayAgreementAcceptedAt ?? createdAt);
-
+export function formatCurrentTimeForTimeZone(
+  timeZone: string,
+  now = new Date(),
+): string {
   try {
-    return formatLocalGameStart(gameStartedAt, timeZone);
+    return formatLocalGameStart(now, timeZone);
   } catch {
-    return formatLocalGameStart(gameStartedAt, "UTC");
+    return formatLocalGameStart(now, "UTC");
   }
 }
 
