@@ -197,3 +197,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Clarified that the first YES/NO answer is an initial branch state, not a permanent player identity.
 - Recorded that later units should support NO players switching to YES and YES players losing, destroying, refusing, or rejecting the orb, potentially returning to unconnected play or entering a rejected/disconnected category.
+
+## [2026-04-28] fix | classify explicit typed YES/NO actions
+
+- Added deterministic reveal-text classification for explicit typed button/action phrases such as `I click yes`, `I tap no`, and mixed prose ending in a direct click/press/select response.
+- Preserved deferred handling for negated phrases such as refusing or not clicking a choice.

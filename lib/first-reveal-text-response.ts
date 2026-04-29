@@ -29,6 +29,15 @@ export async function classifyFirstRevealTextResponse({
   responseText: string;
 }): Promise<FirstRevealTextClassificationResult> {
   const model = getOpenAIClassifierModel();
+  const deterministicChoice = classifyExplicitChoiceAction(responseText);
+
+  if (deterministicChoice) {
+    return {
+      classification: deterministicChoice,
+      model: "deterministic-explicit-choice-action",
+      source: "fallback",
+    };
+  }
 
   if (isEndDayDeferral(responseText)) {
     return {
@@ -87,6 +96,52 @@ function normalizeClassification(text: string): FirstRevealTextClassification {
   }
 
   throw new Error("Classifier returned malformed output.");
+}
+
+function classifyExplicitChoiceAction(
+  responseText: string,
+): "YES" | "NO" | null {
+  const normalized = responseText.trim().replace(/\s+/g, " ").toLowerCase();
+  const actionMatches = [
+    ...findChoiceActionMatches(
+      normalized,
+      /\b(?:i\s+)?(?:click|tap|press|select|choose|pick|hit)\s+(?:the\s+)?(?:button\s+)?(yes|no)\b/g,
+    ),
+    ...findChoiceActionMatches(
+      normalized,
+      /\b(?:i\s+)?(?:say|answer|respond|reply)\s+(yes|no)\b/g,
+    ),
+  ].sort((left, right) => left.index - right.index);
+  const lastAffirmativeMatch = actionMatches
+    .filter((match) => !hasNearbyNegation(normalized, match.index))
+    .at(-1);
+
+  return lastAffirmativeMatch?.choice ?? null;
+}
+
+function findChoiceActionMatches(
+  text: string,
+  pattern: RegExp,
+): Array<{ choice: "YES" | "NO"; index: number }> {
+  const matches: Array<{ choice: "YES" | "NO"; index: number }> = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    matches.push({
+      choice: match[1].toUpperCase() as "YES" | "NO",
+      index: match.index,
+    });
+  }
+
+  return matches;
+}
+
+function hasNearbyNegation(text: string, matchIndex: number): boolean {
+  const precedingText = text.slice(Math.max(0, matchIndex - 48), matchIndex);
+
+  return /\b(don't|do not|didn't|did not|won't|wouldn't|never|not|refuse to)(?:\s+\w+){0,3}\s*$/.test(
+    precedingText,
+  );
 }
 
 function isEndDayDeferral(responseText: string): boolean {

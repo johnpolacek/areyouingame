@@ -66,6 +66,7 @@ The reveal should feel like the first moment of the global text-based MUD-style 
 - Test empty and malformed text submissions fail.
 - Test explicit button YES and NO paths still persist final choices.
 - Test representative text YES and NO inputs persist final choices.
+- Test explicit typed button/action phrases such as `I click yes`, `I tap no`, or mixed prose ending in `I click yes` resolve exactly like pressing the corresponding button.
 - Test representative deferred inputs keep the decision pending and store a deferred attempt.
 - Test duplicate final decision submissions are blocked after either button or text-based final choice.
 - Test refresh behavior after deferred attempt and after final choice.
