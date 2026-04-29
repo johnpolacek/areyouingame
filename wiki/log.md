@@ -235,3 +235,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Tuned YES connected-path handling so pickup, photography, livestream setup, waiting for likes, and chat interaction keep the package sealed until an explicit open/unbox action.
 - Recorded YES package livestreams as a future NO/unconnected discovery pattern for players monitoring feeds or news.
+
+## [2026-04-29] reference | define connected ASI response guide
+
+- Added a connected ASI LLM response guide for post-orb-acceptance play.
+- Defined the gentle human-node awareness model, future multiplayer consent pattern, ASI data categories, capability tiers, and response rules for broad player questions.
+- Linked the guide from the wiki index and source catalog so future accepted-path prompt work can use it as durable reference.

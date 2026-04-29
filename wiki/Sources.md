@@ -5,6 +5,7 @@ This page captures the human-facing source context that informed this project du
 ## Current Sources
 
 - Guided plan interview summary recorded by MarkdownStack.
+- Connected ASI response direction captured in [`reference/connected-asi-response-guide.md`](reference/connected-asi-response-guide.md).
 
 ## Interview Notes
 

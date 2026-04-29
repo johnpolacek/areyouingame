@@ -18,3 +18,4 @@ The project is built around a strict separation between canonical world state, i
 - [`plans/`](plans/README.md) - implementation plans and plan-track conventions
 - [`Architecture.md`](Architecture.md) - cross-cutting reference page including locked initial stack decisions
 - [`Sources.md`](Sources.md) - human-facing page for imported and preserved source material
+- [`reference/connected-asi-response-guide.md`](reference/connected-asi-response-guide.md) - LLM response guide for the accepted YES/orb-connected experience
