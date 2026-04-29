@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getBrowserTimeZone, persistBrowserTimeZoneCookie } from "@/lib/character-draft";
 import type { OpeningSceneContextQuestion } from "@/lib/player-store";
 
 type OpeningPromptProps = {
@@ -22,9 +23,21 @@ export function OpeningPrompt({
 }: OpeningPromptProps) {
   const router = useRouter();
   const [response, setResponse] = useState("");
+  const [displayTime, setDisplayTime] = useState(localGameStart);
+  const [displayTimeIso, setDisplayTimeIso] = useState(currentTimeIso);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const canSend = response.trim().length > 0 && !isSubmitting;
+
+  useEffect(() => {
+    persistBrowserTimeZoneCookie();
+
+    const now = new Date();
+    const browserTimeZone = getBrowserTimeZone();
+
+    setDisplayTime(formatBrowserCurrentTime(now, browserTimeZone));
+    setDisplayTimeIso(now.toISOString());
+  }, []);
 
   async function submitResponse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +56,7 @@ export function OpeningPrompt({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          browserTimeZone: getBrowserTimeZone(),
           openingResponse: response.trim(),
         }),
       });
@@ -75,7 +89,7 @@ export function OpeningPrompt({
           className="text-base leading-7 font-medium text-amber-100 text-balance sm:text-lg sm:leading-8"
         >
           Hi {playerName}, it is{" "}
-          <time dateTime={currentTimeIso}>{localGameStart}</time> in{" "}
+          <time dateTime={displayTimeIso}>{displayTime}</time> in{" "}
           {playerLocation}.
         </p>
         <p className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12">
@@ -112,6 +126,56 @@ export function OpeningPrompt({
       </Button>
     </form>
   );
+}
+
+function formatBrowserCurrentTime(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone,
+    weekday: "long",
+  }).formatToParts(date);
+  const weekday = getDatePart(parts, "weekday");
+  const hour = Number(getDatePart(parts, "hour"));
+  const minute = getDatePart(parts, "minute");
+  const meridiem = hour < 12 ? "am" : "pm";
+  const displayHour = hour % 12 || 12;
+  const displayTime =
+    minute === "00"
+      ? `${displayHour}${meridiem}`
+      : `${displayHour}:${minute}${meridiem}`;
+
+  return `${displayTime} on ${weekday} ${getDaypart(hour)}`;
+}
+
+function getDatePart(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): string {
+  return parts.find((part) => part.type === type)?.value ?? "";
+}
+
+function getDaypart(
+  hour: number,
+): "early morning" | "morning" | "afternoon" | "evening" | "night" {
+  if (hour < 5) {
+    return "early morning";
+  }
+
+  if (hour < 12) {
+    return "morning";
+  }
+
+  if (hour < 17) {
+    return "afternoon";
+  }
+
+  if (hour < 22) {
+    return "evening";
+  }
+
+  return "night";
 }
 
 export function OpeningSceneContextPrompt({

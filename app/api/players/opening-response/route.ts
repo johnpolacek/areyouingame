@@ -3,6 +3,7 @@ import {
   formatCurrentTimeForTimeZone,
   getRequestTimeZone,
   getTodayGameForRequest,
+  resolveValidTimeZone,
 } from "@/lib/daily-game";
 import { createOpeningSceneContextQuestion } from "@/lib/opening-scene-context";
 import {
@@ -21,9 +22,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { openingResponse?: unknown };
+    const body = (await request.json()) as {
+      browserTimeZone?: unknown;
+      openingResponse?: unknown;
+    };
     const openingResponse = validateOpeningResponse(body.openingResponse);
-    const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
+    const submittedTimeZone =
+      typeof body.browserTimeZone === "string"
+        ? resolveValidTimeZone(body.browserTimeZone)
+        : null;
+    const requestTimeZone =
+      submittedTimeZone ?? (await getRequestTimeZone()) ?? "UTC";
     const todayGame = await getTodayGameForRequest(new Date(), requestTimeZone);
     const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
 

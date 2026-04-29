@@ -116,6 +116,12 @@ export function formatCurrentTimeForTimeZone(
   }
 }
 
+export function resolveValidTimeZone(
+  timeZone: string | undefined,
+): string | null {
+  return isValidTimeZone(timeZone) ? timeZone : null;
+}
+
 export async function getTodayGameDestination(
   clerkUserId: string,
   dailyGameId: string,
@@ -272,7 +278,7 @@ function getDatePart(
 
 function getDaypart(
   hour: number,
-): "early morning" | "morning" | "afternoon" | "night" {
+): "early morning" | "morning" | "afternoon" | "evening" | "night" {
   if (hour < 5) {
     return "early morning";
   }
@@ -283,6 +289,10 @@ function getDaypart(
 
   if (hour >= 12 && hour < 17) {
     return "afternoon";
+  }
+
+  if (hour < 22) {
+    return "evening";
   }
 
   return "night";
