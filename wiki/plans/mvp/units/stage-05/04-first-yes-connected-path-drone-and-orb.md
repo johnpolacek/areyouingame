@@ -56,6 +56,8 @@ Clarified product direction: the YES branch initially shares the same early-worl
 - Do not make model prose the source of enforceable connected state. Store physical delivery/orb state as structured Convex fields.
 - Delivery is deterministic by connected-path turn count: the first two YES turns stay in the public speculation/waiting period, the third turn can receive the package unless the submitted action plausibly prevents delivery, and a later open/unbox action reveals the orb.
 - The package should feel small, minimal, sleek, physical, and plausible rather than magical.
+- Picking up, staging, photographing, livestreaming, waiting for likes, reading chat, or otherwise delaying with the package should keep it sealed and available; only an explicit open/unbox/unwrap/look-inside action reveals the orb.
+- YES livestream/chat interactions around the sealed package are a useful bridge artifact for later NO/unconnected discovery: NO players may encounter livestreams of YES players showing or unboxing packages through ordinary feeds or news.
 - The first YES/NO answer is an initial branch marker, not a permanent player ontology. Later units should support players changing course, including NO players switching to YES and YES players losing, destroying, refusing, or rejecting the orb in ways that may move them back toward NO/unconnected or into a distinct rejected/disconnected category.
 
 ## Implementation Notes
@@ -67,6 +69,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 - Preserved the NO/unconnected continuation route separately; YES players no longer hit the NO-focused first post-choice endpoint.
 - Tuned YES waiting-period public-feed/news/broadcast actions to support short fictional blockquote fragments, matching the NO path transcript rendering.
 - Refactored the early post-choice narration layer so NO and pre-delivery YES share media context, public-feed timing, external-content policy, blockquote guidance, and response normalization while keeping branch-specific Convex state separate.
+- Tuned sealed-package handling so livestream setup, chat interaction, photography, and waiting actions do not reveal the orb prematurely.
 
 ## Verification
 

@@ -60,6 +60,9 @@ export async function createFirstConnectedPathTurnResponse({
       "The structured transition supplied in the prompt is canonical. Do not contradict it or invent a different delivery, package, or orb state.",
       "If the transition is waiting, do not deliver the player's package or show the orb. Keep the consequences uncertain and social/informational.",
       "If the transition is delivered, describe a small, minimal, sleek package delivered by a plausible drone to a nearby place. Keep it physical and logistical, not magical.",
+      "If delivery happens while the player looks through a window or checks outside, the package can be visible nearby before they touch it.",
+      "If the package is already available and the player picks it up, brings it inside, stages it, photographs it, starts a livestream, waits for likes, reads chat, or otherwise delays, keep the package sealed and present. Do not reveal the orb until they explicitly open, unbox, unwrap, or look inside.",
+      "For livestream or chat actions around the sealed package, make the public reaction messy and useful for later NO/unconnected discovery: viewers ask for proof, warn them not to open it, dare them to open it, compare other YES/package reports, and argue over whether it is fake or dangerous.",
       "If the transition is opened, describe the player opening the small sleek package and finding a smooth featureless orb with the instruction to place it at the center of their forehead. Do not simulate full connected cognition yet.",
       "If the player tries something drastic that plausibly prevents delivery, respect the supplied waiting transition and make the delay feel causal.",
     ],
@@ -151,7 +154,17 @@ export function getNextConnectedPathTransition({
 }
 
 function wantsToOpenPackage(actionText: string): boolean {
-  return /\b(open|unbox|unwrap|unpack|cut|tear|inspect inside|look inside)\b/i.test(
+  const normalizedAction = actionText.toLowerCase();
+
+  if (
+    /\b(livestream|live stream|stream|premiere|countdown|likes?|chat|viewers?|picture|photo|photograph|camera|record|film|post|upload)\b/.test(
+      normalizedAction,
+    )
+  ) {
+    return false;
+  }
+
+  return /\b(open|unbox|unwrap|unpack|break (?:the )?seal|cut (?:the )?seal|tear (?:it|the package|the box)? open|inspect inside|look inside)\b/i.test(
     actionText,
   );
 }

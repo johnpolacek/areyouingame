@@ -101,3 +101,4 @@ Media context should be source material for the LLM, not a custom rendered feed 
 
 - Tune the first media-investigation response tone so it feels public, messy, credible, and uncanny without pretending to be a real scrape.
 - Confirm whether later units should add custom feed/news UI once the prose-first continuation works.
+- Use YES-player livestreams as a later NO-path discovery pattern: NO players monitoring feeds or news may come across livestreams where a YES player shows a sleek sealed package, waits for likes or chat, and eventually unboxes the orb. Treat these as simulated in-world streams, not real external embeds or scraped content.

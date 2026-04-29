@@ -224,3 +224,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Updated the development reset control to send the browser timezone to the reset API.
 - Updated day reset and full reset to target the user-local daily game id and reroll that same user-local day rather than falling back to UTC.
+
+## [2026-04-28] tuning | preserve sealed-package livestream beats
+
+- Tuned YES connected-path handling so pickup, photography, livestream setup, waiting for likes, and chat interaction keep the package sealed until an explicit open/unbox action.
+- Recorded YES package livestreams as a future NO/unconnected discovery pattern for players monitoring feeds or news.
