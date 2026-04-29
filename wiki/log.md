@@ -202,3 +202,8 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Added deterministic reveal-text classification for explicit typed button/action phrases such as `I click yes`, `I tap no`, and mixed prose ending in a direct click/press/select response.
 - Preserved deferred handling for negated phrases such as refusing or not clicking a choice.
+
+## [2026-04-28] polish | add YES feed blockquotes
+
+- Tuned the first YES connected-path narration prompt so waiting-period checks of X, social feeds, public web, news, or broadcasts can include short fictional blockquote fragments.
+- Kept the external-content boundary explicit: these are simulated in-world fragments, not real scraped posts or broadcasts.
