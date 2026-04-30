@@ -32,6 +32,12 @@ export function NewPlayerForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const canCreatePlayer = isCompleteDraft(draft) && !isSubmitting;
+  const hasEnteredAllFields =
+    draft.name.trim().length > 0 &&
+    draft.age.trim().length > 0 &&
+    draft.location.trim().length > 0 &&
+    draft.occupation.trim().length > 0 &&
+    draft.bio.trim().length > 0;
 
   useEffect(() => {
     persistBrowserTimeZoneCookie();
@@ -66,9 +72,15 @@ export function NewPlayerForm({
       ...currentDraft,
       [field]: value,
     }));
+    setError("");
   }
 
   async function createPlayer() {
+    if (!hasEnteredAllFields) {
+      setError("Please fill out all fields");
+      return;
+    }
+
     if (!canCreatePlayer) {
       return;
     }
@@ -117,7 +129,7 @@ export function NewPlayerForm({
       actions={
         <Button
           className={`${primaryActionClass} hero-create-account`}
-          disabled={!canCreatePlayer}
+          disabled={isSubmitting}
           onClick={createPlayer}
         >
           {isSubmitting ? (
