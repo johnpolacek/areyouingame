@@ -16,6 +16,9 @@ import type {
 const DELIVERY_ELIGIBLE_TURN = 3;
 const PRE_DELIVERY_REVEAL_TERMS =
   /\b(drone|drones|package|packages|orb|orbs|delivery|delivered|deliveries|box|boxes|parcel|parcels)\b/i;
+const DELIVERY_DRONE_TERMS = /\b(drone|drones)\b/i;
+const DELIVERY_PACKAGE_TERMS =
+  /\b(package|packages|box|boxes|parcel|parcels)\b/i;
 
 export type ConnectedPathTransition = {
   expectedTurnNumber: number;
@@ -80,6 +83,8 @@ export async function createFirstConnectedPathTurnResponse({
     responseValidation:
       transition.transitionKind === "waiting"
         ? validatePreDeliveryConnectedPathResponse
+        : transition.transitionKind === "delivered"
+          ? validateDeliveredConnectedPathResponse
         : undefined,
     storylineContext,
     usageOperation: "connected_path_turn",
@@ -105,6 +110,22 @@ function validatePreDeliveryConnectedPathResponse({
   }
 
   return "Pre-delivery YES turns must not mention or negatively foreshadow drones, deliveries, boxes, packages, parcels, or orbs. Preserve the future delivery reveal by describing only the player's immediate scene, uncertainty, public confusion, and social or informational consequences.";
+}
+
+function validateDeliveredConnectedPathResponse({
+  responseText,
+}: {
+  responseText: string;
+  playerVisibleFacts: string[];
+}): string | null {
+  if (
+    DELIVERY_DRONE_TERMS.test(responseText) &&
+    DELIVERY_PACKAGE_TERMS.test(responseText)
+  ) {
+    return null;
+  }
+
+  return "Delivered connected-path turns must visibly narrate a plausible drone delivering a small package nearby. The player-facing response cannot skip or hide the deterministic delivery transition.";
 }
 
 export function getNextConnectedPathTransition({
