@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { RefreshCcwIcon, RotateCcwIcon, Trash2Icon } from "lucide-react";
+import {
+  RefreshCcwIcon,
+  RotateCcwIcon,
+  ShieldIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getBrowserTimeZone,
@@ -83,19 +89,31 @@ export function DevResetPlayerButton() {
         </div>
       ) : null}
 
-      <Button
-        aria-expanded={isOpen}
-        aria-label="Open reset options"
-        className="h-8 rounded-[3px] border-border bg-card/75 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase backdrop-blur-md hover:bg-muted hover:text-foreground focus-visible:ring-ring/35 dark:border-amber-200/20 dark:bg-black/35 dark:text-amber-100/70 dark:hover:bg-amber-200/10 dark:hover:text-amber-50 dark:focus-visible:ring-amber-200/35"
-        disabled={resettingMode !== null}
-        onClick={() => setIsOpen((current) => !current)}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <RotateCcwIcon aria-hidden="true" className="size-3.5" />
-        {resettingMode ? "Resetting" : "Reset"}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          aria-label="Open admin dashboard"
+          className="h-8 rounded-[3px] border-border bg-card/75 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase backdrop-blur-md hover:bg-muted hover:text-foreground focus-visible:ring-ring/35 dark:border-amber-200/20 dark:bg-black/35 dark:text-amber-100/70 dark:hover:bg-amber-200/10 dark:hover:text-amber-50 dark:focus-visible:ring-amber-200/35"
+          render={<Link href="/admin" />}
+          size="sm"
+          variant="ghost"
+        >
+          <ShieldIcon aria-hidden="true" className="size-3.5" />
+          Admin
+        </Button>
+        <Button
+          aria-expanded={isOpen}
+          aria-label="Open reset options"
+          className="h-8 rounded-[3px] border-border bg-card/75 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase backdrop-blur-md hover:bg-muted hover:text-foreground focus-visible:ring-ring/35 dark:border-amber-200/20 dark:bg-black/35 dark:text-amber-100/70 dark:hover:bg-amber-200/10 dark:hover:text-amber-50 dark:focus-visible:ring-amber-200/35"
+          disabled={resettingMode !== null}
+          onClick={() => setIsOpen((current) => !current)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          <RotateCcwIcon aria-hidden="true" className="size-3.5" />
+          {resettingMode ? "Resetting" : "Reset"}
+        </Button>
+      </div>
     </div>
   );
 }
