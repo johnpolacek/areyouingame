@@ -28,22 +28,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(theme);
   }, [theme]);
 
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-
-    function syncSystemTheme() {
-      if (window.localStorage.getItem(themeStorageKey)) {
-        return;
-      }
-
-      setThemeState(media.matches ? "dark" : "light");
-    }
-
-    media.addEventListener("change", syncSystemTheme);
-
-    return () => media.removeEventListener("change", syncSystemTheme);
-  }, []);
-
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
