@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { trackedGenerateText, type AiUsageOperation } from "./ai-usage";
 import type {
   Day1GameplayContextPayload,
   Day1StorylineContext,
@@ -101,6 +100,7 @@ export async function createEarlyPostChoiceTurnResponse({
   player,
   promptExtras,
   responseValidation,
+  usageOperation,
   storylineContext,
 }: {
   actionText: string;
@@ -112,6 +112,7 @@ export async function createEarlyPostChoiceTurnResponse({
   player: DailyPlayer;
   promptExtras?: Record<string, unknown>;
   responseValidation?: ResponseValidation;
+  usageOperation?: AiUsageOperation;
   storylineContext: Day1StorylineContext;
 }): Promise<EarlyPostChoiceTurnResponse> {
   const model = getOpenAINarrativeModel();
@@ -119,8 +120,13 @@ export async function createEarlyPostChoiceTurnResponse({
   let generatedResponse: NormalizedEarlyTurnResponse | null = null;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const { text } = await generateText({
-      model: openai(model),
+    const { text } = await trackedGenerateText({
+      model,
+      operation:
+        usageOperation ??
+        (branch === "YES" ? "connected_path_turn" : "post_choice_turn"),
+      dailyGameId: dailyGame.id,
+      player,
       system: createPlayerFacingNarrativePrompt([
         `You are resolving an open-world action after the player answered ${branch}.`,
         "The ordinary world resumes, but public information is starting to show that the event is larger than one person.",

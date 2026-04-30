@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { trackedGenerateText } from "./ai-usage";
 import type { DailyGame } from "./daily-game";
 import {
   createPlayerFacingNarrativePrompt,
@@ -31,8 +30,11 @@ export async function generateFirstMoveReveal({
 
   try {
     const deliveryDevice = getDeliveryDevice(player.openingResponse || "");
-    const { text } = await generateText({
-      model: openai(model),
+    const { text } = await trackedGenerateText({
+      model,
+      operation: "first_move_reveal",
+      dailyGameId: dailyGame.id,
+      player,
       system: createPlayerFacingNarrativePrompt([
         ...narrativeOutputShapePresets.twoCinematicSentences,
         "Return only the scene intro.",

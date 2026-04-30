@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { trackedGenerateText } from "./ai-usage";
 import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
@@ -45,8 +44,10 @@ async function createYesConsequence({
   });
 
   try {
-    const { text } = await generateText({
-      model: openai(model),
+    const { text } = await trackedGenerateText({
+      model,
+      operation: "first_choice_consequence_yes",
+      player,
       system: createPlayerFacingNarrativePrompt([
         ...narrativeOutputShapePresets.twoCinematicSentences,
         "Return only the immediate consequence of the player choosing YES.",
@@ -100,8 +101,10 @@ async function createNoConsequence({
   });
 
   try {
-    const { text } = await generateText({
-      model: openai(model),
+    const { text } = await trackedGenerateText({
+      model,
+      operation: "first_choice_consequence_no",
+      player,
       system: createPlayerFacingNarrativePrompt([
         ...narrativeOutputShapePresets.twoCinematicSentences,
         "Return only the immediate consequence of the player choosing NO.",

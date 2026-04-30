@@ -82,6 +82,7 @@ export async function createFirstConnectedPathTurnResponse({
         ? validatePreDeliveryConnectedPathResponse
         : undefined,
     storylineContext,
+    usageOperation: "connected_path_turn",
   });
 
   return {

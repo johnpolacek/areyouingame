@@ -204,6 +204,29 @@ const day1StorylineContext = v.object({
   updatedAt: v.string(),
 });
 
+const aiUsageStatus = v.union(v.literal("success"), v.literal("error"));
+
+const aiUsageEvent = v.object({
+  id: v.string(),
+  provider: v.literal("openai"),
+  model: v.string(),
+  operation: v.string(),
+  dailyGameId: v.optional(v.string()),
+  playerId: v.optional(v.string()),
+  clerkUserId: v.optional(v.string()),
+  inputTokens: v.number(),
+  cachedInputTokens: v.number(),
+  outputTokens: v.number(),
+  reasoningTokens: v.number(),
+  totalTokens: v.number(),
+  estimatedCostUsd: v.number(),
+  pricingSourceUrl: v.string(),
+  pricingEffectiveDate: v.string(),
+  status: aiUsageStatus,
+  errorType: v.optional(v.string()),
+  createdAt: v.string(),
+});
+
 export default defineSchema({
   dailyGames: defineTable({
     dailyGameId: v.string(),
@@ -307,5 +330,12 @@ export default defineSchema({
   })
     .index("by_dailyGameId", ["dailyGameId"])
     .index("by_playerId", ["playerId"])
+    .index("by_clerkUserId", ["clerkUserId"]),
+
+  aiUsageEvents: defineTable(aiUsageEvent)
+    .index("by_createdAt", ["createdAt"])
+    .index("by_model", ["model"])
+    .index("by_operation", ["operation"])
+    .index("by_dailyGameId", ["dailyGameId"])
     .index("by_clerkUserId", ["clerkUserId"]),
 });

@@ -41,5 +41,6 @@ export async function createFirstNoPostChoiceActionResponse({
     defaultActionKind: "open_world_action",
     player,
     storylineContext,
+    usageOperation: "post_choice_turn",
   });
 }

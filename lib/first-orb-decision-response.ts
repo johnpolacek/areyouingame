@@ -68,6 +68,7 @@ export async function createFirstOrbDecisionTurnResponse({
       },
     },
     storylineContext,
+    usageOperation: "orb_decision_turn",
   });
 
   return {

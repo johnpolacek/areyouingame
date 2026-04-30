@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { trackedGenerateText } from "./ai-usage";
 import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
@@ -48,8 +47,10 @@ export async function classifyFirstRevealTextResponse({
     };
   }
 
-  const { text } = await generateText({
-    model: openai(model),
+  const { text } = await trackedGenerateText({
+    model,
+    operation: "yes_no_classifier",
+    player,
     system: [
       "Classify a player's response to the exact question 'Are you in?'.",
       "Return exactly one token: YES, NO, DEFERRED, or END_DAY.",
@@ -178,8 +179,11 @@ async function createInterruptionText({
   const fallbackText = createFallbackInterruptionText(responseText);
 
   try {
-    const { text } = await generateText({
-      model: openai(getOpenAINarrativeModel()),
+    const model = getOpenAINarrativeModel();
+    const { text } = await trackedGenerateText({
+      model,
+      operation: "deferred_interruption",
+      player,
       system: createPlayerFacingNarrativePrompt([
         ...narrativeOutputShapePresets.twoCinematicSentences,
         "Return only the immediate narrative response to the player's deferred action.",

@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { trackedGenerateText } from "./ai-usage";
 import { getOpenAINarrativeModel } from "./openai-models";
 import type { DailyPlayer, OpeningSceneContextQuestion } from "./player-store";
 
@@ -20,8 +19,10 @@ export async function createOpeningSceneContextQuestion({
 
   try {
     const model = getOpenAINarrativeModel();
-    const { text } = await generateText({
-      model: openai(model),
+    const { text } = await trackedGenerateText({
+      model,
+      operation: "opening_scene_context",
+      player,
       system: [
         "You are a game master deciding whether the player's opening state needs one immediate scene-context question before narration can proceed.",
         "Return CONTINUE if the scene can proceed without asking.",

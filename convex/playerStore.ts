@@ -218,6 +218,29 @@ const day1StorylineContext = v.object({
   updatedAt: v.string(),
 });
 
+const aiUsageStatus = v.union(v.literal("success"), v.literal("error"));
+
+const aiUsageEvent = v.object({
+  id: v.string(),
+  provider: v.literal("openai"),
+  model: v.string(),
+  operation: v.string(),
+  dailyGameId: v.optional(v.string()),
+  playerId: v.optional(v.string()),
+  clerkUserId: v.optional(v.string()),
+  inputTokens: v.number(),
+  cachedInputTokens: v.number(),
+  outputTokens: v.number(),
+  reasoningTokens: v.number(),
+  totalTokens: v.number(),
+  estimatedCostUsd: v.number(),
+  pricingSourceUrl: v.string(),
+  pricingEffectiveDate: v.string(),
+  status: aiUsageStatus,
+  errorType: v.optional(v.string()),
+  createdAt: v.string(),
+});
+
 const player = v.object({
   id: v.string(),
   clerkUserId: v.string(),
@@ -291,6 +314,38 @@ export const getDailyGameStats = queryGeneric({
         gameplayEvents.map((event) => event.sourceTurnId),
       ).size,
     };
+  },
+});
+
+export const getAiUsageEventsForAdmin = queryGeneric({
+  args: {
+    backendSecret: v.string(),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(aiUsageEvent),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    return await ctx.db
+      .query("aiUsageEvents")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(Math.min(Math.max(args.limit ?? 200, 1), 2000));
+  },
+});
+
+export const recordAiUsageEvent = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    event: aiUsageEvent,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    await ctx.db.insert("aiUsageEvents", args.event);
+
+    return null;
   },
 });
 

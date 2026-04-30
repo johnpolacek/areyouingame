@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { trackedGenerateText } from "./ai-usage";
 import type {
   Day1GameplayContextPayload,
   Day1StorylineContext,
@@ -79,8 +78,11 @@ export async function createFirstConnectedAsiTurnResponse({
   const model = getOpenAINarrativeModel();
   const expectedTurnNumber =
     (player.firstConnectedPath?.connectedAsiTurns?.length ?? 0) + 1;
-  const { text } = await generateText({
-    model: openai(model),
+  const { text } = await trackedGenerateText({
+    model,
+    operation: "connected_asi_turn",
+    dailyGameId: dailyGame.id,
+    player,
     system: createPlayerFacingNarrativePrompt([
       "You are resolving the first playable connected ASI interaction after a YES player accepted the orb.",
       "Respond as a grounded global MUD game master, not as an assistant.",
