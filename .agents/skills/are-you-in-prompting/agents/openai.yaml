@@ -1,0 +1,4 @@
+interface:
+  display_name: "Are You In Prompting"
+  short_description: "Stage-aware narrative prompt design"
+  default_prompt: "Use $are-you-in-prompting to review and improve Are You In narrative prompts without leaking future reveal facts."
