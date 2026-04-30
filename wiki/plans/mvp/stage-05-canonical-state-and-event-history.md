@@ -6,7 +6,7 @@ Expand the production backend into deeper authoritative world and player state, 
 
 ## Current Status
 
-Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is completed: shared Day 1 global storyline context is available to constrain later player turns. Stage 05 Unit 03 is completed: the first NO/unconnected post-choice action resolves into a persisted narrative response with append-only event history. Stage 05 Unit 04 is completed: the first YES/connected path persists deterministic waiting, package delivery eligibility, optional unboxing, orb reveal, and connected-path event history. Stage 05 Unit 05 is completed: revealed-orb play now has a canonical `orbLifecycle` with delivered, accepted, and lost outcomes.
+Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is completed: shared Day 1 global storyline context is available to constrain later player turns. Stage 05 Unit 03 is completed: the first NO/unconnected post-choice action resolves into a persisted narrative response with append-only event history. Stage 05 Unit 04 is completed: the first YES/connected path persists deterministic waiting, package delivery eligibility, optional unboxing, orb reveal, and connected-path event history. Stage 05 Unit 05 is completed: revealed-orb play now has a canonical `orbLifecycle` with delivered, accepted, and lost outcomes. Stage 05 Unit 06 is completed: an orb-accepted player can take the first connected ASI interaction through a guarded, persisted, append-only turn.
 
 ## Scope
 
@@ -20,6 +20,7 @@ Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is 
 - [Stage 05, Unit 03: First NO/Unconnected Post-Choice Action Response](units/stage-05/03-first-post-choice-action-response.md) - completed.
 - [Stage 05, Unit 04: First YES Connected Path, Drone, And Orb](units/stage-05/04-first-yes-connected-path-drone-and-orb.md) - completed.
 - [Stage 05, Unit 05: First Orb Decision](units/stage-05/05-first-orb-decision.md) - completed.
+- [Stage 05, Unit 06: First Connected ASI Interaction](units/stage-05/06-first-connected-asi-interaction.md) - completed.
 
 ## Acceptance Criteria
 

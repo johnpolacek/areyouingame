@@ -359,10 +359,15 @@ export function FirstChoiceConsequence({
     firstConnectedPath?.packageStatus === "opened" &&
     firstConnectedPath.orbStatus === "revealed" &&
     currentOrbLifecycle === "orb_delivered";
+  const connectedAsiTurns = firstConnectedPath?.connectedAsiTurns ?? [];
+  const isConnectedAsiReadyForFirstAction =
+    currentOrbLifecycle === "orb_accepted" && connectedAsiTurns.length === 0;
   const isConnectedPathComplete =
-    currentOrbLifecycle === "orb_accepted" || currentOrbLifecycle === "orb_lost";
+    currentOrbLifecycle === "orb_lost" ||
+    (currentOrbLifecycle === "orb_accepted" && connectedAsiTurns.length > 0);
   const isYesPathReadyForAction =
-    decision.choice === "YES" && !isConnectedPathComplete;
+    decision.choice === "YES" &&
+    (!isConnectedPathComplete || isConnectedAsiReadyForFirstAction);
   const connectedPathTurns = firstConnectedPath?.turns ?? [];
   const orbDecisionTurns = firstConnectedPath?.orbDecisionTurns ?? [];
   const timeline = buildResponseTimeline({
@@ -376,7 +381,9 @@ export function FirstChoiceConsequence({
   const playerMessageCount = timeline.length;
   const actionFormPlaceholder =
     decision.choice === "YES"
-      ? isOrbDecisionAvailable
+      ? isConnectedAsiReadyForFirstAction
+        ? "Ask what is happening, ask what it can do, reach toward another presence, set a boundary, or request help."
+        : isOrbDecisionAvailable
         ? "Place it on your forehead, refuse it, destroy it, hide it, ask chat, or try anything else."
         : firstConnectedPath?.packageStatus === "available"
         ? "Open the package, leave it closed, hide it, call someone, or try anything else."
@@ -405,7 +412,9 @@ export function FirstChoiceConsequence({
     try {
       const endpoint =
         decision.choice === "YES"
-          ? isOrbDecisionAvailable
+          ? isConnectedAsiReadyForFirstAction
+            ? "/api/players/first-connected-asi-action"
+            : isOrbDecisionAvailable
             ? "/api/players/first-orb-decision-action"
             : "/api/players/first-connected-path-action"
           : "/api/players/first-post-choice-action";
@@ -620,7 +629,7 @@ export function FirstChoiceConsequence({
         </article>
       ) : connectedPathTurns.length > 0 ? (
         <div className="grid w-full gap-4">
-          {[...connectedPathTurns, ...orbDecisionTurns].map((turn) => (
+          {[...connectedPathTurns, ...orbDecisionTurns, ...connectedAsiTurns].map((turn) => (
             <article
               className="grid w-full gap-4 rounded-md border border-amber-300/25 bg-black/35 px-4 py-4 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur"
               key={turn.id}
@@ -733,6 +742,18 @@ function buildResponseTimeline({
         turn.sceneTitle ??
         titleFromActionKind(turn.actionKind) ??
         `Orb Turn ${turn.turnNumber}`,
+    });
+  }
+
+  for (const turn of firstConnectedPath?.connectedAsiTurns ?? []) {
+    timeline.push({
+      id: turn.id,
+      actionText: turn.actionText,
+      responseText: turn.responseText,
+      title:
+        turn.sceneTitle ??
+        titleFromActionKind(turn.actionKind) ??
+        `Connected ASI Turn ${turn.turnNumber}`,
     });
   }
 

@@ -241,3 +241,9 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 - Added a connected ASI LLM response guide for post-orb-acceptance play.
 - Defined the gentle human-node awareness model, future multiplayer consent pattern, ASI data categories, capability tiers, and response rules for broad player questions.
 - Linked the guide from the wiki index and source catalog so future accepted-path prompt work can use it as durable reference.
+
+## [2026-04-30] implementation | add first connected ASI interaction
+
+- Added Stage 05 Unit 06 for the first connected ASI action after `orbLifecycle: orb_accepted`.
+- Implemented a guarded connected-ASI action route, AI SDK response boundary, Convex persistence, and append-only events for the first accepted-orb interaction.
+- Updated the post-choice transcript UI so accepted players get one connected ASI action prompt before the next-turn placeholder.

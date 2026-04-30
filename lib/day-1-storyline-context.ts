@@ -344,6 +344,16 @@ function getPlayerKnownFacts(player: DailyPlayer): string[] {
         `Most recent orb decision action: ${lastOrbDecisionTurn.actionText}`,
       );
     }
+
+    if ((player.firstConnectedPath.connectedAsiTurns ?? []).length > 0) {
+      const connectedAsiTurns = player.firstConnectedPath.connectedAsiTurns ?? [];
+      const lastConnectedAsiTurn =
+        connectedAsiTurns[connectedAsiTurns.length - 1];
+
+      knownFacts.push(
+        `Most recent connected ASI action: ${lastConnectedAsiTurn.actionText}`,
+      );
+    }
   }
 
   return knownFacts;
@@ -383,6 +393,12 @@ function getRecentPlayerEvents(player: DailyPlayer): string[] {
 
     if (player.firstConnectedPath.orbLostAt) {
       events.push(`Orb lost at ${player.firstConnectedPath.orbLostAt}.`);
+    }
+
+    if (player.firstConnectedPath.connectedAsiStartedAt) {
+      events.push(
+        `Connected ASI interface started at ${player.firstConnectedPath.connectedAsiStartedAt}.`,
+      );
     }
   }
 

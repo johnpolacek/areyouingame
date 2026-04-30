@@ -133,6 +133,20 @@ const firstOrbDecisionTurn = v.object({
   resolvedAt: v.string(),
 });
 
+const firstConnectedAsiTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  responseText: v.string(),
+  sceneTitle: v.optional(v.string()),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  resolvedAt: v.string(),
+});
+
 const firstConnectedPath = v.object({
   id: v.string(),
   status: v.union(
@@ -147,11 +161,13 @@ const firstConnectedPath = v.object({
   turnCount: v.number(),
   turns: v.array(firstConnectedPathTurn),
   orbDecisionTurns: v.optional(v.array(firstOrbDecisionTurn)),
+  connectedAsiTurns: v.optional(v.array(firstConnectedAsiTurn)),
   startedAt: v.string(),
   deliveredAt: v.optional(v.string()),
   openedAt: v.optional(v.string()),
   orbAcceptedAt: v.optional(v.string()),
   orbLostAt: v.optional(v.string()),
+  connectedAsiStartedAt: v.optional(v.string()),
   updatedAt: v.string(),
 });
 
@@ -1074,6 +1090,128 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
         ...baseEvent,
         id: `${turnRecord.id}:orb-lost`,
         eventType: "orb_lost" as const,
+      });
+    }
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      firstConnectedPath: firstConnectedPathRecord,
+      updatedAt: now,
+    });
+  },
+});
+
+export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    actionText: v.string(),
+    responseText: v.string(),
+    sceneTitle: v.string(),
+    responseModel: v.string(),
+    responseSource: v.literal("ai"),
+    actionKind: v.string(),
+    playerVisibleFacts: v.array(v.string()),
+    storylineContextSourceVersion: v.string(),
+    expectedTurnNumber: v.number(),
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    if (!args.actionText.trim()) {
+      throw new ConvexError("Action text is required.");
+    }
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    if (!existingPlayer.firstDecision) {
+      throw new ConvexError("YES/NO choice is required first.");
+    }
+
+    if (existingPlayer.firstDecision.choice !== "YES") {
+      throw new ConvexError("Connected ASI interaction is only available after YES.");
+    }
+
+    const existingPath = existingPlayer.firstConnectedPath;
+
+    if (!existingPath || existingPath.orbLifecycle !== "orb_accepted") {
+      throw new ConvexError("The connected ASI interface is not available yet.");
+    }
+
+    const existingConnectedAsiTurns = existingPath.connectedAsiTurns ?? [];
+
+    if (existingConnectedAsiTurns.length > 0) {
+      return toDailyPlayer(existingPlayer);
+    }
+
+    if (existingConnectedAsiTurns.length >= args.expectedTurnNumber) {
+      return toDailyPlayer(existingPlayer);
+    }
+
+    if (existingConnectedAsiTurns.length !== args.expectedTurnNumber - 1) {
+      throw new ConvexError("Connected ASI turn is out of order.");
+    }
+
+    const now = new Date().toISOString();
+    const turnRecord = {
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-connected-asi-turn:${args.expectedTurnNumber}`,
+      turnNumber: args.expectedTurnNumber,
+      actionText: args.actionText,
+      responseText: args.responseText,
+      sceneTitle: args.sceneTitle,
+      responseModel: args.responseModel,
+      responseSource: args.responseSource,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      resolvedAt: now,
+    };
+    const firstConnectedPathRecord = {
+      ...existingPath,
+      connectedAsiTurns: [...existingConnectedAsiTurns, turnRecord],
+      connectedAsiStartedAt: existingPath.connectedAsiStartedAt ?? now,
+      updatedAt: now,
+    };
+    const baseEvent = {
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      clerkUserId: args.clerkUserId,
+      sourceTurnId: turnRecord.id,
+      selectedChoice: existingPlayer.firstDecision.choice,
+      playerActionText: args.actionText,
+      narrativeResponseText: args.responseText,
+      sceneTitle: args.sceneTitle,
+      actionKind: args.actionKind,
+      playerVisibleFacts: args.playerVisibleFacts,
+      connectedDeliveryStatus: existingPath.deliveryStatus,
+      connectedPackageStatus: existingPath.packageStatus,
+      connectedOrbStatus: existingPath.orbStatus,
+      connectedOrbLifecycle: existingPath.orbLifecycle,
+      model: args.responseModel,
+      source: args.responseSource,
+      storylineContextSourceVersion: args.storylineContextSourceVersion,
+      createdAt: now,
+    };
+
+    await ctx.db.patch(existingPlayer._id, {
+      firstConnectedPath: firstConnectedPathRecord,
+      updatedAt: now,
+    });
+    await ctx.db.insert("gameplayEvents", {
+      ...baseEvent,
+      id: `${turnRecord.id}:connected-asi-interaction-resolved`,
+      eventType: "connected_asi_interaction_resolved" as const,
+    });
+
+    if (args.expectedTurnNumber === 1) {
+      await ctx.db.insert("gameplayEvents", {
+        ...baseEvent,
+        id: `${turnRecord.id}:connected-asi-interface-started`,
+        eventType: "connected_asi_interface_started" as const,
       });
     }
 

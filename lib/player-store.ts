@@ -137,6 +137,20 @@ export type FirstOrbDecisionTurn = {
   resolvedAt: string;
 };
 
+export type FirstConnectedAsiTurn = {
+  id: string;
+  turnNumber: number;
+  actionText: string;
+  responseText: string;
+  sceneTitle?: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  resolvedAt: string;
+};
+
 export type FirstConnectedPath = {
   id: string;
   status: FirstConnectedPathStatus;
@@ -147,11 +161,13 @@ export type FirstConnectedPath = {
   turnCount: number;
   turns: FirstConnectedPathTurn[];
   orbDecisionTurns?: FirstOrbDecisionTurn[];
+  connectedAsiTurns?: FirstConnectedAsiTurn[];
   startedAt: string;
   deliveredAt?: string;
   openedAt?: string;
   orbAcceptedAt?: string;
   orbLostAt?: string;
+  connectedAsiStartedAt?: string;
   updatedAt: string;
 };
 
@@ -315,6 +331,22 @@ const submitFirstOrbDecisionTurnForUserGameRef = makeFunctionReference<
   },
   DailyPlayer
 >("playerStore:submitFirstOrbDecisionTurnForUserGame");
+
+const submitFirstConnectedAsiTurnForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    actionText: string;
+    responseText: string;
+    sceneTitle: string;
+    responseModel: string;
+    responseSource: "ai";
+    actionKind: string;
+    playerVisibleFacts: string[];
+    storylineContextSourceVersion: string;
+    expectedTurnNumber: number;
+  },
+  DailyPlayer
+>("playerStore:submitFirstConnectedAsiTurnForUserGame");
 
 const deletePlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -570,6 +602,10 @@ export function validateFirstOrbDecisionAction(input: unknown): string {
   return readRequiredString(input, "Action text", 1200);
 }
 
+export function validateFirstConnectedAsiAction(input: unknown): string {
+  return readRequiredString(input, "Action text", 1200);
+}
+
 export async function submitFirstPostChoiceActionForUserGame({
   clerkUserId,
   dailyGameId,
@@ -702,6 +738,47 @@ export async function submitFirstOrbDecisionTurnForUserGame({
     storylineContextSourceVersion,
     expectedTurnNumber,
     orbLifecycle,
+  });
+}
+
+export async function submitFirstConnectedAsiTurnForUserGame({
+  clerkUserId,
+  dailyGameId,
+  actionText,
+  responseText,
+  sceneTitle,
+  responseModel,
+  responseSource,
+  actionKind,
+  playerVisibleFacts,
+  storylineContextSourceVersion,
+  expectedTurnNumber,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  actionText: string;
+  responseText: string;
+  sceneTitle: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  expectedTurnNumber: number;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(submitFirstConnectedAsiTurnForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    actionText,
+    responseText,
+    sceneTitle,
+    responseModel,
+    responseSource,
+    actionKind,
+    playerVisibleFacts,
+    storylineContextSourceVersion,
+    expectedTurnNumber,
   });
 }
 

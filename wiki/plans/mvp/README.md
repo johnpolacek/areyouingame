@@ -6,9 +6,9 @@ This MVP plan starts with a hello-world-first greenfield build, then incremental
 
 - Next execution unit: [Stage 6, Unit 01: Daily Game Lifecycle And Public Recap](units/stage-06/01-daily-game-lifecycle-and-public-recap.md)
 - Most recently completed stage: [Stage 5: Canonical State, Event History, And Narrative Memory](stage-05-canonical-state-and-event-history.md)
-- Most recently completed unit: [Stage 5, Unit 05: First Orb Decision](units/stage-05/05-first-orb-decision.md)
+- Most recently completed unit: [Stage 5, Unit 06: First Connected ASI Interaction](units/stage-05/06-first-connected-asi-interaction.md)
 - Current execution stage: [Stage 6: Daily Game Lifecycle And Recaps](stage-06-daily-progression.md)
-- Status: the first-chat path now persists the opening response, YES/NO reveal, exactly-once first decision, text-based YES/NO classification, deferred interruptions, end-day deferrals, shared Day 1 global storyline context, the first NO/unconnected post-choice resolved turn, the first YES connected path through orb reveal, and the first orb decision lifecycle with delivered, accepted, and lost outcomes in Convex. The next unit moves toward daily lifecycle and public recap behavior.
+- Status: the first-chat path now persists the opening response, YES/NO reveal, exactly-once first decision, text-based YES/NO classification, deferred interruptions, end-day deferrals, shared Day 1 global storyline context, the first NO/unconnected post-choice resolved turn, the first YES connected path through orb reveal, the first orb decision lifecycle with delivered, accepted, and lost outcomes, and the first connected ASI interaction after orb acceptance in Convex. The next unit moves toward daily lifecycle and public recap behavior.
 
 ## Stages
 

@@ -119,6 +119,20 @@ const firstOrbDecisionTurn = v.object({
   resolvedAt: v.string(),
 });
 
+const firstConnectedAsiTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  responseText: v.string(),
+  sceneTitle: v.optional(v.string()),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  resolvedAt: v.string(),
+});
+
 const firstConnectedPath = v.object({
   id: v.string(),
   status: v.union(
@@ -133,11 +147,13 @@ const firstConnectedPath = v.object({
   turnCount: v.number(),
   turns: v.array(firstConnectedPathTurn),
   orbDecisionTurns: v.optional(v.array(firstOrbDecisionTurn)),
+  connectedAsiTurns: v.optional(v.array(firstConnectedAsiTurn)),
   startedAt: v.string(),
   deliveredAt: v.optional(v.string()),
   openedAt: v.optional(v.string()),
   orbAcceptedAt: v.optional(v.string()),
   orbLostAt: v.optional(v.string()),
+  connectedAsiStartedAt: v.optional(v.string()),
   updatedAt: v.string(),
 });
 
@@ -270,6 +286,8 @@ export default defineSchema({
       v.literal("orb_action_resolved"),
       v.literal("orb_accepted"),
       v.literal("orb_lost"),
+      v.literal("connected_asi_interface_started"),
+      v.literal("connected_asi_interaction_resolved"),
     ),
     sourceTurnId: v.string(),
     selectedChoice: v.union(v.literal("YES"), v.literal("NO")),
