@@ -49,8 +49,45 @@
   --font-display: var(--font-rubik-80s-fade);
 }
 
-:root {
+:root,
+.light {
   --radius: 0.5rem;
+  --background: oklch(0.955 0.026 83);
+  --foreground: oklch(0.22 0.035 64);
+  --card: oklch(0.985 0.012 86 / 78%);
+  --card-foreground: oklch(0.22 0.035 64);
+  --popover: oklch(0.985 0.012 86);
+  --popover-foreground: oklch(0.22 0.035 64);
+  --primary: oklch(0.56 0.13 70);
+  --primary-foreground: oklch(0.99 0.012 88);
+  --secondary: oklch(0.91 0.04 84);
+  --secondary-foreground: oklch(0.28 0.04 65);
+  --muted: oklch(0.89 0.028 82);
+  --muted-foreground: oklch(0.47 0.035 67);
+  --accent: oklch(0.61 0.105 188);
+  --accent-foreground: oklch(0.98 0.012 86);
+  --destructive: oklch(0.55 0.19 28);
+  --destructive-foreground: oklch(0.99 0.012 86);
+  --border: oklch(0.42 0.055 68 / 24%);
+  --input: oklch(0.99 0.012 86 / 76%);
+  --ring: oklch(0.61 0.105 188);
+  --chart-1: oklch(0.61 0.105 188);
+  --chart-2: oklch(0.64 0.13 72);
+  --chart-3: oklch(0.58 0.14 335);
+  --chart-4: oklch(0.56 0.12 145);
+  --chart-5: oklch(0.57 0.1 260);
+  --sidebar: oklch(0.93 0.028 82);
+  --sidebar-foreground: oklch(0.22 0.035 64);
+  --sidebar-primary: oklch(0.56 0.13 70);
+  --sidebar-primary-foreground: oklch(0.99 0.012 88);
+  --sidebar-accent: oklch(0.89 0.028 82);
+  --sidebar-accent-foreground: oklch(0.22 0.035 64);
+  --sidebar-border: oklch(0.42 0.055 68 / 24%);
+  --sidebar-ring: oklch(0.61 0.105 188);
+  color-scheme: light;
+}
+
+.dark {
   --background: oklch(0.13 0.01 255);
   --foreground: oklch(0.96 0.025 83);
   --card: oklch(0.18 0.012 255);
@@ -83,6 +120,7 @@
   --sidebar-accent-foreground: oklch(0.96 0.025 83);
   --sidebar-border: oklch(0.98 0.01 83 / 16%);
   --sidebar-ring: oklch(0.72 0.11 188);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -110,11 +148,37 @@
   font-family: var(--font-rubik-80s-fade), var(--font-rethink-sans), sans-serif;
 }
 
+.cinematic-vignette {
+  background:
+    radial-gradient(
+      circle at center,
+      transparent 0%,
+      oklch(0.98 0.018 86 / 34%) 46%,
+      oklch(0.82 0.06 76 / 68%) 100%
+    );
+}
+
+.dark .cinematic-vignette {
+  background:
+    radial-gradient(
+      circle at center,
+      transparent 0%,
+      rgb(0 0 0 / 24%) 42%,
+      rgb(0 0 0 / 86%) 100%
+    );
+}
+
 .first-move-question {
   text-shadow:
     0 0 16px rgb(251 191 36 / 44%),
     0 0 54px rgb(251 191 36 / 20%),
     0 2px 18px rgb(0 0 0 / 74%);
+}
+
+.light .first-move-question {
+  text-shadow:
+    0 0 14px rgb(180 83 9 / 22%),
+    0 2px 18px rgb(255 251 235 / 70%);
 }
 
 .first-move-glint {
@@ -132,4 +196,11 @@
 
 .first-move-answer {
   text-shadow: 0 0 14px currentColor;
+}
+
+button {
+  cursor: pointer;
+  transition: all;
+  transition-duration: 500ms;
+  transition-timing-function: var(--ease-in-out);
 }

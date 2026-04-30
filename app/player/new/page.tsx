@@ -16,7 +16,7 @@ export default async function NewPlayerPage() {
   }
 
   return (
-    <main className="relative isolate grid min-h-svh place-items-center overflow-hidden bg-black px-5 py-16 text-amber-50 sm:p-8">
+    <main className="relative isolate grid min-h-svh place-items-center overflow-hidden bg-background px-5 py-16 text-foreground sm:p-8">
       <HeroBackgroundVideo />
       <NewPlayerForm successHref="/game/today" />
     </main>

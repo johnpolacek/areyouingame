@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Rethink_Sans, Rubik_80s_Fade, Stalinist_One } from "next/font/google";
 import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import { CommandEnterSubmit } from "./command-enter-submit";
+import { themeInitializationScript } from "./theme";
+import { ThemeProvider, ThemeToggle } from "./theme-provider";
 import "./globals.css";
 
 const rethinkSans = Rethink_Sans({
@@ -33,22 +36,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950`}
+        className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-background`}
       >
-        <ClerkProvider>
-          <CommandEnterSubmit />
-          <Show when="signed-in">
+        <Script
+          id="theme-initialization"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeInitializationScript() }}
+        />
+        <ThemeProvider>
+          <ClerkProvider>
+            <CommandEnterSubmit />
             <div
-              className="fixed top-5 right-5 z-10 inline-flex"
-              aria-label="Account"
+              className="fixed top-5 right-5 z-20 inline-flex items-center gap-3"
+              aria-label="Account and display settings"
             >
-              <UserButton />
+              <ThemeToggle />
+              <Show when="signed-in">
+                <UserButton />
+              </Show>
             </div>
-          </Show>
-          {children}
-        </ClerkProvider>
+            {children}
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

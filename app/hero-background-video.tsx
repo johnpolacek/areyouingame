@@ -2,11 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "./theme-provider";
 
 export function HeroBackgroundVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [canLoadVideo, setCanLoadVideo] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const { theme } = useTheme();
+  const videoSource =
+    theme === "light"
+      ? "/video/generated/background-loop-slower-light.mp4"
+      : "/video/generated/background-loop-slower.mp4";
 
   function prepareVideo() {
     setIsReady(true);
@@ -75,12 +81,14 @@ export function HeroBackgroundVideo() {
 
   return (
     <video
+      key={videoSource}
       ref={videoRef}
       aria-hidden="true"
       autoPlay
       className={cn(
         "pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-0 transition-opacity duration-1000 ease-out",
-        isReady && "opacity-45",
+        isReady && theme === "light" && "opacity-50 mix-blend-multiply",
+        isReady && theme === "dark" && "opacity-45",
       )}
       loop
       muted
@@ -88,7 +96,7 @@ export function HeroBackgroundVideo() {
       onLoadedData={prepareVideo}
       playsInline
       preload="metadata"
-      src="/video/generated/background-loop-slower.mp4"
+      src={videoSource}
     />
   );
 }

@@ -55,10 +55,10 @@ export function DevResetPlayerButton() {
   return (
     <div className="absolute right-4 bottom-4 z-20 flex flex-col items-end gap-2">
       {isOpen ? (
-        <div className="grid w-64 gap-1 rounded-[4px] border border-amber-200/15 bg-black/70 p-1.5 text-amber-50 shadow-2xl shadow-black/40 backdrop-blur-md">
+        <div className="grid w-64 gap-1 rounded-[4px] border border-border bg-card/85 p-1.5 text-foreground shadow-2xl shadow-black/15 backdrop-blur-md dark:border-amber-200/15 dark:bg-black/70 dark:text-amber-50 dark:shadow-black/40">
           <Button
             aria-label="Start today's flow over"
-            className="h-auto justify-start rounded-[3px] px-2.5 py-2 text-left text-[0.72rem] font-semibold tracking-[0.12em] text-amber-100/80 uppercase hover:bg-amber-200/10 hover:text-amber-50 focus-visible:ring-amber-200/35"
+            className="h-auto justify-start rounded-[3px] px-2.5 py-2 text-left text-[0.72rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase hover:bg-muted hover:text-foreground focus-visible:ring-ring/35 dark:text-amber-100/80 dark:hover:bg-amber-200/10 dark:hover:text-amber-50 dark:focus-visible:ring-amber-200/35"
             disabled={resettingMode !== null}
             onClick={() => resetPlayer("day")}
             size="sm"
@@ -70,7 +70,7 @@ export function DevResetPlayerButton() {
           </Button>
           <Button
             aria-label="Delete today's local player and start over completely"
-            className="h-auto justify-start rounded-[3px] px-2.5 py-2 text-left text-[0.72rem] font-semibold tracking-[0.12em] text-red-100/75 uppercase hover:bg-red-400/10 hover:text-red-50 focus-visible:ring-red-200/35"
+            className="h-auto justify-start rounded-[3px] px-2.5 py-2 text-left text-[0.72rem] font-semibold tracking-[0.12em] text-destructive uppercase hover:bg-destructive/10 focus-visible:ring-destructive/35 dark:text-red-100/75 dark:hover:bg-red-400/10 dark:hover:text-red-50 dark:focus-visible:ring-red-200/35"
             disabled={resettingMode !== null}
             onClick={() => resetPlayer("full")}
             size="sm"
@@ -86,7 +86,7 @@ export function DevResetPlayerButton() {
       <Button
         aria-expanded={isOpen}
         aria-label="Open reset options"
-        className="h-8 rounded-[3px] border-amber-200/20 bg-black/35 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-amber-100/70 uppercase backdrop-blur-md hover:bg-amber-200/10 hover:text-amber-50 focus-visible:ring-amber-200/35"
+        className="h-8 rounded-[3px] border-border bg-card/75 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase backdrop-blur-md hover:bg-muted hover:text-foreground focus-visible:ring-ring/35 dark:border-amber-200/20 dark:bg-black/35 dark:text-amber-100/70 dark:hover:bg-amber-200/10 dark:hover:text-amber-50 dark:focus-visible:ring-amber-200/35"
         disabled={resettingMode !== null}
         onClick={() => setIsOpen((current) => !current)}
         size="sm"

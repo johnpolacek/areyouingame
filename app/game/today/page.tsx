@@ -48,14 +48,14 @@ export default async function TodaysGamePage() {
   return (
     <main
       className={cn(
-        "relative isolate bg-black px-5 text-amber-50 sm:p-8",
+        "relative isolate bg-background px-5 text-foreground sm:p-8",
         hasConsoleLayout
           ? "h-svh overflow-hidden py-6"
           : "grid min-h-svh place-items-center overflow-hidden py-16",
       )}
     >
       <HeroBackgroundVideo />
-      <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.24)_42%,rgba(0,0,0,0.86)_100%)]" />
+      <div className="cinematic-vignette absolute inset-0 z-[1]" />
       {process.env.NODE_ENV === "development" ? (
         <DevResetPlayerButton />
       ) : null}

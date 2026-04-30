@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type {
   FirstDecision,
   FirstConnectedPath,
@@ -13,6 +14,19 @@ import type {
   FirstRevealTextResponse,
   YesNoChoice,
 } from "@/lib/player-store";
+
+const errorClass =
+  "max-w-lg rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm leading-6 text-destructive backdrop-blur dark:border-red-400/30 dark:bg-red-950/35 dark:text-red-100";
+const panelClass =
+  "rounded-md border border-border bg-card/80 shadow-2xl shadow-black/10 backdrop-blur-md dark:border-amber-300/25 dark:bg-black/40 dark:shadow-black/30";
+const panelTextClass =
+  "text-base leading-7 font-medium text-foreground dark:text-amber-100";
+const labelClass =
+  "text-sm font-semibold tracking-[0.18em] text-primary uppercase dark:text-amber-200";
+const textareaClass =
+  "min-h-32 resize-y rounded-md border border-border bg-card/80 px-4 py-3 text-base leading-7 text-foreground shadow-2xl shadow-black/10 outline-none backdrop-blur-md placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-300/25 dark:bg-black/45 dark:text-amber-50 dark:shadow-black/25 dark:placeholder:text-amber-100/35 dark:focus:border-amber-200/80 dark:focus:ring-amber-300/25";
+const smallActionClass =
+  "!h-11 !rounded-[3px] border border-primary/45 bg-primary/10 px-6 text-sm font-bold tracking-[0.18em] text-primary uppercase hover:border-primary/70 hover:bg-primary/15 dark:border-amber-300/45 dark:bg-amber-300/10 dark:text-amber-100 dark:hover:border-amber-200 dark:hover:bg-amber-300/20";
 
 type FirstMoveRevealProps = {
   reveal: FirstMoveRevealState;
@@ -73,13 +87,13 @@ export function FirstMoveRevealPending() {
       className="relative z-10 grid min-h-40 w-full place-items-center text-center"
     >
       {error ? (
-        <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+        <p className={errorClass}>
           {error}
         </p>
       ) : (
         <LoaderCircleIcon
           aria-label="Loading"
-          className="size-8 animate-spin text-amber-300"
+          className="size-8 animate-spin text-primary dark:text-amber-300"
         />
       )}
     </section>
@@ -192,7 +206,7 @@ export function FirstMoveReveal({
       <div className="grid w-full max-w-2xl gap-5 text-left sm:text-center">
         {reveal.sceneIntro.map((paragraph) => (
           <p
-            className="text-base leading-8 font-medium text-amber-100/90 text-balance sm:text-lg sm:leading-9"
+            className="text-base leading-8 font-medium text-muted-foreground text-balance dark:text-amber-100/90 sm:text-lg sm:leading-9"
             key={paragraph}
           >
             {paragraph}
@@ -201,7 +215,7 @@ export function FirstMoveReveal({
       </div>
 
       <div className="mt-9 grid w-full justify-items-center gap-4 sm:mt-11">
-        <div className="grid gap-3 text-amber-200">
+        <div className="grid gap-3 text-primary dark:text-amber-200">
           <p className="text-lg leading-8 font-normal tracking-[0.12em] text-balance sm:text-2xl sm:leading-10 sm:tracking-[0.18em]">
             {reveal.revealCopy.availability}
           </p>
@@ -214,7 +228,7 @@ export function FirstMoveReveal({
 
         <h1
           id="first-move-reveal-title"
-          className="first-move-question whitespace-nowrap text-[2.25rem] leading-none font-light tracking-[0.08em] text-amber-50 uppercase sm:text-7xl sm:tracking-[0.18em] md:text-8xl md:tracking-[0.22em] lg:text-9xl"
+          className="first-move-question whitespace-nowrap text-[2.25rem] leading-none font-light tracking-[0.08em] text-foreground uppercase dark:text-amber-50 sm:text-7xl sm:tracking-[0.18em] md:text-8xl md:tracking-[0.22em] lg:text-9xl"
         >
           {reveal.revealCopy.question}
         </h1>
@@ -229,7 +243,7 @@ export function FirstMoveReveal({
           onClick={() => void submitChoice("YES")}
           type="button"
           variant="ghost"
-          className="first-move-answer !h-16 !rounded-[3px] border border-emerald-300/70 bg-black/20 font-sans text-xl font-light tracking-[0.48em] text-emerald-200 shadow-[0_0_34px_rgba(34,197,94,0.14)] backdrop-blur-sm hover:border-emerald-200 hover:bg-emerald-400/10 hover:text-emerald-100 focus-visible:border-emerald-100 focus-visible:ring-emerald-300/35 sm:!h-18"
+          className="first-move-answer !h-16 !rounded-[3px] border border-emerald-600/50 bg-emerald-50/45 font-sans text-xl font-light tracking-[0.48em] text-emerald-700 shadow-[0_0_34px_rgba(5,150,105,0.12)] backdrop-blur-sm hover:border-emerald-600 hover:bg-emerald-100/60 hover:text-emerald-800 focus-visible:border-emerald-700 focus-visible:ring-emerald-500/25 dark:border-emerald-300/70 dark:bg-black/20 dark:text-emerald-200 dark:shadow-[0_0_34px_rgba(34,197,94,0.14)] dark:hover:border-emerald-200 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-100 dark:focus-visible:border-emerald-100 dark:focus-visible:ring-emerald-300/35 sm:!h-18"
         >
           {submittedChoice === "YES" ? (
             <LoaderCircleIcon aria-hidden="true" className="size-5 animate-spin" />
@@ -242,7 +256,7 @@ export function FirstMoveReveal({
           onClick={() => void submitChoice("NO")}
           type="button"
           variant="ghost"
-          className="first-move-answer !h-16 !rounded-[3px] border border-red-400/75 bg-black/20 font-sans text-xl font-light tracking-[0.48em] text-red-300 shadow-[0_0_34px_rgba(239,68,68,0.13)] backdrop-blur-sm hover:border-red-200 hover:bg-red-500/10 hover:text-red-100 focus-visible:border-red-100 focus-visible:ring-red-300/35 sm:!h-18"
+          className="first-move-answer !h-16 !rounded-[3px] border border-red-600/45 bg-red-50/45 font-sans text-xl font-light tracking-[0.48em] text-red-700 shadow-[0_0_34px_rgba(220,38,38,0.1)] backdrop-blur-sm hover:border-red-600 hover:bg-red-100/60 hover:text-red-800 focus-visible:border-red-700 focus-visible:ring-red-500/25 dark:border-red-400/75 dark:bg-black/20 dark:text-red-300 dark:shadow-[0_0_34px_rgba(239,68,68,0.13)] dark:hover:border-red-200 dark:hover:bg-red-500/10 dark:hover:text-red-100 dark:focus-visible:border-red-100 dark:focus-visible:ring-red-300/35 sm:!h-18"
         >
           {submittedChoice === "NO" ? (
             <LoaderCircleIcon aria-hidden="true" className="size-5 animate-spin" />
@@ -256,13 +270,13 @@ export function FirstMoveReveal({
         <div className="mt-7 grid w-full max-w-2xl gap-3">
           {deferredResponses.map((response) => (
             <article
-              className="grid gap-3 rounded-md border border-amber-300/30 bg-black/45 px-4 py-3 text-left shadow-2xl shadow-black/30 backdrop-blur-md"
+              className={cn("grid gap-3 px-4 py-3 text-left", panelClass)}
               key={response.id}
             >
-              <p className="border-l border-amber-200/35 pl-3 text-sm leading-6 font-medium text-amber-50/70 italic">
+              <p className="border-l border-border pl-3 text-sm leading-6 font-medium text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
                 {response.inputText}
               </p>
-              <p className="text-base leading-7 font-medium text-amber-100">
+              <p className={panelTextClass}>
                 {response.interruptionText}
               </p>
             </article>
@@ -271,15 +285,15 @@ export function FirstMoveReveal({
       ) : null}
 
       {dayEndResponse ? (
-        <article className="mt-8 grid w-full max-w-2xl gap-3 rounded-md border border-amber-300/30 bg-black/45 px-4 py-4 text-left shadow-2xl shadow-black/30 backdrop-blur-md">
-          <p className="border-l border-amber-200/35 pl-3 text-sm leading-6 font-medium text-amber-50/70 italic">
+        <article className={cn("mt-8 grid w-full max-w-2xl gap-3 px-4 py-4 text-left", panelClass)}>
+          <p className="border-l border-border pl-3 text-sm leading-6 font-medium text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
             {dayEndResponse.inputText}
           </p>
-          <p className="text-base leading-7 font-medium text-amber-100">
+          <p className={panelTextClass}>
             {dayEndResponse.dayEndText ??
               "You turn off what you can, leave what you cannot, and go to bed. The house settles around you. For now, that is your answer."}
           </p>
-          <p className="text-xs font-bold tracking-[0.18em] text-amber-300/75 uppercase">
+          <p className="text-xs font-bold tracking-[0.18em] text-primary/80 uppercase dark:text-amber-300/75">
             Today&apos;s active play has ended
           </p>
         </article>
@@ -289,7 +303,7 @@ export function FirstMoveReveal({
           onSubmit={(event) => void submitTextResponse(event)}
         >
           <label
-            className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+            className={labelClass}
             htmlFor="first-reveal-text-response"
           >
             What do you do next?
@@ -301,7 +315,7 @@ export function FirstMoveReveal({
             disabled={isSubmitting}
             maxLength={1200}
             rows={4}
-            className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
+            className={textareaClass}
             placeholder="Say yes, refuse, stall, ask, run, call someone, or try anything else."
           />
           <div className="flex justify-end">
@@ -309,7 +323,7 @@ export function FirstMoveReveal({
               disabled={isSubmitting}
               type="submit"
               variant="ghost"
-              className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+              className={smallActionClass}
             >
               {isSubmittingText ? (
                 <LoaderCircleIcon
@@ -325,7 +339,7 @@ export function FirstMoveReveal({
       )}
 
       {error ? (
-        <p className="mt-6 max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+        <p className={cn("mt-6", errorClass)}>
           {error}
         </p>
       ) : null}
@@ -345,7 +359,9 @@ export function FirstChoiceConsequence({
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [error, setError] = useState("");
   const choiceClass =
-    decision.choice === "YES" ? "text-emerald-200" : "text-red-300";
+    decision.choice === "YES"
+      ? "text-emerald-700 dark:text-emerald-200"
+      : "text-red-700 dark:text-red-300";
   const hasResolvedFirstTurn = Boolean(firstPostChoiceAction?.responseText);
   const isNoPathReadyForFirstAction =
     decision.choice === "NO" && !firstPostChoiceAction;
@@ -450,52 +466,52 @@ export function FirstChoiceConsequence({
         aria-labelledby="current-scene-title"
         className="relative z-10 mx-auto grid h-full w-full max-w-7xl grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden text-left"
       >
-        <header className="flex flex-col gap-3 border-b border-amber-200/15 pb-5 sm:flex-row sm:items-end sm:justify-between sm:pr-16">
-          <p className="font-sans text-2xl leading-none font-extrabold tracking-normal text-amber-100 sm:text-4xl">
+        <header className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between sm:pr-16 dark:border-amber-200/15">
+          <p className="font-sans text-2xl leading-none font-extrabold tracking-normal text-foreground dark:text-amber-100 sm:text-4xl">
             Are You In?
           </p>
-          <p className="text-xs font-bold tracking-[0.18em] text-amber-100/70 uppercase">
-            Day 1 <span className="px-2 text-amber-300/45">|</span> Local Time{" "}
+          <p className="text-xs font-bold tracking-[0.18em] text-muted-foreground uppercase dark:text-amber-100/70">
+            Day 1 <span className="px-2 text-primary/55 dark:text-amber-300/45">|</span> Local Time{" "}
             {localTime}
           </p>
         </header>
 
         <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden lg:grid-cols-[17rem_minmax(0,1fr)] lg:grid-rows-none">
           <aside className="h-fit">
-            <div className="border-b border-amber-200/15 pb-5">
-              <p className="text-xs font-bold tracking-[0.22em] text-amber-300/75 uppercase">
+            <div className="border-b border-border pb-5 dark:border-amber-200/15">
+              <p className="text-xs font-bold tracking-[0.22em] text-primary/80 uppercase dark:text-amber-300/75">
                 Day 01
               </p>
-              <h2 className="mt-2 text-2xl leading-8 font-semibold text-amber-50">
+              <h2 className="mt-2 text-2xl leading-8 font-semibold text-foreground dark:text-amber-50">
                 Signal Day
               </h2>
             </div>
 
             <dl className="mt-5 grid gap-4">
               <div>
-                <dt className="text-xs font-bold tracking-[0.18em] text-amber-100/50 uppercase">
+                <dt className="text-xs font-bold tracking-[0.18em] text-muted-foreground uppercase dark:text-amber-100/50">
                   Messages
                 </dt>
-                <dd className="mt-1 text-3xl leading-none font-light text-amber-100">
+                <dd className="mt-1 text-3xl leading-none font-light text-foreground dark:text-amber-100">
                   {playerMessageCount}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-bold tracking-[0.18em] text-amber-100/50 uppercase">
+                <dt className="text-xs font-bold tracking-[0.18em] text-muted-foreground uppercase dark:text-amber-100/50">
                   Players
                 </dt>
-                <dd className="mt-1 text-3xl leading-none font-light text-amber-100">
+                <dd className="mt-1 text-3xl leading-none font-light text-foreground dark:text-amber-100">
                   {dailyGameStats.playerCount}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-bold tracking-[0.18em] text-amber-100/50 uppercase">
+                <dt className="text-xs font-bold tracking-[0.18em] text-muted-foreground uppercase dark:text-amber-100/50">
                   Total Messages
                 </dt>
-                <dd className="mt-1 text-3xl leading-none font-light text-amber-100">
+                <dd className="mt-1 text-3xl leading-none font-light text-foreground dark:text-amber-100">
                   {dailyGameStats.totalMessages}
                 </dd>
-                <p className="mt-1 text-xs leading-5 text-amber-100/45">
+                <p className="mt-1 text-xs leading-5 text-muted-foreground/70 dark:text-amber-100/45">
                   All players
                 </p>
               </div>
@@ -503,22 +519,22 @@ export function FirstChoiceConsequence({
           </aside>
 
           <div className="grid min-h-0 min-w-0 content-start gap-7 overflow-y-auto overscroll-contain pr-1 lg:pr-3">
-            <article className="border border-amber-200/20 bg-black/40 p-5 shadow-2xl shadow-black/30 backdrop-blur-md sm:p-7">
-              <p className="text-xs font-bold tracking-[0.22em] text-amber-300/75 uppercase">
+            <article className={cn("p-5 sm:p-7", panelClass)}>
+              <p className="text-xs font-bold tracking-[0.22em] text-primary/80 uppercase dark:text-amber-300/75">
                 Current Scene
               </p>
               <h1
                 id="current-scene-title"
-                className="mt-3 text-3xl leading-10 font-semibold text-amber-50 text-balance sm:text-5xl sm:leading-14"
+                className="mt-3 text-3xl leading-10 font-semibold text-foreground text-balance dark:text-amber-50 sm:text-5xl sm:leading-14"
               >
                 {currentTimelineEntry.title}
               </h1>
               {currentTimelineEntry.actionText ? (
-                <blockquote className="mt-6 border-l border-amber-200/35 pl-4 text-sm leading-6 font-medium text-amber-50/65 italic">
+                <blockquote className="mt-6 border-l border-border pl-4 text-sm leading-6 font-medium text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/65">
                   {currentTimelineEntry.actionText}
                 </blockquote>
               ) : null}
-              <div className="mt-6 grid gap-4 text-base leading-8 font-medium text-amber-100/90 sm:text-lg sm:leading-9">
+              <div className="mt-6 grid gap-4 text-base leading-8 font-medium text-foreground dark:text-amber-100/90 sm:text-lg sm:leading-9">
                 {currentTimelineEntry.responseText
                   .split(/\n{2,}/)
                   .map((paragraph) => (
@@ -545,29 +561,29 @@ export function FirstChoiceConsequence({
               <section aria-label="Response history" className="grid gap-3">
                 {historyTimelineEntries.map((entry, index) => (
                   <details
-                    className="group border border-amber-200/15 bg-black/30 px-4 py-3 backdrop-blur-sm open:bg-black/50"
+                    className="group border border-border bg-card/70 px-4 py-3 backdrop-blur-sm open:bg-muted/80 dark:border-amber-200/15 dark:bg-black/30 dark:open:bg-black/50"
                     key={entry.id}
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold tracking-[0.14em] text-amber-100/75 uppercase">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold tracking-[0.14em] text-muted-foreground uppercase dark:text-amber-100/75">
                       <span>
                         History Response {index + 1}:{" "}
-                        <span className="normal-case tracking-normal text-amber-50/85">
+                        <span className="normal-case tracking-normal text-foreground dark:text-amber-50/85">
                           {entry.title}
                         </span>
                       </span>
                       <span
                         aria-hidden="true"
-                        className="text-amber-300/70 transition group-open:rotate-45"
+                        className="text-primary/70 transition group-open:rotate-45 dark:text-amber-300/70"
                       >
                         +
                       </span>
                     </summary>
                     {entry.actionText ? (
-                      <blockquote className="mt-4 border-l border-amber-200/25 pl-3 text-sm leading-6 text-amber-50/60 italic">
+                      <blockquote className="mt-4 border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/25 dark:text-amber-50/60">
                         {entry.actionText}
                       </blockquote>
                     ) : null}
-                    <div className="mt-4 grid gap-3 text-sm leading-7 text-amber-100/82">
+                    <div className="mt-4 grid gap-3 text-sm leading-7 text-foreground dark:text-amber-100/82">
                       {entry.responseText.split(/\n{2,}/).map((paragraph) => (
                         <TranscriptParagraph key={paragraph} text={paragraph} />
                       ))}
@@ -578,7 +594,7 @@ export function FirstChoiceConsequence({
             ) : null}
 
             {error ? (
-              <p className="max-w-lg border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+              <p className={errorClass}>
                 {error}
               </p>
             ) : null}
@@ -602,23 +618,23 @@ export function FirstChoiceConsequence({
         </h1>
         {decision.consequenceTitle ? (
           <p
-            className="text-2xl leading-9 font-semibold text-amber-200 text-balance sm:text-4xl sm:leading-12"
+            className="text-2xl leading-9 font-semibold text-primary text-balance dark:text-amber-200 sm:text-4xl sm:leading-12"
           >
             {decision.consequenceTitle}
           </p>
         ) : null}
-        <p className="mx-auto max-w-xl text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8">
+        <p className="mx-auto max-w-xl text-base leading-7 font-medium text-muted-foreground text-balance dark:text-amber-100/85 sm:text-lg sm:leading-8">
           {decision.consequenceBody}
         </p>
       </div>
 
       {firstPostChoiceAction ? (
-        <article className="grid w-full gap-4 rounded-md border border-amber-300/25 bg-black/35 px-4 py-4 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur">
-          <blockquote className="border-l border-amber-200/35 pl-3 text-sm leading-6 text-amber-50/70 italic">
+        <article className={cn("grid w-full gap-4 px-4 py-4 text-left", panelTextClass, panelClass)}>
+          <blockquote className="border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
             {firstPostChoiceAction.actionText}
           </blockquote>
           {firstPostChoiceAction.responseText ? (
-            <div className="grid gap-4 text-amber-100">
+            <div className="grid gap-4 text-foreground dark:text-amber-100">
               {firstPostChoiceAction.responseText
                 .split(/\n{2,}/)
                 .map((paragraph) => (
@@ -631,13 +647,13 @@ export function FirstChoiceConsequence({
         <div className="grid w-full gap-4">
           {[...connectedPathTurns, ...orbDecisionTurns, ...connectedAsiTurns].map((turn) => (
             <article
-              className="grid w-full gap-4 rounded-md border border-amber-300/25 bg-black/35 px-4 py-4 text-left text-base leading-7 font-medium text-amber-100/85 backdrop-blur"
+              className={cn("grid w-full gap-4 px-4 py-4 text-left", panelTextClass, panelClass)}
               key={turn.id}
             >
-              <blockquote className="border-l border-amber-200/35 pl-3 text-sm leading-6 text-amber-50/70 italic">
+              <blockquote className="border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
                 {turn.actionText}
               </blockquote>
-              <div className="grid gap-4 text-amber-100">
+              <div className="grid gap-4 text-foreground dark:text-amber-100">
                 {turn.responseText.split(/\n{2,}/).map((paragraph) => (
                   <TranscriptParagraph key={paragraph} text={paragraph} />
                 ))}
@@ -662,7 +678,7 @@ export function FirstChoiceConsequence({
       ) : null}
 
       {error ? (
-        <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+        <p className={errorClass}>
           {error}
         </p>
       ) : null}
@@ -675,7 +691,7 @@ function TranscriptParagraph({ text }: { text: string }) {
 
   if (trimmed.startsWith(">")) {
     return (
-      <blockquote className="border-l border-amber-200/35 pl-4 text-sm leading-6 text-amber-50/75 italic">
+      <blockquote className="border-l border-border pl-4 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/75">
         {trimmed.replace(/^>\s?/, "")}
       </blockquote>
     );
@@ -788,7 +804,7 @@ function ActionPromptForm({
   return (
     <form className="grid w-full gap-3 text-left" onSubmit={onSubmit}>
       <label
-        className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+        className={labelClass}
         htmlFor="first-post-choice-action"
       >
         What do you do next?
@@ -800,7 +816,7 @@ function ActionPromptForm({
         disabled={isSubmittingAction}
         maxLength={1200}
         rows={4}
-        className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
+        className={textareaClass}
         placeholder={actionFormPlaceholder}
       />
       <div className="flex justify-end">
@@ -808,7 +824,7 @@ function ActionPromptForm({
           disabled={isSubmittingAction}
           type="submit"
           variant="ghost"
-          className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+          className={smallActionClass}
         >
           {isSubmittingAction ? (
             <LoaderCircleIcon aria-hidden="true" className="size-4 animate-spin" />
@@ -825,7 +841,7 @@ function NextTurnPendingForm() {
   return (
     <form className="grid w-full gap-3 text-left" aria-disabled="true">
       <label
-        className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+        className={labelClass}
         htmlFor="next-post-choice-action"
       >
         What do you do next?
@@ -834,7 +850,7 @@ function NextTurnPendingForm() {
         id="next-post-choice-action"
         disabled
         rows={4}
-        className="min-h-32 resize-y rounded-md border border-amber-300/20 bg-black/30 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/20 outline-none backdrop-blur-md placeholder:text-amber-100/35 disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-32 resize-y rounded-md border border-border bg-muted/70 px-4 py-3 text-base leading-7 text-muted-foreground shadow-2xl shadow-black/5 outline-none backdrop-blur-md placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-300/20 dark:bg-black/30 dark:text-amber-50 dark:shadow-black/20 dark:placeholder:text-amber-100/35"
         placeholder="The line stays open."
       />
       <div className="flex justify-end">
@@ -842,7 +858,7 @@ function NextTurnPendingForm() {
           disabled
           type="button"
           variant="ghost"
-          className="!h-11 !rounded-[3px] border border-amber-300/30 bg-amber-300/5 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase"
+          className="!h-11 !rounded-[3px] border border-primary/30 bg-primary/5 px-6 text-sm font-bold tracking-[0.18em] text-primary uppercase dark:border-amber-300/30 dark:bg-amber-300/5 dark:text-amber-100"
         >
           Continue
         </Button>

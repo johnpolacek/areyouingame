@@ -291,7 +291,7 @@ export function AnimatedHomeHero() {
       <h1
         ref={titleRef}
         id="entry-title"
-        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-600/90 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed]"
+        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-700 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
         Are You In?
@@ -299,7 +299,7 @@ export function AnimatedHomeHero() {
       <p
         ref={subtitleRef}
         aria-label={subtitleText}
-        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-amber-500 uppercase sm:text-xl"
+        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-primary uppercase sm:text-xl"
         style={{ opacity: 0 }}
       >
         An invitation to the future awaits.

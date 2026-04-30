@@ -93,7 +93,7 @@ export function HomeEntryActions({
             </SignUpButton>
             <SignInButton mode="modal" forceRedirectUrl="/join">
               <Button
-                className="hero-sign-in rounded-md border-amber-600/45 bg-slate-950/55 px-5 text-sm font-semibold text-amber-100 shadow-lg shadow-amber-700/15 backdrop-blur hover:bg-amber-600/10 hover:text-amber-50"
+                className="hero-sign-in rounded-md border-border bg-card/70 px-5 text-sm font-semibold text-foreground shadow-lg shadow-black/10 backdrop-blur hover:bg-muted/80 dark:border-amber-600/45 dark:bg-slate-950/55 dark:text-amber-100 dark:shadow-amber-700/15 dark:hover:bg-amber-600/10 dark:hover:text-amber-50"
                 onClick={savePendingDraft}
                 variant="outline"
               >

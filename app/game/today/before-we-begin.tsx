@@ -44,19 +44,19 @@ export function BeforeWeBegin() {
       className="relative z-10 flex w-full max-w-2xl flex-col items-center gap-7 text-center"
     >
       <div className="grid gap-4">
-        <p className="text-[0.68rem] font-bold tracking-[0.22em] text-amber-400 uppercase">
+        <p className="text-[0.68rem] font-bold tracking-[0.22em] text-primary uppercase dark:text-amber-400">
           Before we begin
         </p>
         <p
           id="before-we-begin-title"
-          className="mx-auto max-w-xl text-base leading-7 font-medium text-amber-100/85 text-balance sm:text-lg sm:leading-8"
+          className="mx-auto max-w-xl text-base leading-7 font-medium text-muted-foreground text-balance dark:text-amber-100/85 sm:text-lg sm:leading-8"
         >
           Your gameplay helps shape the shared story and will be published at
           the end of each day&apos;s session as part of the daily recap.
         </p>
       </div>
 
-      <label className="flex w-full max-w-xl items-start gap-3 rounded-md border border-amber-500/30 bg-black/45 p-4 text-left text-sm leading-6 text-amber-100 shadow-2xl shadow-black/35 backdrop-blur-md">
+      <label className="flex w-full max-w-xl items-start gap-3 rounded-md border border-border bg-card/80 p-4 text-left text-sm leading-6 text-foreground shadow-2xl shadow-black/10 backdrop-blur-md dark:border-amber-500/30 dark:bg-black/45 dark:text-amber-100 dark:shadow-black/35">
         <input
           checked={hasAccepted}
           className="mt-1 size-4 shrink-0 accent-amber-400"
@@ -70,13 +70,13 @@ export function BeforeWeBegin() {
       </label>
 
       {error ? (
-        <p className="max-w-lg rounded-md border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+        <p className="max-w-lg rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm leading-6 text-destructive backdrop-blur dark:border-red-400/30 dark:bg-red-950/35 dark:text-red-100">
           {error}
         </p>
       ) : null}
 
       <Button
-        className="h-12 w-full max-w-sm border border-amber-200/70 bg-gradient-to-b from-amber-500 to-amber-950 px-6 font-accent text-[0.84rem] font-normal tracking-[0.06em] text-amber-50 uppercase shadow-2xl shadow-black/60 backdrop-blur-md hover:brightness-[1.15] disabled:brightness-75 sm:h-14"
+        className="h-12 w-full max-w-sm border border-amber-600/40 bg-gradient-to-b from-amber-300 to-amber-700 px-6 font-accent text-[0.84rem] font-normal tracking-[0.06em] text-primary-foreground uppercase shadow-2xl shadow-black/20 backdrop-blur-md hover:brightness-[1.12] disabled:brightness-75 dark:border-amber-200/70 dark:from-amber-500 dark:to-amber-950 dark:text-amber-50 dark:shadow-black/60 dark:hover:brightness-[1.15] sm:h-14"
         disabled={!hasAccepted || isSubmitting}
         onClick={continueToGame}
       >

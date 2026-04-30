@@ -72,18 +72,20 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
       <main
         aria-busy="true"
         aria-label="Joining game"
-        className="min-h-screen bg-black"
+        className="min-h-screen bg-background"
       />
     );
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-black px-5 py-16 text-amber-50">
+    <main className="grid min-h-screen place-items-center bg-background px-5 py-16 text-foreground">
       <div className="flex max-w-md flex-col items-center gap-4 text-center">
-        <h1 className="font-accent text-xl tracking-normal text-amber-300">
+        <h1 className="font-accent text-xl tracking-normal text-primary">
           Character Creation Paused
         </h1>
-        <p className="text-sm leading-6 text-amber-100/80">{errorMessage}</p>
+        <p className="text-sm leading-6 text-muted-foreground">
+          {errorMessage}
+        </p>
       </div>
     </main>
   );
