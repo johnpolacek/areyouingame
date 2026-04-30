@@ -28,6 +28,11 @@ export type DailyPlayer = PlayerDraftInput & {
   updatedAt: string;
 };
 
+export type DailyGameStats = {
+  playerCount: number;
+  totalMessages: number;
+};
+
 export type FirstMoveReveal = {
   id: string;
   sceneIntro: string[];
@@ -79,6 +84,7 @@ export type FirstPostChoiceAction = {
   actionText: string;
   submittedAt: string;
   responseText?: string;
+  sceneTitle?: string;
   responseModel?: string;
   responseSource?: "ai";
   actionKind?: string;
@@ -104,6 +110,7 @@ export type FirstConnectedPathTurn = {
   turnNumber: number;
   actionText: string;
   responseText: string;
+  sceneTitle?: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;
@@ -120,6 +127,7 @@ export type FirstOrbDecisionTurn = {
   turnNumber: number;
   actionText: string;
   responseText: string;
+  sceneTitle?: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;
@@ -171,6 +179,15 @@ const getPlayerForUserGameRef = makeFunctionReference<
   AuthenticatedPlayerArgs,
   DailyPlayer | null
 >("playerStore:getPlayerForUserGame");
+
+const getDailyGameStatsRef = makeFunctionReference<
+  "query",
+  {
+    backendSecret: string;
+    dailyGameId: string;
+  },
+  DailyGameStats
+>("playerStore:getDailyGameStats");
 
 const createPlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -252,6 +269,7 @@ const submitFirstPostChoiceActionForUserGameRef = makeFunctionReference<
   AuthenticatedPlayerArgs & {
     actionText: string;
     responseText: string;
+    sceneTitle: string;
     responseModel: string;
     responseSource: "ai";
     actionKind: string;
@@ -266,6 +284,7 @@ const submitFirstConnectedPathTurnForUserGameRef = makeFunctionReference<
   AuthenticatedPlayerArgs & {
     actionText: string;
     responseText: string;
+    sceneTitle: string;
     responseModel: string;
     responseSource: "ai";
     actionKind: string;
@@ -285,6 +304,7 @@ const submitFirstOrbDecisionTurnForUserGameRef = makeFunctionReference<
   AuthenticatedPlayerArgs & {
     actionText: string;
     responseText: string;
+    sceneTitle: string;
     responseModel: string;
     responseSource: "ai";
     actionKind: string;
@@ -334,6 +354,15 @@ export async function getPlayerForUserGame(
   return await fetchQuery(getPlayerForUserGameRef, {
     backendSecret: getBackendSecret(),
     clerkUserId,
+    dailyGameId,
+  });
+}
+
+export async function getDailyGameStats(
+  dailyGameId: string,
+): Promise<DailyGameStats> {
+  return await fetchQuery(getDailyGameStatsRef, {
+    backendSecret: getBackendSecret(),
     dailyGameId,
   });
 }
@@ -546,6 +575,7 @@ export async function submitFirstPostChoiceActionForUserGame({
   dailyGameId,
   actionText,
   responseText,
+  sceneTitle,
   responseModel,
   responseSource,
   actionKind,
@@ -556,6 +586,7 @@ export async function submitFirstPostChoiceActionForUserGame({
   dailyGameId: string;
   actionText: string;
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;
@@ -568,6 +599,7 @@ export async function submitFirstPostChoiceActionForUserGame({
     dailyGameId,
     actionText,
     responseText,
+    sceneTitle,
     responseModel,
     responseSource,
     actionKind,
@@ -581,6 +613,7 @@ export async function submitFirstConnectedPathTurnForUserGame({
   dailyGameId,
   actionText,
   responseText,
+  sceneTitle,
   responseModel,
   responseSource,
   actionKind,
@@ -596,6 +629,7 @@ export async function submitFirstConnectedPathTurnForUserGame({
   dailyGameId: string;
   actionText: string;
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;
@@ -613,6 +647,7 @@ export async function submitFirstConnectedPathTurnForUserGame({
     dailyGameId,
     actionText,
     responseText,
+    sceneTitle,
     responseModel,
     responseSource,
     actionKind,
@@ -631,6 +666,7 @@ export async function submitFirstOrbDecisionTurnForUserGame({
   dailyGameId,
   actionText,
   responseText,
+  sceneTitle,
   responseModel,
   responseSource,
   actionKind,
@@ -643,6 +679,7 @@ export async function submitFirstOrbDecisionTurnForUserGame({
   dailyGameId: string;
   actionText: string;
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;
@@ -657,6 +694,7 @@ export async function submitFirstOrbDecisionTurnForUserGame({
     dailyGameId,
     actionText,
     responseText,
+    sceneTitle,
     responseModel,
     responseSource,
     actionKind,

@@ -26,6 +26,7 @@ export type ConnectedPathTransition = {
 
 export type FirstConnectedPathTurnResponse = ConnectedPathTransition & {
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;

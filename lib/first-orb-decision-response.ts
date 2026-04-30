@@ -14,6 +14,7 @@ export type FirstOrbDecisionTurnResponse = {
   expectedTurnNumber: number;
   orbLifecycle: ConnectedOrbLifecycle;
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;

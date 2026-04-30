@@ -13,6 +13,7 @@ export type EarlyPostChoiceBranch = "YES" | "NO";
 
 export type EarlyPostChoiceTurnResponse = {
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;
@@ -22,6 +23,7 @@ export type EarlyPostChoiceTurnResponse = {
 
 type GeneratedEarlyTurnResponse = {
   responseText?: unknown;
+  sceneTitle?: unknown;
   actionKind?: unknown;
   playerVisibleFacts?: unknown;
 };
@@ -116,8 +118,9 @@ export async function createEarlyPostChoiceTurnResponse({
       "Fictional quoted fragments should sound like ordinary people reacting in the moment. Do not include handles, real names, real outlets, or real quotes.",
       "Do not call, scrape, quote, or imply access to real Twitter, X, Bluesky, Facebook, news sites, broadcasts, or external services.",
       "Do not introduce deleted, disappearing, or vanishing posts unless future canonical state explicitly establishes that behavior.",
-      "Return valid compact JSON only, with keys responseText, actionKind, and playerVisibleFacts.",
+      "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
       "responseText should be 2 to 5 short paragraphs of second-person present-tense narration. Blockquote paragraphs count toward this limit.",
+      "sceneTitle should be a short evocative title, 2 to 6 words, title case, made from the current scene rather than the player's literal input.",
       "actionKind should be a short snake_case phrase describing the attempted action in broad terms.",
       "playerVisibleFacts should contain 2 to 5 short durable facts the player learned or established, not literary prose.",
     ]),
@@ -151,6 +154,7 @@ export async function createEarlyPostChoiceTurnResponse({
 
   return {
     responseText: normalizeResponseText(generated.responseText),
+    sceneTitle: normalizeSceneTitle(generated.sceneTitle),
     responseModel: model,
     responseSource: "ai",
     actionKind: normalizeActionKind(generated.actionKind, defaultActionKind),
@@ -197,6 +201,20 @@ function normalizeResponseText(value: unknown): string {
   }
 
   return normalized.slice(0, 1800);
+}
+
+function normalizeSceneTitle(value: unknown): string {
+  if (typeof value !== "string") {
+    return "The World Answers";
+  }
+
+  const normalized = value
+    .replace(/\s+/g, " ")
+    .replace(/[^\w\s:'-]/g, "")
+    .trim()
+    .slice(0, 80);
+
+  return normalized || "The World Answers";
 }
 
 function normalizeActionKind(value: unknown, defaultActionKind: string): string {

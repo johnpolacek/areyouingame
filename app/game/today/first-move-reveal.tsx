@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import type {
   FirstDecision,
   FirstConnectedPath,
+  DailyGameStats,
   FirstPostChoiceAction,
   FirstMoveReveal as FirstMoveRevealState,
   FirstRevealTextResponse,
@@ -19,9 +20,11 @@ type FirstMoveRevealProps = {
 };
 
 type FirstChoiceConsequenceProps = {
+  dailyGameStats: DailyGameStats;
   decision: FirstDecision;
   firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
+  localTime: string;
 };
 
 export function FirstMoveRevealPending() {
@@ -331,9 +334,11 @@ export function FirstMoveReveal({
 }
 
 export function FirstChoiceConsequence({
+  dailyGameStats,
   decision,
   firstConnectedPath,
   firstPostChoiceAction,
+  localTime,
 }: FirstChoiceConsequenceProps) {
   const router = useRouter();
   const [actionText, setActionText] = useState("");
@@ -360,6 +365,15 @@ export function FirstChoiceConsequence({
     decision.choice === "YES" && !isConnectedPathComplete;
   const connectedPathTurns = firstConnectedPath?.turns ?? [];
   const orbDecisionTurns = firstConnectedPath?.orbDecisionTurns ?? [];
+  const timeline = buildResponseTimeline({
+    decision,
+    firstConnectedPath,
+    firstPostChoiceAction,
+  });
+  const currentTimelineEntry = timeline[timeline.length - 1];
+  const historyTimelineEntries = timeline.slice(0, -1);
+  const shouldUseConsoleLayout = timeline.length > 1;
+  const playerMessageCount = timeline.length;
   const actionFormPlaceholder =
     decision.choice === "YES"
       ? isOrbDecisionAvailable
@@ -419,6 +433,150 @@ export function FirstChoiceConsequence({
     } finally {
       setIsSubmittingAction(false);
     }
+  }
+
+  if (shouldUseConsoleLayout && currentTimelineEntry) {
+    return (
+      <section
+        aria-labelledby="current-scene-title"
+        className="relative z-10 mx-auto grid min-h-[calc(100svh-8rem)] w-full max-w-7xl grid-rows-[auto_1fr] gap-6 text-left"
+      >
+        <header className="flex flex-col gap-3 border-b border-amber-200/15 pb-5 sm:flex-row sm:items-end sm:justify-between sm:pr-16">
+          <p className="hero-display-title text-2xl leading-none text-amber-100 sm:text-4xl">
+            Are You In?
+          </p>
+          <p className="text-xs font-bold tracking-[0.18em] text-amber-100/70 uppercase">
+            Day 1 <span className="px-2 text-amber-300/45">|</span> Local Time{" "}
+            {localTime}
+          </p>
+        </header>
+
+        <div className="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
+          <aside className="h-fit border border-amber-200/15 bg-black/45 p-5 shadow-2xl shadow-black/25 backdrop-blur-md lg:sticky lg:top-8">
+            <div className="border-b border-amber-200/15 pb-5">
+              <p className="text-xs font-bold tracking-[0.22em] text-amber-300/75 uppercase">
+                Day 01
+              </p>
+              <h2 className="mt-2 text-2xl leading-8 font-semibold text-amber-50">
+                Signal Day
+              </h2>
+            </div>
+
+            <dl className="mt-5 grid gap-4">
+              <div>
+                <dt className="text-xs font-bold tracking-[0.18em] text-amber-100/50 uppercase">
+                  Messages
+                </dt>
+                <dd className="mt-1 text-3xl leading-none font-light text-amber-100">
+                  {playerMessageCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-bold tracking-[0.18em] text-amber-100/50 uppercase">
+                  Players
+                </dt>
+                <dd className="mt-1 text-3xl leading-none font-light text-amber-100">
+                  {dailyGameStats.playerCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-bold tracking-[0.18em] text-amber-100/50 uppercase">
+                  Total Messages
+                </dt>
+                <dd className="mt-1 text-3xl leading-none font-light text-amber-100">
+                  {dailyGameStats.totalMessages}
+                </dd>
+                <p className="mt-1 text-xs leading-5 text-amber-100/45">
+                  All players
+                </p>
+              </div>
+            </dl>
+          </aside>
+
+          <div className="grid min-w-0 content-start gap-7">
+            <article className="border border-amber-200/20 bg-black/40 p-5 shadow-2xl shadow-black/30 backdrop-blur-md sm:p-7">
+              <p className="text-xs font-bold tracking-[0.22em] text-amber-300/75 uppercase">
+                Current Scene
+              </p>
+              <h1
+                id="current-scene-title"
+                className="mt-3 text-3xl leading-10 font-semibold text-amber-50 text-balance sm:text-5xl sm:leading-14"
+              >
+                {currentTimelineEntry.title}
+              </h1>
+              {currentTimelineEntry.actionText ? (
+                <blockquote className="mt-6 border-l border-amber-200/35 pl-4 text-sm leading-6 font-medium text-amber-50/65 italic">
+                  {currentTimelineEntry.actionText}
+                </blockquote>
+              ) : null}
+              <div className="mt-6 grid gap-4 text-base leading-8 font-medium text-amber-100/90 sm:text-lg sm:leading-9">
+                {currentTimelineEntry.responseText
+                  .split(/\n{2,}/)
+                  .map((paragraph) => (
+                    <TranscriptParagraph key={paragraph} text={paragraph} />
+                  ))}
+              </div>
+            </article>
+
+            {isNoPathReadyForFirstAction || isYesPathReadyForAction ? (
+              <ActionPromptForm
+                actionFormPlaceholder={actionFormPlaceholder}
+                actionText={actionText}
+                isSubmittingAction={isSubmittingAction}
+                onActionTextChange={setActionText}
+                onSubmit={submitAction}
+              />
+            ) : null}
+
+            {hasResolvedFirstTurn || isConnectedPathComplete ? (
+              <NextTurnPendingForm />
+            ) : null}
+
+            {historyTimelineEntries.length > 0 ? (
+              <section aria-label="Response history" className="grid gap-3">
+                {historyTimelineEntries.map((entry, index) => (
+                  <details
+                    className="group border border-amber-200/15 bg-black/30 px-4 py-3 backdrop-blur-sm open:bg-black/50"
+                    key={entry.id}
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold tracking-[0.14em] text-amber-100/75 uppercase">
+                      <span>
+                        History Response {index + 1}:{" "}
+                        <span className="normal-case tracking-normal text-amber-50/85">
+                          {entry.title}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="text-amber-300/70 transition group-open:rotate-45"
+                      >
+                        +
+                      </span>
+                    </summary>
+                    {entry.actionText ? (
+                      <blockquote className="mt-4 border-l border-amber-200/25 pl-3 text-sm leading-6 text-amber-50/60 italic">
+                        {entry.actionText}
+                      </blockquote>
+                    ) : null}
+                    <div className="mt-4 grid gap-3 text-sm leading-7 text-amber-100/82">
+                      {entry.responseText.split(/\n{2,}/).map((paragraph) => (
+                        <TranscriptParagraph key={paragraph} text={paragraph} />
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </section>
+            ) : null}
+
+            {error ? (
+              <p className="max-w-lg border border-red-400/30 bg-red-950/35 px-4 py-3 text-sm leading-6 text-red-100 backdrop-blur">
+                {error}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -481,41 +639,13 @@ export function FirstChoiceConsequence({
       ) : null}
 
       {isNoPathReadyForFirstAction || isYesPathReadyForAction ? (
-        <form className="grid w-full gap-3 text-left" onSubmit={submitAction}>
-          <label
-            className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
-            htmlFor="first-post-choice-action"
-          >
-            What do you do next?
-          </label>
-          <textarea
-            id="first-post-choice-action"
-            value={actionText}
-            onChange={(event) => setActionText(event.target.value)}
-            disabled={isSubmittingAction}
-            maxLength={1200}
-            rows={4}
-            className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
-            placeholder={actionFormPlaceholder}
-          />
-          <div className="flex justify-end">
-            <Button
-              disabled={isSubmittingAction}
-              type="submit"
-              variant="ghost"
-              className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
-            >
-              {isSubmittingAction ? (
-                <LoaderCircleIcon
-                  aria-hidden="true"
-                  className="size-4 animate-spin"
-                />
-              ) : (
-                "Continue"
-              )}
-            </Button>
-          </div>
-        </form>
+        <ActionPromptForm
+          actionFormPlaceholder={actionFormPlaceholder}
+          actionText={actionText}
+          isSubmittingAction={isSubmittingAction}
+          onActionTextChange={setActionText}
+          onSubmit={submitAction}
+        />
       ) : null}
 
       {hasResolvedFirstTurn || isConnectedPathComplete ? (
@@ -543,6 +673,131 @@ function TranscriptParagraph({ text }: { text: string }) {
   }
 
   return <p>{text}</p>;
+}
+
+type TimelineEntry = {
+  id: string;
+  actionText?: string;
+  responseText: string;
+  title: string;
+};
+
+function buildResponseTimeline({
+  decision,
+  firstConnectedPath,
+  firstPostChoiceAction,
+}: {
+  decision: FirstDecision;
+  firstConnectedPath?: FirstConnectedPath;
+  firstPostChoiceAction?: FirstPostChoiceAction;
+}): TimelineEntry[] {
+  const timeline: TimelineEntry[] = [
+    {
+      id: decision.id,
+      actionText: `Answered ${decision.choice}`,
+      responseText: decision.consequenceBody,
+      title: decision.consequenceTitle || `${decision.choice} Answered`,
+    },
+  ];
+
+  if (firstPostChoiceAction?.responseText) {
+    timeline.push({
+      id: firstPostChoiceAction.id,
+      actionText: firstPostChoiceAction.actionText,
+      responseText: firstPostChoiceAction.responseText,
+      title:
+        firstPostChoiceAction.sceneTitle ??
+        titleFromActionKind(firstPostChoiceAction.actionKind) ??
+        "The World Answers",
+    });
+  }
+
+  for (const turn of firstConnectedPath?.turns ?? []) {
+    timeline.push({
+      id: turn.id,
+      actionText: turn.actionText,
+      responseText: turn.responseText,
+      title:
+        turn.sceneTitle ??
+        titleFromActionKind(turn.actionKind) ??
+        `Connected Turn ${turn.turnNumber}`,
+    });
+  }
+
+  for (const turn of firstConnectedPath?.orbDecisionTurns ?? []) {
+    timeline.push({
+      id: turn.id,
+      actionText: turn.actionText,
+      responseText: turn.responseText,
+      title:
+        turn.sceneTitle ??
+        titleFromActionKind(turn.actionKind) ??
+        `Orb Turn ${turn.turnNumber}`,
+    });
+  }
+
+  return timeline;
+}
+
+function titleFromActionKind(actionKind: string | undefined): string | null {
+  if (!actionKind) {
+    return null;
+  }
+
+  return actionKind
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function ActionPromptForm({
+  actionFormPlaceholder,
+  actionText,
+  isSubmittingAction,
+  onActionTextChange,
+  onSubmit,
+}: {
+  actionFormPlaceholder: string;
+  actionText: string;
+  isSubmittingAction: boolean;
+  onActionTextChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <form className="grid w-full gap-3 text-left" onSubmit={onSubmit}>
+      <label
+        className="text-sm font-semibold tracking-[0.18em] text-amber-200 uppercase"
+        htmlFor="first-post-choice-action"
+      >
+        What do you do next?
+      </label>
+      <textarea
+        id="first-post-choice-action"
+        value={actionText}
+        onChange={(event) => onActionTextChange(event.target.value)}
+        disabled={isSubmittingAction}
+        maxLength={1200}
+        rows={4}
+        className="min-h-32 resize-y rounded-md border border-amber-300/25 bg-black/45 px-4 py-3 text-base leading-7 text-amber-50 shadow-2xl shadow-black/25 outline-none backdrop-blur-md placeholder:text-amber-100/35 focus:border-amber-200/80 focus:ring-2 focus:ring-amber-300/25 disabled:cursor-not-allowed disabled:opacity-60"
+        placeholder={actionFormPlaceholder}
+      />
+      <div className="flex justify-end">
+        <Button
+          disabled={isSubmittingAction}
+          type="submit"
+          variant="ghost"
+          className="!h-11 !rounded-[3px] border border-amber-300/45 bg-amber-300/10 px-6 text-sm font-bold tracking-[0.18em] text-amber-100 uppercase hover:border-amber-200 hover:bg-amber-300/20"
+        >
+          {isSubmittingAction ? (
+            <LoaderCircleIcon aria-hidden="true" className="size-4 animate-spin" />
+          ) : (
+            "Continue"
+          )}
+        </Button>
+      </div>
+    </form>
+  );
 }
 
 function NextTurnPendingForm() {

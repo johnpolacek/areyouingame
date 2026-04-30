@@ -70,6 +70,7 @@ const firstPostChoiceAction = v.object({
   actionText: v.string(),
   submittedAt: v.string(),
   responseText: v.optional(v.string()),
+  sceneTitle: v.optional(v.string()),
   responseModel: v.optional(v.string()),
   responseSource: v.optional(v.literal("ai")),
   actionKind: v.optional(v.string()),
@@ -105,6 +106,7 @@ const firstConnectedPathTurn = v.object({
   turnNumber: v.number(),
   actionText: v.string(),
   responseText: v.string(),
+  sceneTitle: v.optional(v.string()),
   responseModel: v.string(),
   responseSource: v.literal("ai"),
   actionKind: v.string(),
@@ -121,6 +123,7 @@ const firstOrbDecisionTurn = v.object({
   turnNumber: v.number(),
   actionText: v.string(),
   responseText: v.string(),
+  sceneTitle: v.optional(v.string()),
   responseModel: v.string(),
   responseSource: v.literal("ai"),
   actionKind: v.string(),
@@ -242,6 +245,36 @@ export const getPlayerForUserGame = queryGeneric({
     );
 
     return existingPlayer ? toDailyPlayer(existingPlayer) : null;
+  },
+});
+
+export const getDailyGameStats = queryGeneric({
+  args: {
+    backendSecret: v.string(),
+    dailyGameId: v.string(),
+  },
+  returns: v.object({
+    playerCount: v.number(),
+    totalMessages: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
+      .collect();
+    const gameplayEvents = await ctx.db
+      .query("gameplayEvents")
+      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
+      .collect();
+
+    return {
+      playerCount: players.length,
+      totalMessages: new Set(
+        gameplayEvents.map((event) => event.sourceTurnId),
+      ).size,
+    };
   },
 });
 
@@ -666,6 +699,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
     ...authenticatedArgs,
     actionText: v.string(),
     responseText: v.string(),
+    sceneTitle: v.string(),
     responseModel: v.string(),
     responseSource: v.literal("ai"),
     actionKind: v.string(),
@@ -700,6 +734,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       actionText: args.actionText,
       submittedAt: now,
       responseText: args.responseText,
+      sceneTitle: args.sceneTitle,
       responseModel: args.responseModel,
       responseSource: args.responseSource,
       actionKind: args.actionKind,
@@ -717,6 +752,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       selectedChoice: existingPlayer.firstDecision.choice,
       playerActionText: args.actionText,
       narrativeResponseText: args.responseText,
+      sceneTitle: args.sceneTitle,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
       model: args.responseModel,
@@ -744,6 +780,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
     ...authenticatedArgs,
     actionText: v.string(),
     responseText: v.string(),
+    sceneTitle: v.string(),
     responseModel: v.string(),
     responseSource: v.literal("ai"),
     actionKind: v.string(),
@@ -798,6 +835,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       turnNumber: args.expectedTurnNumber,
       actionText: args.actionText,
       responseText: args.responseText,
+      sceneTitle: args.sceneTitle,
       responseModel: args.responseModel,
       responseSource: args.responseSource,
       actionKind: args.actionKind,
@@ -853,6 +891,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       selectedChoice: existingPlayer.firstDecision.choice,
       playerActionText: args.actionText,
       narrativeResponseText: args.responseText,
+      sceneTitle: args.sceneTitle,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
       connectedDeliveryStatus: args.deliveryStatus,
@@ -907,6 +946,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
     ...authenticatedArgs,
     actionText: v.string(),
     responseText: v.string(),
+    sceneTitle: v.string(),
     responseModel: v.string(),
     responseSource: v.literal("ai"),
     actionKind: v.string(),
@@ -973,6 +1013,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       turnNumber: args.expectedTurnNumber,
       actionText: args.actionText,
       responseText: args.responseText,
+      sceneTitle: args.sceneTitle,
       responseModel: args.responseModel,
       responseSource: args.responseSource,
       actionKind: args.actionKind,
@@ -997,6 +1038,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       selectedChoice: existingPlayer.firstDecision.choice,
       playerActionText: args.actionText,
       narrativeResponseText: args.responseText,
+      sceneTitle: args.sceneTitle,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
       connectedDeliveryStatus: existingPath.deliveryStatus,

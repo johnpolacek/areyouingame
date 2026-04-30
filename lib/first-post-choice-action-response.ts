@@ -8,6 +8,7 @@ import type { DailyPlayer } from "./player-store";
 
 export type FirstPostChoiceActionResponse = {
   responseText: string;
+  sceneTitle: string;
   responseModel: string;
   responseSource: "ai";
   actionKind: string;

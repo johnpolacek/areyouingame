@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       dailyGameId: todayGame.id,
       actionText,
       responseText: generatedResponse.responseText,
+      sceneTitle: generatedResponse.sceneTitle,
       responseModel: generatedResponse.responseModel,
       responseSource: generatedResponse.responseSource,
       actionKind: generatedResponse.actionKind,
