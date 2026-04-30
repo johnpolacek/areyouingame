@@ -28,6 +28,17 @@ type GeneratedEarlyTurnResponse = {
   playerVisibleFacts?: unknown;
 };
 
+type NormalizedEarlyTurnResponse = {
+  responseText: string;
+  sceneTitle: string;
+  actionKind: string;
+  playerVisibleFacts: string[];
+};
+
+type ResponseValidation = (
+  response: NormalizedEarlyTurnResponse,
+) => string | null;
+
 const day1MediaContext = {
   xFeed: [
     "At first there may be little or nothing useful. It can take a minute or two for people to recover, screenshot, type, and post.",
@@ -89,6 +100,7 @@ export async function createEarlyPostChoiceTurnResponse({
   defaultActionKind,
   player,
   promptExtras,
+  responseValidation,
   storylineContext,
 }: {
   actionText: string;
@@ -99,66 +111,95 @@ export async function createEarlyPostChoiceTurnResponse({
   defaultActionKind: string;
   player: DailyPlayer;
   promptExtras?: Record<string, unknown>;
+  responseValidation?: ResponseValidation;
   storylineContext: Day1StorylineContext;
 }): Promise<EarlyPostChoiceTurnResponse> {
   const model = getOpenAINarrativeModel();
-  const { text } = await generateText({
-    model: openai(model),
-    system: createPlayerFacingNarrativePrompt([
-      `You are resolving an open-world action after the player answered ${branch}.`,
-      "The ordinary world resumes, but public information is starting to show that the event is larger than one person.",
-      "Everyone is reacting to the global takeover of screens, audio, internet services, and phone lines. Speculation is rampant.",
-      ...branchInstructions,
-      "Respond as a grounded global MUD game master, not as an assistant.",
-      "Interpret the player's attempted action generously and adjudicate what they can plausibly perceive or learn.",
-      "Use the supplied media context only when it matches the player's action. If it does not match, answer the action directly from player and world context.",
-      "When media context is relevant, use it as source material. Do not dump it verbatim.",
-      "For feed, public-web, or broadcast actions, preserve the timing: at first there may be nothing or only a few scattered posts, then within a minute or two the trickle becomes a firehose.",
-      "When it fits the player's action, sprinkle in 1 to 3 short fictional post or broadcast fragments as separate blockquote paragraphs prefixed with >.",
-      "Fictional quoted fragments should sound like ordinary people reacting in the moment. Do not include handles, real names, real outlets, or real quotes.",
-      "Do not call, scrape, quote, or imply access to real Twitter, X, Bluesky, Facebook, news sites, broadcasts, or external services.",
-      "Do not introduce deleted, disappearing, or vanishing posts unless future canonical state explicitly establishes that behavior.",
-      "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
-      "responseText should be 2 to 5 short paragraphs of second-person present-tense narration. Blockquote paragraphs count toward this limit.",
-      "sceneTitle should be a short evocative title, 2 to 6 words, title case, made from the current scene rather than the player's literal input.",
-      "actionKind should be a short snake_case phrase describing the attempted action in broad terms.",
-      "playerVisibleFacts should contain 2 to 5 short durable facts the player learned or established, not literary prose.",
-    ]),
-    prompt: JSON.stringify(
-      {
-        player: {
-          name: player.name,
-          location: player.location,
-          occupation: player.occupation,
-          openingResponse: player.openingResponse ?? null,
-          openingSceneClarification:
-            player.openingSceneContext?.answerText ?? null,
+  let validationError: string | null = null;
+  let generatedResponse: NormalizedEarlyTurnResponse | null = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const { text } = await generateText({
+      model: openai(model),
+      system: createPlayerFacingNarrativePrompt([
+        `You are resolving an open-world action after the player answered ${branch}.`,
+        "The ordinary world resumes, but public information is starting to show that the event is larger than one person.",
+        "Everyone is reacting to the global takeover of screens, audio, internet services, and phone lines. Speculation is rampant.",
+        ...branchInstructions,
+        ...(validationError
+          ? [
+              `Regenerate the response because the previous attempt violated this rule: ${validationError}`,
+            ]
+          : []),
+        "Respond as a grounded global MUD game master, not as an assistant.",
+        "Interpret the player's attempted action generously and adjudicate what they can plausibly perceive or learn.",
+        "Use the supplied media context only when it matches the player's action. If it does not match, answer the action directly from player and world context.",
+        "When media context is relevant, use it as source material. Do not dump it verbatim.",
+        "For feed, public-web, or broadcast actions, preserve the timing: at first there may be nothing or only a few scattered posts, then within a minute or two the trickle becomes a firehose.",
+        "When it fits the player's action, sprinkle in 1 to 3 short fictional post or broadcast fragments as separate blockquote paragraphs prefixed with >.",
+        "Fictional quoted fragments should sound like ordinary people reacting in the moment. Do not include handles, real names, real outlets, or real quotes.",
+        "Do not call, scrape, quote, or imply access to real Twitter, X, Bluesky, Facebook, news sites, broadcasts, or external services.",
+        "Do not introduce deleted, disappearing, or vanishing posts unless future canonical state explicitly establishes that behavior.",
+        "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
+        "responseText should be 2 to 5 short paragraphs of second-person present-tense narration. Blockquote paragraphs count toward this limit.",
+        "sceneTitle should be a short evocative title, 2 to 6 words, title case, made from the current scene rather than the player's literal input.",
+        "actionKind should be a short snake_case phrase describing the attempted action in broad terms.",
+        "playerVisibleFacts should contain 2 to 5 short durable facts the player learned or established, not literary prose.",
+      ]),
+      prompt: JSON.stringify(
+        {
+          player: {
+            name: player.name,
+            location: player.location,
+            occupation: player.occupation,
+            openingResponse: player.openingResponse ?? null,
+            openingSceneClarification:
+              player.openingSceneContext?.answerText ?? null,
+          },
+          dailyGame: {
+            id: dailyGame.id,
+            eventStartsAtIso: dailyGame.eventStartsAtIso,
+            eventStartsAtLabel: dailyGame.eventStartsAtLabel,
+          },
+          firstDecision: player.firstDecision,
+          firstMoveReveal: player.firstMoveReveal,
+          actionText,
+          day1GameplayContext,
+          day1MediaContext,
+          ...(promptExtras ?? {}),
         },
-        dailyGame: {
-          id: dailyGame.id,
-          eventStartsAtIso: dailyGame.eventStartsAtIso,
-          eventStartsAtLabel: dailyGame.eventStartsAtLabel,
-        },
-        firstDecision: player.firstDecision,
-        firstMoveReveal: player.firstMoveReveal,
-        actionText,
-        day1GameplayContext,
-        day1MediaContext,
-        ...(promptExtras ?? {}),
-      },
-      null,
-      2,
-    ),
-  });
-  const generated = parseGeneratedResponse(text);
+        null,
+        2,
+      ),
+    });
+    const generated = parseGeneratedResponse(text);
+    const normalized = {
+      responseText: normalizeResponseText(generated.responseText),
+      sceneTitle: normalizeSceneTitle(generated.sceneTitle),
+      actionKind: normalizeActionKind(generated.actionKind, defaultActionKind),
+      playerVisibleFacts: normalizePlayerVisibleFacts(
+        generated.playerVisibleFacts,
+      ),
+    };
+    validationError = responseValidation?.(normalized) ?? null;
+
+    if (!validationError) {
+      generatedResponse = normalized;
+      break;
+    }
+  }
+
+  if (!generatedResponse) {
+    throw new Error(validationError ?? "Generated response failed validation.");
+  }
 
   return {
-    responseText: normalizeResponseText(generated.responseText),
-    sceneTitle: normalizeSceneTitle(generated.sceneTitle),
+    responseText: generatedResponse.responseText,
+    sceneTitle: generatedResponse.sceneTitle,
     responseModel: model,
     responseSource: "ai",
-    actionKind: normalizeActionKind(generated.actionKind, defaultActionKind),
-    playerVisibleFacts: normalizePlayerVisibleFacts(generated.playerVisibleFacts),
+    actionKind: generatedResponse.actionKind,
+    playerVisibleFacts: generatedResponse.playerVisibleFacts,
     storylineContextSourceVersion: storylineContext.sourceVersion,
   };
 }

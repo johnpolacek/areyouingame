@@ -14,6 +14,8 @@ import type {
 } from "./player-store";
 
 const DELIVERY_ELIGIBLE_TURN = 3;
+const PRE_DELIVERY_REVEAL_TERMS =
+  /\b(drone|drones|package|packages|orb|orbs|delivery|delivered|deliveries|box|boxes|parcel|parcels)\b/i;
 
 export type ConnectedPathTransition = {
   expectedTurnNumber: number;
@@ -59,7 +61,7 @@ export async function createFirstConnectedPathTurnResponse({
       "People who answered YES are likely in the minority and may wonder whether anything has happened to them or whether they made a mistake.",
       "Only after that first waiting period can drone/package reports become personally relevant to this YES player.",
       "The structured transition supplied in the prompt is canonical. Do not contradict it or invent a different delivery, package, or orb state.",
-      "If the transition is waiting, do not deliver the player's package or show the orb. Keep the consequences uncertain and social/informational.",
+      "If the transition is waiting, do not mention drones, packages, boxes, deliveries, or orbs in any form, including by saying they are absent, not visible, not outside, not waiting, or not happening yet. Keep the consequences uncertain and social/informational.",
       "If the transition is delivered, describe a small, minimal, sleek package delivered by a plausible drone to a nearby place. Keep it physical and logistical, not magical.",
       "If delivery happens while the player looks through a window or checks outside, the package can be visible nearby before they touch it.",
       "If the package is already available and the player picks it up, brings it inside, stages it, photographs it, starts a livestream, waits for likes, reads chat, or otherwise delays, keep the package sealed and present. Do not reveal the orb until they explicitly open, unbox, unwrap, or look inside.",
@@ -75,6 +77,10 @@ export async function createFirstConnectedPathTurnResponse({
       previousConnectedPath: player.firstConnectedPath ?? null,
       transition,
     },
+    responseValidation:
+      transition.transitionKind === "waiting"
+        ? validatePreDeliveryConnectedPathResponse
+        : undefined,
     storylineContext,
   });
 
@@ -82,6 +88,22 @@ export async function createFirstConnectedPathTurnResponse({
     ...transition,
     ...generatedResponse,
   };
+}
+
+function validatePreDeliveryConnectedPathResponse({
+  responseText,
+  playerVisibleFacts,
+}: {
+  responseText: string;
+  playerVisibleFacts: string[];
+}): string | null {
+  const combinedText = [responseText, ...playerVisibleFacts].join("\n");
+
+  if (!PRE_DELIVERY_REVEAL_TERMS.test(combinedText)) {
+    return null;
+  }
+
+  return "Pre-delivery YES turns must not mention or negatively foreshadow drones, deliveries, boxes, packages, parcels, or orbs. Preserve the future delivery reveal by describing only the player's immediate scene, uncertainty, public confusion, and social or informational consequences.";
 }
 
 export function getNextConnectedPathTransition({
