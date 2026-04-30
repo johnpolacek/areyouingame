@@ -48,10 +48,10 @@ export default async function TodaysGamePage() {
   return (
     <main
       className={cn(
-        "relative isolate min-h-svh bg-black px-5 py-16 text-amber-50 sm:p-8",
+        "relative isolate bg-black px-5 text-amber-50 sm:p-8",
         hasConsoleLayout
-          ? "overflow-x-hidden"
-          : "grid place-items-center overflow-hidden",
+          ? "h-svh overflow-hidden py-6"
+          : "grid min-h-svh place-items-center overflow-hidden py-16",
       )}
     >
       <HeroBackgroundVideo />

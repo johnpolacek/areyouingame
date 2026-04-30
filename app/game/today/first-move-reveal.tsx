@@ -439,10 +439,10 @@ export function FirstChoiceConsequence({
     return (
       <section
         aria-labelledby="current-scene-title"
-        className="relative z-10 mx-auto grid min-h-[calc(100svh-8rem)] w-full max-w-7xl grid-rows-[auto_1fr] gap-6 text-left"
+        className="relative z-10 mx-auto grid h-full w-full max-w-7xl grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden text-left"
       >
         <header className="flex flex-col gap-3 border-b border-amber-200/15 pb-5 sm:flex-row sm:items-end sm:justify-between sm:pr-16">
-          <p className="hero-display-title text-2xl leading-none text-amber-100 sm:text-4xl">
+          <p className="font-sans text-2xl leading-none font-extrabold tracking-normal text-amber-100 sm:text-4xl">
             Are You In?
           </p>
           <p className="text-xs font-bold tracking-[0.18em] text-amber-100/70 uppercase">
@@ -451,8 +451,8 @@ export function FirstChoiceConsequence({
           </p>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
-          <aside className="h-fit border border-amber-200/15 bg-black/45 p-5 shadow-2xl shadow-black/25 backdrop-blur-md lg:sticky lg:top-8">
+        <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-6 overflow-hidden lg:grid-cols-[17rem_minmax(0,1fr)] lg:grid-rows-none">
+          <aside className="h-fit">
             <div className="border-b border-amber-200/15 pb-5">
               <p className="text-xs font-bold tracking-[0.22em] text-amber-300/75 uppercase">
                 Day 01
@@ -493,7 +493,7 @@ export function FirstChoiceConsequence({
             </dl>
           </aside>
 
-          <div className="grid min-w-0 content-start gap-7">
+          <div className="grid min-h-0 min-w-0 content-start gap-7 overflow-y-auto overscroll-contain pr-1 lg:pr-3">
             <article className="border border-amber-200/20 bg-black/40 p-5 shadow-2xl shadow-black/30 backdrop-blur-md sm:p-7">
               <p className="text-xs font-bold tracking-[0.22em] text-amber-300/75 uppercase">
                 Current Scene
