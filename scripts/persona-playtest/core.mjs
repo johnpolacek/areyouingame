@@ -107,6 +107,49 @@ export async function loadBuildVersion(repoRoot) {
   return buildVersion;
 }
 
+export async function loadPlaytestEnv(repoRoot) {
+  for (const fileName of [".env.local", ".env"]) {
+    try {
+      const raw = await readFile(path.join(repoRoot, fileName), "utf8");
+      const values = parseEnvFile(raw);
+
+      for (const [key, value] of Object.entries(values)) {
+        if (process.env[key] === undefined) {
+          process.env[key] = value;
+        }
+      }
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+}
+
+export function parseEnvFile(raw) {
+  const values = {};
+
+  for (const rawLine of String(raw).split(/\r?\n/)) {
+    const line = rawLine.trim();
+
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(
+      line,
+    );
+
+    if (!match) {
+      continue;
+    }
+
+    values[match[1]] = parseEnvValue(match[2]);
+  }
+
+  return values;
+}
+
 export async function generatePersona({
   model,
   personaPrompt,
@@ -275,6 +318,25 @@ function readFlagValue(argv, index, flag) {
   }
 
   return value;
+}
+
+function parseEnvValue(rawValue) {
+  const trimmed = rawValue.trim();
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed
+      .slice(1, -1)
+      .replaceAll("\\n", "\n")
+      .replaceAll('\\"', '"')
+      .replaceAll("\\'", "'");
+  }
+
+  const commentIndex = trimmed.search(/\s+#/);
+
+  return (commentIndex === -1 ? trimmed : trimmed.slice(0, commentIndex)).trim();
 }
 
 function personaJsonInstructions() {

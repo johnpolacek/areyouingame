@@ -10,6 +10,7 @@ import {
   generatePlayerTurn,
   generateRunAnalysis,
   loadBuildVersion,
+  loadPlaytestEnv,
   normalizeCapturedGameText,
   parsePlaytestArgs,
   slugify,
@@ -18,7 +19,6 @@ import {
 
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
-const llmModel = process.env.PLAYTEST_OPENAI_MODEL || process.env.OPENAI_MODEL || "gpt-5.4-mini";
 
 export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
   const options = parsePlaytestArgs(argv);
@@ -28,6 +28,9 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     return null;
   }
 
+  await loadPlaytestEnv(repoRoot);
+
+  const llmModel = getPlaytestModel();
   const build = await loadBuildVersion(repoRoot);
   const buildVersion = options.build || build.version;
   const persona = await generatePersona({
@@ -95,6 +98,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
       build,
       buildVersion,
       completedAt: new Date().toISOString(),
+      model: llmModel,
       persona,
       runId,
       scenario: options.scenario,
@@ -134,6 +138,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
       build,
       buildVersion,
       completedAt: new Date().toISOString(),
+      model: llmModel,
       persona,
       runId,
       scenario: options.scenario,
@@ -172,6 +177,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     build,
     buildVersion,
     completedAt: new Date().toISOString(),
+    model: llmModel,
     persona,
     runId,
     scenario: options.scenario,
@@ -181,10 +187,15 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
   });
 }
 
+function getPlaytestModel() {
+  return process.env.PLAYTEST_OPENAI_MODEL || process.env.OPENAI_MODEL || "gpt-5.4-mini";
+}
+
 async function finishRun({
   build,
   buildVersion,
   completedAt,
+  model,
   persona,
   runId,
   scenario,
@@ -206,7 +217,7 @@ async function finishRun({
     turns,
   };
   const analysis = await generateRunAnalysis({
-    model: llmModel,
+    model,
     persona,
     run: runWithoutAnalysis,
   });

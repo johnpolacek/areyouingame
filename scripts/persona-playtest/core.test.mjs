@@ -7,6 +7,7 @@ import {
   createFallbackRandomPersona,
   createFallbackRequestedPersona,
   normalizeCapturedGameText,
+  parseEnvFile,
   parsePlaytestArgs,
   slugify,
   writePlaytestReport,
@@ -59,6 +60,23 @@ describe("persona playtest core", () => {
     expect(normalizeCapturedGameText(JSON.stringify(noisy))).toBe(
       "Hi Maya, it is 10:46pm in Melbourne.\nWhere are you and what are you doing?",
     );
+  });
+
+  it("parses .env.local values for the runner", () => {
+    expect(
+      parseEnvFile([
+        "# comment",
+        "OPENAI_API_KEY=sk-test",
+        'PLAYTEST_OPENAI_MODEL="gpt-test"',
+        "export OTHER_VALUE='hello world'",
+        "INLINE=value # comment",
+      ].join("\n")),
+    ).toEqual({
+      INLINE: "value",
+      OPENAI_API_KEY: "sk-test",
+      OTHER_VALUE: "hello world",
+      PLAYTEST_OPENAI_MODEL: "gpt-test",
+    });
   });
 
   it("writes markdown reports and index files", async () => {
