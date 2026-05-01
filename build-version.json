@@ -1,6 +1,6 @@
 {
-  "version": "0.1.11",
-  "label": "Build 0.1.11",
+  "version": "0.1.12",
+  "label": "Build 0.1.12",
   "updatedAt": "2026-05-01",
-  "summary": "Add worktree workflow skill"
+  "summary": "Stabilize local agent-browser auth"
 }

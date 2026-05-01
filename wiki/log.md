@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] operations | stabilize local agent-browser auth
+
+- Documented the split between disposable `ayi-*` automated persona sessions and the persistent `areyouin-john` manual dogfood session.
+- Recorded the local-only synthetic auth requirements, including `AREYOUIN_PLAYTEST_AUTH=1`, localhost-only requests, playtest headers, and safe `playtest:*` ids.
+- Added cleanup guidance for closing only disposable automated playtest sessions.
+
 ## [2026-05-01] planning | clarify live public gameplay direction
 
 - Updated the MVP roadmap and Stage 06 planning direction so gameplay is intended to be public live from the beginning, across all daily games.

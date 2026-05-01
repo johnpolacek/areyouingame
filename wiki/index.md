@@ -20,4 +20,5 @@ The project is built around a strict separation between canonical world state, i
 - [`Architecture.md`](Architecture.md) - cross-cutting reference page including locked initial stack decisions
 - [`Sources.md`](Sources.md) - human-facing page for imported and preserved source material
 - [`reference/connected-asi-response-guide.md`](reference/connected-asi-response-guide.md) - LLM response guide for the accepted YES/orb-connected experience
+- [`reference/local-agent-browser-auth.md`](reference/local-agent-browser-auth.md) - local synthetic persona auth, manual dogfood session, and cleanup conventions
 - [`playtests/index.md`](playtests/index.md) - generated persona playthrough reports by build, persona, scenario, and findings

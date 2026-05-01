@@ -65,12 +65,13 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
   const turns = [];
 
   await browser.open("/player/new");
+  await assertSyntheticAuthReachedPlayerForm(browser, options.baseUrl);
   await browser.fill('input[name="character-name"]', persona.name);
   await browser.fill('input[name="character-age"]', String(persona.age));
   await browser.fill('input[name="character-location"]', persona.location);
   await browser.fill('input[name="character-occupation"]', persona.occupation);
   await browser.fill('textarea[name="character-bio"]', persona.bio);
-  await browser.click('button:has-text("Create Player")');
+  await browser.clickExactButton("Create Player");
   await browser.wait(1500);
 
   await acceptAgreementIfPresent(browser);
@@ -90,7 +91,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     persona: openingTurn,
   });
   await browser.fill('textarea[name="opening-response"]', openingTurn.responseText);
-  await browser.click('button:has-text("Send")');
+  await browser.clickExactButton("Send");
   await browser.wait(3000);
 
   if (turns.length >= options.maxTurns) {
@@ -152,7 +153,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     await browser.clickExactButton("NO");
   } else if (choiceTurn.choice === "DEFERRED") {
     await browser.fill("#first-reveal-text-response", choiceTurn.responseText);
-    await browser.click('button:has-text("Continue")');
+    await browser.clickExactButton("Continue");
   } else {
     await browser.clickExactButton("YES");
   }
@@ -219,7 +220,7 @@ async function continueThroughActionPrompts({
     });
 
     await browser.fill("#first-post-choice-action", actionTurn.responseText);
-    await browser.click('button:has-text("Continue")');
+    await browser.clickExactButton("Continue");
     await browser.wait(5000);
     currentText = await browser.getBodyText();
   }
@@ -347,8 +348,9 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
       run("eval", [
         `(() => {
           const label = ${JSON.stringify(label)};
+          const normalize = (value) => value.replace(/\\s+/g, " ").trim().toLowerCase();
           const button = Array.from(document.querySelectorAll("button"))
-            .find((candidate) => candidate.innerText.trim() === label && !candidate.disabled);
+            .find((candidate) => normalize(candidate.innerText) === normalize(label) && !candidate.disabled);
           if (!button) throw new Error("Button not found: " + label);
           button.click();
           return true;
@@ -360,6 +362,14 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
       const text = await run("eval", [createMainTextEval()]);
 
       return normalizeCapturedGameText(text);
+    },
+    getUrl: () => run("get", ["url"]),
+    hasCharacterForm: async () => {
+      const result = await run("eval", [
+        `Boolean(document.querySelector('input[name="character-name"]'))`,
+      ]);
+
+      return result.trim() === "true";
     },
     hasEnabledActionPrompt: async () => {
       const result = await run("eval", [
@@ -374,6 +384,23 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
     open: (pathname) => run("open", [new URL(pathname, baseUrl).toString()]),
     wait: (ms) => run("wait", [String(ms)]),
   };
+}
+
+async function assertSyntheticAuthReachedPlayerForm(browser, baseUrl) {
+  if (await browser.hasCharacterForm()) {
+    return;
+  }
+
+  const currentUrl = (await browser.getUrl()).trim();
+
+  throw new Error(
+    [
+      "Synthetic playtest auth did not reach /player/new.",
+      `Current URL: ${currentUrl || "unknown"}`,
+      "Start the local app with AREYOUIN_PLAYTEST_AUTH=1 or stop the existing dev server so this runner can start one.",
+      `Target base URL: ${baseUrl}`,
+    ].join(" "),
+  );
 }
 
 function createMainTextEval() {
@@ -475,7 +502,7 @@ async function acceptAgreementIfPresent(browser) {
   }
 
   await browser.click('input[type="checkbox"]');
-  await browser.click('button:has-text("Continue")');
+  await browser.clickExactButton("Continue");
   await browser.wait(1500);
 }
 
@@ -506,7 +533,7 @@ async function answerOpeningContextIfPresent({
     persona: contextTurn,
   });
   await browser.fill('textarea[name="opening-scene-context-answer"]', contextTurn.responseText);
-  await browser.click('button:has-text("Send")');
+  await browser.clickExactButton("Send");
   await browser.wait(3000);
 }
 
