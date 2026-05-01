@@ -72,8 +72,32 @@ export function slugify(value) {
     .slice(0, 72) || "playtest";
 }
 
-export function buildSyntheticUserId({ build, personaSlug, scenario }) {
-  return `playtest:${slugify(build)}:${slugify(personaSlug)}:${slugify(scenario)}`;
+export function buildSyntheticUserId({ build, personaSlug, runSlug, scenario }) {
+  return [
+    "playtest",
+    slugify(build),
+    slugify(personaSlug),
+    slugify(scenario),
+    runSlug ? slugify(runSlug).slice(0, 20) : "",
+  ].filter(Boolean).join(":");
+}
+
+export function normalizeCapturedGameText(text) {
+  const parsedText = parseMaybeJsonString(text);
+  const lines = parsedText
+    .replace(/\r/g, "\n")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !isNonGameplayLine(line))
+    .filter((line, index, allLines) => {
+      const previousLine = allLines[index - 1];
+
+      return !previousLine || !previousLine.includes(line);
+    });
+  const cleaned = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  return cleaned || parsedText.trim();
 }
 
 export async function loadBuildVersion(repoRoot) {
@@ -473,7 +497,7 @@ function createMarkdownReport(run) {
   const turns = run.turns
     .map(
       (turn, index) =>
-        `### Turn ${index + 1}: ${escapeMarkdown(turn.label)}\n\n**Game**\n\n${escapeMarkdown(turn.gameText)}\n\n**Persona Response**\n\n${escapeMarkdown(turn.persona.responseText)}\n\n- Intent: ${escapeMarkdown(turn.persona.intent)}\n- Emotion: ${escapeMarkdown(turn.persona.emotionalState)}\n- Trust: ${turn.persona.trustLevel}\n- Confusion: ${turn.persona.confusionLevel}\n- Engagement: ${turn.persona.engagementLevel}`,
+        `### Turn ${index + 1}: ${escapeMarkdown(turn.label)}\n\n**Game**\n\n${escapeMarkdown(normalizeCapturedGameText(turn.gameText))}\n\n**Persona Response**\n\n${escapeMarkdown(turn.persona.responseText)}\n\n- Intent: ${escapeMarkdown(turn.persona.intent)}\n- Emotion: ${escapeMarkdown(turn.persona.emotionalState)}\n- Trust: ${turn.persona.trustLevel}\n- Confusion: ${turn.persona.confusionLevel}\n- Engagement: ${turn.persona.engagementLevel}`,
     )
     .join("\n\n");
 
@@ -512,6 +536,35 @@ function stripJsonFences(text) {
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/i, "");
+}
+
+function parseMaybeJsonString(text) {
+  const trimmed = String(text ?? "").trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    return typeof parsed === "string" ? parsed : trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+function isNonGameplayLine(line) {
+  return (
+    /^(admin|reset|send|continue)$/i.test(line) ||
+    /^Build \d+\.\d+\.\d+$/.test(line) ||
+    /^\(self\.__next_/.test(line) ||
+    /^self\.__next_/.test(line) ||
+    /^\d+:[A-Z]/.test(line) ||
+    /^:HL\[/.test(line) ||
+    /\[project\]\/node_modules/.test(line) ||
+    /next-devtools/.test(line)
+  );
 }
 
 function stringOr(value, fallback) {

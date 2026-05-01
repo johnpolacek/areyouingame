@@ -10,6 +10,7 @@ import {
   generatePlayerTurn,
   generateRunAnalysis,
   loadBuildVersion,
+  normalizeCapturedGameText,
   parsePlaytestArgs,
   slugify,
   writePlaytestReport,
@@ -36,18 +37,19 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     seed: options.seed,
   });
   const personaSlug = slugify(persona.name);
-  const syntheticUserId = buildSyntheticUserId({
-    build: buildVersion,
-    personaSlug,
-    scenario: options.scenario,
-  });
   const runId = [
     buildVersion,
     options.scenario,
     personaSlug,
     new Date().toISOString().replace(/[:.]/g, "-"),
   ].map(slugify).join("__");
-  const session = `ayi-${Date.now().toString(36)}-${personaSlug.slice(0, 18)}`;
+  const syntheticUserId = buildSyntheticUserId({
+    build: buildVersion,
+    personaSlug,
+    runSlug: runId.split("__").at(-1),
+    scenario: options.scenario,
+  });
+  const session = `ayi-${Date.now().toString(36)}`;
 
   await ensureLocalApp(options.baseUrl);
 
@@ -277,13 +279,60 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
     click: (selector) => run("click", [selector]),
     fill: (selector, value) => run("fill", [selector, value]),
     getBodyText: async () => {
-      const text = await run("get", ["text", "body"]);
+      const text = await run("eval", [createMainTextEval()]);
 
-      return text.trim();
+      return normalizeCapturedGameText(text);
     },
     open: (pathname) => run("open", [new URL(pathname, baseUrl).toString()]),
     wait: (ms) => run("wait", [String(ms)]),
   };
+}
+
+function createMainTextEval() {
+  return `(() => {
+    const root = document.querySelector("main") || document.body;
+    const excluded = [
+      "script",
+      "style",
+      "noscript",
+      "[hidden]",
+      "[aria-hidden='true']",
+      "[aria-label='Open admin dashboard']",
+      "[aria-label='Open reset options']",
+      "[aria-label='Account and display settings']",
+      ".absolute.right-4.bottom-4",
+      ".fixed"
+    ].join(",");
+    const selector = [
+      "h1",
+      "h2",
+      "h3",
+      "p",
+      "blockquote",
+      "summary",
+      "label",
+      "button",
+      "textarea",
+      "input",
+      "dt",
+      "dd",
+      "time"
+    ].join(",");
+    const lines = [];
+
+    for (const element of root.querySelectorAll(selector)) {
+      if (element.closest(excluded)) continue;
+      const style = window.getComputedStyle(element);
+      if (style.display === "none" || style.visibility === "hidden") continue;
+      const text = "value" in element && element.value
+        ? element.value
+        : element.innerText || element.textContent || "";
+      const normalized = text.replace(/\\s+/g, " ").trim();
+      if (normalized) lines.push(normalized);
+    }
+
+    return Array.from(new Set(lines)).join("\\n");
+  })()`;
 }
 
 async function ensureLocalApp(baseUrl) {

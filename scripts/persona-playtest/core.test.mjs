@@ -6,6 +6,7 @@ import {
   buildSyntheticUserId,
   createFallbackRandomPersona,
   createFallbackRequestedPersona,
+  normalizeCapturedGameText,
   parsePlaytestArgs,
   slugify,
   writePlaytestReport,
@@ -29,9 +30,10 @@ describe("persona playtest core", () => {
       buildSyntheticUserId({
         build: "0.1.2",
         personaSlug: "Maya Collins!",
+        runSlug: "2026-05-01T03-00",
         scenario: "yes-connected-path",
       }),
-    ).toBe("playtest:0-1-2:maya-collins:yes-connected-path");
+    ).toBe("playtest:0-1-2:maya-collins:yes-connected-path:2026-05-01t03-00");
   });
 
   it("creates useful fallback personas", () => {
@@ -41,6 +43,22 @@ describe("persona playtest core", () => {
     expect(requested.location).toContain("Australia");
     expect(requested.occupation.toLowerCase()).toContain("teacher");
     expect(random.whyInteresting).toBeTruthy();
+  });
+
+  it("normalizes captured game text for readable reports", () => {
+    const noisy = [
+      '(self.__next_s=self.__next_s||[]).push([0,{"children":"script"}])',
+      "Admin",
+      "Reset",
+      "Hi Maya, it is 10:46pm in Melbourne.",
+      "Where are you and what are you doing?",
+      "SEND",
+      "Build 0.1.2",
+    ].join("\n");
+
+    expect(normalizeCapturedGameText(JSON.stringify(noisy))).toBe(
+      "Hi Maya, it is 10:46pm in Melbourne.\nWhere are you and what are you doing?",
+    );
   });
 
   it("writes markdown reports and index files", async () => {
