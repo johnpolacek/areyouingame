@@ -13,3 +13,4 @@ This folder contains durable implementation plans for the project. It is the gat
 ## Current Tracks
 
 - [`mvp/`](mvp/README.md) - active numbered roadmap for the AreYouIn MVP.
+- [`worktrees/`](worktrees/README.md) - operations plan for parallel git worktrees and AI-agent feature development.

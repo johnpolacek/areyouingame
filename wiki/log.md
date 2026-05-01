@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] planning | define parallel worktree workflow
+
+- Added a dedicated worktree operations plan for running multiple feature branches and AI agents in parallel.
+- Covered Portless-based dev URLs, per-worktree setup scripts, pnpm dependency policy, Convex runtime-state isolation, future Docker/service naming, IDE ergonomics, overlap detection, and cleanup retention.
+- Linked the new worktree plan from the wiki index and plans index.
+
 ## [2026-05-01] playtesting | add persona playtest report index
 
 - Added `wiki/playtests/` as the durable home for generated persona playthrough reports.
