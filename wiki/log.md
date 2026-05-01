@@ -2,6 +2,11 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] operations | add worktree workflow skill
+
+- Added the repo-local `are-you-in-worktrees` skill so future agents can create AreYouIn feature worktrees from natural-language requests.
+- Captured the CLI Codex handoff, Portless URL convention, `polish` lane guidance, Convex isolation trigger, overlap checks, and cleanup guardrails.
+
 ## [2026-05-01] operations | implement worktree baseline
 
 - Added Portless as the standard Next.js dev entrypoint while keeping `pnpm next:dev:app` as the direct `next dev` escape hatch.
