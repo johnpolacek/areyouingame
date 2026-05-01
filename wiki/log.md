@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] operations | implement worktree baseline
+
+- Added Portless as the standard Next.js dev entrypoint while keeping `pnpm next:dev:app` as the direct `next dev` escape hatch.
+- Added worktree helper scripts for create, list, doctor, overlap detection, pruning, and stale cleanup.
+- Recorded the `polish` branch lane convention for light bug fixes and UI/UX tweaks that should merge back frequently.
+
 ## [2026-05-01] planning | define parallel worktree workflow
 
 - Added a dedicated worktree operations plan for running multiple feature branches and AI agents in parallel.

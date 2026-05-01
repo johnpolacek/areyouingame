@@ -24,11 +24,17 @@ Make it routine to run one agent per feature branch in an isolated worktree with
 5. Each worktree uses isolated local build/cache directories and, where needed, an isolated Convex deployment or explicitly shared read-only dev deployment.
 6. Cleanup is a first-class command that prunes stale worktrees, dev servers, caches, and orphaned Portless routes.
 
+## Branch Lanes
+
+Use short-lived feature branches for material product work. Use a single long-running `polish` branch for light bug fixes and UI/UX tweaks when they do not overlap with active feature ownership. Keep `polish` boring: merge it into `main` frequently, then merge or rebase `main` back into active feature branches so small fixes do not drift.
+
+Do not put schema changes, Convex data-shape changes, broad refactors, or prompt/flow rewrites on `polish`. Those deserve named feature branches and, when stateful, isolated runtime state.
+
 ## Phase 1: Portless Dev Server Isolation
 
 Add Portless as the standard development entrypoint.
 
-- Add `portless` as a dev dependency so every agent gets the same version through the lockfile.
+- Use the globally installed `portless` CLI. The local `wt:doctor` command verifies it is present on `PATH`.
 - Keep the real Next command behind a direct script:
   - `next:dev:app`: `next dev`
   - `next:dev`: `portless run --name are-you-in pnpm next:dev:app`
@@ -48,7 +54,8 @@ Add a small `scripts/worktrees/` toolset and package scripts:
 - `pnpm wt:list` shows active worktrees, branch names, paths, disk usage, and likely dev URLs.
 - `pnpm wt:doctor` checks whether Portless is installed/trusted, whether `pnpm install` has been run, whether `.env.local` exists, and whether Convex is pointed at the intended deployment.
 - `pnpm wt:clean` removes stale worktrees only after verifying their branches are merged, pushed, or explicitly confirmed.
-- `pnpm wt:prune` runs `git worktree prune`, `portless prune`, and removes known cache directories for deleted worktrees.
+- `pnpm wt:prune` runs `git worktree prune` and uses Portless orphan cleanup when the installed Portless version exposes it.
+- `pnpm wt:overlap` compares changed files across active worktrees before merge/rebase.
 
 The creation script should copy `.env.local` from the main checkout only when the destination file does not exist. It should never overwrite local secrets. Later, split this into `.env.shared.local` plus generated `.env.worktree.local` if the environment surface grows.
 
@@ -143,3 +150,11 @@ Make cleanup a habit because stale worktrees are the disk-space failure mode.
 ## First Recommended Change
 
 Start small: add Portless and a basic worktree create/list/doctor script set before automating Convex deployment creation. This solves the first failure mode immediately, gives the team a predictable directory convention, and keeps runtime-state isolation as an explicit opt-in until the workflow has been used on real branches.
+
+## Implemented Baseline
+
+- `pnpm next:dev` now runs Next through Portless.
+- `pnpm next:dev:app` remains the direct `next dev` escape hatch.
+- `pnpm wt:create <branch>` creates a worktree under `../AreYouIn.worktrees/<branch-slug>`, copies env files, installs dependencies, and prints the expected Portless URL.
+- `pnpm wt:create polish --polish` creates the recommended light-fix/UI-tweak lane.
+- `pnpm wt:list`, `pnpm wt:doctor`, `pnpm wt:overlap`, `pnpm wt:prune`, and `pnpm wt:clean` cover inspection, health checks, overlap detection, and cleanup. With Portless `0.10.3`, route cleanup is manual through `portless list`/proxy lifecycle because `portless prune` is not exposed.
