@@ -1,6 +1,6 @@
 {
   "name": "are-you-in",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "packageManager": "pnpm@10.6.4",
   "scripts": {
@@ -10,6 +10,7 @@
     "convex:deploy": "convex deploy",
     "convex:sync-secret": "node scripts/sync-convex-backend-secret.mjs",
     "convex:check-secret": "node scripts/check-convex-backend-secret.mjs",
+    "playtest:persona": "node scripts/persona-playtest/run.mjs",
     "version:bump": "node scripts/bump-build-version.mjs",
     "test": "vitest run",
     "build": "next build",

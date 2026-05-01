@@ -1,13 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import {
   getTodayGameDestination,
   getTodayGameForRequest,
 } from "../../lib/daily-game";
+import { getAuthenticatedUserId } from "../../lib/playtest-auth";
 import { JoinFlow } from "./join-flow";
 
 export default async function JoinTodaysGamePage() {
-  const { userId } = await auth.protect();
+  const userId = await getAuthenticatedUserId();
   const todayGame = await getTodayGameForRequest();
   const destination = await getTodayGameDestination(userId, todayGame.id);
 

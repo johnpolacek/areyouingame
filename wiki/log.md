@@ -2,6 +2,11 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] playtesting | add persona playtest report index
+
+- Added `wiki/playtests/` as the durable home for generated persona playthrough reports.
+- Added a playtest index page for build-versioned transcript analysis and findings produced by the local agent-browser runner.
+
 ## [2026-05-01] operations | establish build version rule
 
 - Added the root agent instruction that every material code or content change should include an aligned build version bump before commit.

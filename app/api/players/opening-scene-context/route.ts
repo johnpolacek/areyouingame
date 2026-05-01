@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getOptionalAuthenticatedUserId } from "@/lib/playtest-auth";
 import { getTodayGameForRequest } from "@/lib/daily-game";
 import {
   answerOpeningSceneContextForUserGame,
@@ -8,7 +8,7 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
+  const userId = await getOptionalAuthenticatedUserId();
 
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

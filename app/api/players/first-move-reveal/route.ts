@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getOptionalAuthenticatedUserId } from "@/lib/playtest-auth";
 import {
   formatCurrentTimeForTimeZone,
   getRequestTimeZone,
@@ -13,7 +13,7 @@ import {
 export const runtime = "nodejs";
 
 export async function POST() {
-  const { userId } = await auth();
+  const userId = await getOptionalAuthenticatedUserId();
 
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

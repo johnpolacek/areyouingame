@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { HeroBackgroundVideo } from "../../hero-background-video";
 import {
@@ -11,6 +10,7 @@ import {
   getDailyGameStats,
   getPlayerForUserGame,
 } from "../../../lib/player-store";
+import { getAuthenticatedUserId } from "../../../lib/playtest-auth";
 import { BeforeWeBegin } from "./before-we-begin";
 import { DevResetPlayerButton } from "./dev-reset-player-button";
 import {
@@ -21,7 +21,7 @@ import {
 import { OpeningPrompt, OpeningSceneContextPrompt } from "./opening-prompt";
 
 export default async function TodaysGamePage() {
-  const { userId } = await auth.protect();
+  const userId = await getAuthenticatedUserId();
 
   const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
   const todayGame = await getTodayGameForRequest(new Date(), requestTimeZone);

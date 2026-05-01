@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { requireLocalAdminAccess } from "@/lib/admin-access";
 import {
   getAiUsageSummaryForAdmin,
@@ -49,6 +50,12 @@ export default async function AdminPage() {
                   {classifierModel}
                 </span>
               </div>
+              <Link
+                className="text-amber-200 hover:text-amber-100"
+                href="/admin/playtests"
+              >
+                Persona playtests
+              </Link>
             </div>
           </div>
         </header>
