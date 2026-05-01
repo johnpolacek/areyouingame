@@ -5,6 +5,7 @@ import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import { CommandEnterSubmit } from "./command-enter-submit";
 import { themeInitializationScript } from "./theme";
 import { ThemeProvider, ThemeToggle } from "./theme-provider";
+import { BUILD_VERSION_LABEL } from "@/lib/build-version";
 import "./globals.css";
 
 const rethinkSans = Rethink_Sans({
@@ -38,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        data-build-version={BUILD_VERSION_LABEL}
         className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-background`}
       >
         <Script
@@ -58,6 +60,12 @@ export default function RootLayout({
               </Show>
             </div>
             {children}
+            <div
+              className="fixed bottom-3 left-3 z-20 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-foreground/45"
+              aria-label={BUILD_VERSION_LABEL}
+            >
+              {BUILD_VERSION_LABEL}
+            </div>
           </ClerkProvider>
         </ThemeProvider>
       </body>

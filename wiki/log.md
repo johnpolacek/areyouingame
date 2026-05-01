@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] operations | establish build version rule
+
+- Added the root agent instruction that every material code or content change should include an aligned build version bump before commit.
+- Introduced `build-version.json` as the app-facing build metadata source, aligned with `package.json`.
+- Added a reusable `pnpm version:bump` workflow so routine patch build bumps are mechanical.
+
 ## [2026-04-24] bootstrap | initialize project wiki
 
 - Bootstrapped the standard project wiki structure with required maintenance files, the unified plans track, an optional architecture entrypoint, and source-artifact placeholders.
