@@ -65,6 +65,8 @@ export async function createFirstConnectedPathTurnResponse({
       "Only after that first waiting period can drone/package reports become personally relevant to this YES player.",
       "The structured transition supplied in the prompt is canonical. Do not contradict it or invent a different delivery, package, or orb state.",
       "If the transition is waiting, do not mention drones, packages, boxes, deliveries, or orbs in any form, including by saying they are absent, not visible, not outside, not waiting, or not happening yet. Keep the consequences uncertain and social/informational.",
+      "When the player asks about terms, reversibility, control, consequences, or what changed, explicitly distinguish what is visibly true now, what remains unknown in-world, and what the player can do next.",
+      "Do not strand the player in dead-end phrasing such as 'No terms' or 'No receipt' unless the same response also gives an actionable next step grounded in the current scene.",
       "If the transition is delivered, describe a small, minimal, sleek package delivered by a plausible drone to a nearby place. Keep it physical and logistical, not magical.",
       "If delivery happens while the player looks through a window or checks outside, the package can be visible nearby before they touch it.",
       "If the package is already available and the player picks it up, brings it inside, stages it, photographs it, starts a livestream, waits for likes, reads chat, or otherwise delays, keep the package sealed and present. Do not reveal the orb until they explicitly open, unbox, unwrap, or look inside.",

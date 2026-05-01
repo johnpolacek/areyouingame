@@ -4,6 +4,10 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  buildPlayerFacingStatus,
+  type PlayerFacingStatus,
+} from "@/lib/player-facing-status";
 import { cn } from "@/lib/utils";
 import type {
   FirstDecision,
@@ -384,6 +388,10 @@ export function FirstChoiceConsequence({
   const isYesPathReadyForAction =
     decision.choice === "YES" &&
     (!isConnectedPathComplete || isConnectedAsiReadyForFirstAction);
+  const playerFacingStatus = buildPlayerFacingStatus({
+    decision,
+    firstConnectedPath,
+  });
   const connectedPathTurns = firstConnectedPath?.turns ?? [];
   const orbDecisionTurns = firstConnectedPath?.orbDecisionTurns ?? [];
   const timeline = buildResponseTimeline({
@@ -516,6 +524,11 @@ export function FirstChoiceConsequence({
                 </p>
               </div>
             </dl>
+
+            <CurrentStatusPanel
+              className="mt-6"
+              status={playerFacingStatus}
+            />
           </aside>
 
           <div className="grid min-h-0 min-w-0 content-start gap-7 overflow-y-auto overscroll-contain pr-1 lg:pr-3">
@@ -562,6 +575,7 @@ export function FirstChoiceConsequence({
                 {historyTimelineEntries.map((entry, index) => (
                   <details
                     className="group border border-border bg-card/70 px-4 py-3 backdrop-blur-sm open:bg-muted/80 dark:border-amber-200/15 dark:bg-black/30 dark:open:bg-black/50"
+                    data-playtest-secondary="true"
                     key={entry.id}
                   >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold tracking-[0.14em] text-muted-foreground uppercase dark:text-amber-100/75">
@@ -627,6 +641,8 @@ export function FirstChoiceConsequence({
           {decision.consequenceBody}
         </p>
       </div>
+
+      <CurrentStatusPanel status={playerFacingStatus} />
 
       {firstPostChoiceAction ? (
         <article className={cn("grid w-full gap-4 px-4 py-4 text-left", panelTextClass, panelClass)}>
@@ -698,6 +714,45 @@ function TranscriptParagraph({ text }: { text: string }) {
   }
 
   return <p>{text}</p>;
+}
+
+function CurrentStatusPanel({
+  className,
+  status,
+}: {
+  className?: string;
+  status: PlayerFacingStatus;
+}) {
+  const rows = [
+    ["Answer", status.answer],
+    ["Known", status.known],
+    ["Unknown", status.unknown],
+    ["Current objective", status.currentObjective],
+  ] as const;
+
+  return (
+    <section
+      aria-label="Current Status"
+      className={cn("w-full rounded-md border border-border bg-card/70 px-4 py-4 text-left backdrop-blur-md dark:border-amber-200/20 dark:bg-black/35", className)}
+      data-playtest-active="true"
+    >
+      <h2 className="text-xs font-bold tracking-[0.18em] text-primary uppercase dark:text-amber-300/80">
+        Current Status
+      </h2>
+      <dl className="mt-3 grid gap-3">
+        {rows.map(([label, value]) => (
+          <div className="grid gap-1" key={label}>
+            <dt className="text-[0.7rem] font-bold tracking-[0.16em] text-muted-foreground uppercase dark:text-amber-100/50">
+              {label}
+            </dt>
+            <dd className="text-sm leading-6 font-medium text-foreground dark:text-amber-100/85">
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 type TimelineEntry = {

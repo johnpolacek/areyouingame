@@ -70,8 +70,8 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
   await browser.fill('input[name="character-location"]', persona.location);
   await browser.fill('input[name="character-occupation"]', persona.occupation);
   await browser.fill('textarea[name="character-bio"]', persona.bio);
-  await browser.click('button:has-text("Create Player")');
-  await browser.wait(1500);
+  await browser.click(".hero-create-account");
+  await waitForPostCreationEntry(browser);
 
   await acceptAgreementIfPresent(browser);
 
@@ -90,7 +90,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     persona: openingTurn,
   });
   await browser.fill('textarea[name="opening-response"]', openingTurn.responseText);
-  await browser.click('button:has-text("Send")');
+  await browser.clickEnabledButton("Send");
   await browser.wait(3000);
 
   if (turns.length >= options.maxTurns) {
@@ -152,11 +152,11 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     await browser.clickExactButton("NO");
   } else if (choiceTurn.choice === "DEFERRED") {
     await browser.fill("#first-reveal-text-response", choiceTurn.responseText);
-    await browser.click('button:has-text("Continue")');
+    await browser.clickEnabledButton("Continue");
   } else {
     await browser.clickExactButton("YES");
   }
-  await browser.wait(4000);
+  await waitForChoiceResolution(browser);
 
   await continueThroughActionPrompts({
     browser,
@@ -219,9 +219,8 @@ async function continueThroughActionPrompts({
     });
 
     await browser.fill("#first-post-choice-action", actionTurn.responseText);
-    await browser.click('button:has-text("Continue")');
-    await browser.wait(5000);
-    currentText = await browser.getBodyText();
+    await browser.clickEnabledButton("Continue");
+    currentText = await waitForActionResolution(browser, currentText, 45000);
   }
 
   if (currentText && turns.at(-1)?.gameText !== currentText) {
@@ -341,6 +340,14 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
     return stdout;
   }
 
+  async function hasSelector(selector) {
+    const result = await run("eval", [
+      `(() => Boolean(document.querySelector(${JSON.stringify(selector)})))()`,
+    ]);
+
+    return result.trim() === "true";
+  }
+
   return {
     click: (selector) => run("click", [selector]),
     clickExactButton: (label) =>
@@ -350,6 +357,17 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
           const button = Array.from(document.querySelectorAll("button"))
             .find((candidate) => candidate.innerText.trim() === label && !candidate.disabled);
           if (!button) throw new Error("Button not found: " + label);
+          button.click();
+          return true;
+        })()`,
+      ]),
+    clickEnabledButton: (label) =>
+      run("eval", [
+        `(() => {
+          const label = ${JSON.stringify(label)}.toLowerCase();
+          const button = Array.from(document.querySelectorAll("button"))
+            .find((candidate) => candidate.innerText.trim().toLowerCase() === label && !candidate.disabled);
+          if (!button) throw new Error("Enabled button not found: " + label);
           button.click();
           return true;
         })()`,
@@ -371,8 +389,32 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
 
       return result.trim() === "true";
     },
+    hasSelector,
+    isActionPromptCleared: async () => {
+      const result = await run("eval", [
+        `(() => {
+          const input = document.querySelector("#first-post-choice-action");
+          return !input || input.value.trim() === "";
+        })()`,
+      ]);
+
+      return result.trim() === "true";
+    },
     open: (pathname) => run("open", [new URL(pathname, baseUrl).toString()]),
     wait: (ms) => run("wait", [String(ms)]),
+    waitForSelector: async (selector, timeoutMs = 8000) => {
+      const startedAt = Date.now();
+
+      while (Date.now() - startedAt < timeoutMs) {
+        if (await hasSelector(selector)) {
+          return;
+        }
+
+        await run("wait", ["250"]);
+      }
+
+      throw new Error(`Timed out waiting for selector: ${selector}`);
+    },
   };
 }
 
@@ -388,6 +430,7 @@ function createMainTextEval() {
       "[aria-label='Open admin dashboard']",
       "[aria-label='Open reset options']",
       "[aria-label='Account and display settings']",
+      "[data-playtest-secondary='true']",
       ".absolute.right-4.bottom-4",
       ".fixed"
     ].join(",");
@@ -475,8 +518,65 @@ async function acceptAgreementIfPresent(browser) {
   }
 
   await browser.click('input[type="checkbox"]');
-  await browser.click('button:has-text("Continue")');
-  await browser.wait(1500);
+  await browser.wait(250);
+  await browser.clickEnabledButton("Continue");
+  await browser.waitForSelector('textarea[name="opening-response"]', 30000);
+}
+
+async function waitForPostCreationEntry(browser) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    if (await browser.hasSelector('textarea[name="opening-response"]')) {
+      return;
+    }
+
+    const text = await browser.getBodyText();
+
+    if (/Before we begin/i.test(text)) {
+      return;
+    }
+
+    await browser.wait(500);
+  }
+
+  throw new Error("Timed out waiting for post-creation game entry.");
+}
+
+async function waitForChoiceResolution(browser) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    if (await browser.hasSelector("#first-post-choice-action")) {
+      return;
+    }
+
+    const text = await browser.getBodyText();
+
+    if (/Current Status/i.test(text) && /\bhas been recorded\b/i.test(text)) {
+      return;
+    }
+
+    await browser.wait(500);
+  }
+
+  throw new Error("Timed out waiting for YES/NO choice resolution.");
+}
+
+async function waitForActionResolution(browser, previousText, timeoutMs) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    await browser.wait(750);
+
+    const nextText = await browser.getBodyText();
+
+    if (
+      nextText &&
+      nextText !== previousText &&
+      (await browser.isActionPromptCleared())
+    ) {
+      return nextText;
+    }
+  }
+
+  throw new Error("Timed out waiting for branch action resolution.");
 }
 
 async function answerOpeningContextIfPresent({
@@ -506,7 +606,7 @@ async function answerOpeningContextIfPresent({
     persona: contextTurn,
   });
   await browser.fill('textarea[name="opening-scene-context-answer"]', contextTurn.responseText);
-  await browser.click('button:has-text("Send")');
+  await browser.clickEnabledButton("Send");
   await browser.wait(3000);
 }
 
