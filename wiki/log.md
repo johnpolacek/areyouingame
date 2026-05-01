@@ -2,6 +2,11 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] operations | clarify build version scope
+
+- Updated the root and wiki agent rules so docs-only changes, wiki/planning updates, and agent skill installs/updates do not require build version bumps.
+- Kept build version bumps required for material app code or product content changes that affect shipped app behavior or app-facing content.
+
 ## [2026-05-01] operations | add worktree workflow skill
 
 - Added the repo-local `are-you-in-worktrees` skill so future agents can create AreYouIn feature worktrees from natural-language requests.

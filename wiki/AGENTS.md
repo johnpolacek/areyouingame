@@ -40,7 +40,7 @@ Add other plan tracks or durable notes only when the project earns them. `Archit
 - Keep implementation plans under [`plans/`](plans/README.md).
 - Keep durable cross-cutting architecture guidance in [`Architecture.md`](Architecture.md) unless a later contract deliberately reintroduces a more granular structure.
 - Treat [`../.agents/skills/project-wiki-maintainer/SKILL.md`](../.agents/skills/project-wiki-maintainer/SKILL.md) as the canonical repo-local product skill for wiki work; update this local entrypoint when the skill location or adoption guidance changes, not by duplicating the full skill guidance here.
-- Keep the root [`../AGENTS.md`](../AGENTS.md) build-version rule in force: every material code or content change should bump the aligned `package.json` and `build-version.json` versions before commit.
+- Keep the root [`../AGENTS.md`](../AGENTS.md) build-version rule in force: material app code or product content changes should bump the aligned `package.json` and `build-version.json` versions before commit, while docs-only changes, wiki/planning updates, and agent skill installs/updates do not require a bump.
 - Do not store product-owned app state in project markdown; markdown here is project content and durable coordination context.
 - Do not create root-level `docs/` or `tasks/` folders for maintained project knowledge unless the project later needs runtime-owned documentation elsewhere.
 
