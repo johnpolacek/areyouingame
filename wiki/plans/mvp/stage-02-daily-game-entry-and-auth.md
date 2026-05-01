@@ -11,7 +11,7 @@ Completed.
 ## Scope
 
 - Include: public `Join Today's Game`, today's global game resolution, Clerk sign-in or account creation, and routing authenticated users to the correct next step.
-- Exclude: player creation form fields, the surprise YES or NO reveal, private chat, end-of-day recaps, and archive browsing beyond any minimal entry link.
+- Exclude: player creation form fields, the surprise YES or NO reveal, live public activity implementation, end-of-day recaps, and archive browsing beyond any minimal entry link.
 
 ## Units
 
@@ -24,7 +24,7 @@ Completed.
 - Users who are not signed in are prompted to create an account or sign in through Clerk before joining.
 - Authenticated users without a player for today's game are routed to player creation.
 - Authenticated users who already have today's player are routed to the private game chat.
-- The entry flow communicates that chat is private during the day and summarized publicly at the end of the day.
+- The entry flow communicates that gameplay is public live from the beginning, while joining and playing require authentication.
 
 ## Verification
 

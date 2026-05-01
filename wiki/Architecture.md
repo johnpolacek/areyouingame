@@ -38,8 +38,10 @@ AreYouIn is organized around daily shared game instances.
 - The YES or NO choice must not appear in player creation or in the first location/activity prompt. It is reserved for a later reveal after the player has entered the scene.
 - The YES/NO reveal supports explicit `YES` and `NO` buttons plus an open text response. Open text can be classified as `YES`, `NO`, or deferred/no obvious choice.
 - Deferred reveal responses do not complete the central decision and should not be stored as a third final choice. They keep the decision pending while recording the attempted action and returning another interruption that repeats the demand for yes or no.
-- Player chat is private during the day. End-of-day results, summaries, and selected consequences become visible to everyone through the daily recap/archive.
-- Each day should produce a durable recap that summarizes the game and preserves it as part of the growing archive.
+- Gameplay is intended to be public live from the beginning: anyone can view player-visible prompts, player inputs, choices, narrator responses, scene titles, timestamps, and public character identity across all daily games while they happen.
+- Joining and playing remain authenticated, but viewing live activity should not require sign-in.
+- Public transcript visibility is limited to player-visible content and public character identity. Clerk/account ids, backend secrets, internal prompts, hidden structured facts, model metadata, token/cost data, and operator-only fields stay private.
+- Each day may later produce a durable recap that summarizes the game and preserves it as part of the growing archive, but recaps are not the primary public visibility mechanism.
 
 ## Backend Storage Model
 

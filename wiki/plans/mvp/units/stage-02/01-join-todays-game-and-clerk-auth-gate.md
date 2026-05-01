@@ -18,7 +18,7 @@ Anyone can see that today's game exists and choose `Join Today's Game`. If they 
 - Prompt unauthenticated users to sign in or create an account before player creation.
 - Route authenticated users without today's player to the player creation form.
 - Route authenticated users with today's player to today's private game chat.
-- Communicate that chat is private during the day and end-of-day results become publicly visible.
+- Communicate that gameplay is public live from the beginning, while joining and playing require authentication.
 
 ## Out Of Scope
 
@@ -35,7 +35,7 @@ Anyone can see that today's game exists and choose `Join Today's Game`. If they 
 - Unauthenticated join attempts open or route to Clerk sign-in/sign-up.
 - Authenticated users are routed based on whether they already have a player for today's game.
 - Today's game id is stable for the same global start date.
-- The UI copy establishes that participation is private during the day and summarized publicly at the end of the day.
+- The UI copy establishes that player-visible gameplay is published live from the beginning.
 
 ## Data And State Notes
 

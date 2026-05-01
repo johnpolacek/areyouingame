@@ -2,7 +2,7 @@
 
 ## Stage Goal
 
-Connect the player to a private game chat, begin with the shared-time location/activity prompt, and then grow the loop toward the later `Are you in?` reveal, LLM interpretation, deterministic adjudication guardrails, persisted state changes, event logging, and grounded narrative response.
+Connect the player to the first game chat, begin with the shared-time location/activity prompt, and then grow the loop toward the later `Are you in?` reveal, LLM interpretation, deterministic adjudication guardrails, persisted state changes, event logging, and grounded narrative response.
 
 ## Current Status
 
@@ -10,7 +10,7 @@ Completed product-spine stage. Current player/gameplay state now uses the produc
 
 ## Scope
 
-- Include: private player-to-game chat, first prompt composition, player response capture, and the first boundary between chat messages and game state.
+- Include: player-to-game chat, first prompt composition, player response capture, and the first boundary between chat messages and game state.
 - Exclude: player creation, public daily recap generation, and full world-simulation breadth beyond the first chat loop.
 
 ## Units
@@ -23,7 +23,7 @@ Completed product-spine stage. Current player/gameplay state now uses the produc
 
 ## Acceptance Criteria
 
-- A player who joined today's game and created their player can enter a private chat with the game.
+- A player who joined today's game and created their player can enter the game chat.
 - The first game prompt uses the player's name, local rendering of the shared event time, and player location.
 - The first game prompt asks where the player is and what they are doing.
 - The player's first response is submitted and stored before a later reveal ending with `A new way of being is available. Connection. Understanding. Freedom. Are you in?`
@@ -31,11 +31,11 @@ Completed product-spine stage. Current player/gameplay state now uses the produc
 - The YES or NO choice is captured on the reveal screen, not the player creation form or first location/activity prompt.
 - The current gameplay path is migrated off local storage before the selected YES or NO choice is added.
 - The selected YES or NO choice is persisted exactly once for the player/day in the production backend before deeper state and memory systems are introduced.
-- The interface communicates that private chat content may affect end-of-day public results or summaries.
+- The interface communicates that player-visible gameplay is intended to be public live from the beginning. This supersedes earlier private-during-the-day recap language.
 
 ## Verification
 
-- Verify unauthenticated users and users without a player cannot enter the private game chat.
+- Verify unauthenticated users and users without a player cannot enter the game chat.
 - Verify the first prompt is generated only after player creation.
 - Verify the first prompt asks where the player is and what they are doing using the player's local game-start time.
 - Verify the first response persists and advances out of the opening prompt before the YES/NO reveal screen.
@@ -50,5 +50,5 @@ Completed product-spine stage. Current player/gameplay state now uses the produc
 
 ## Assumptions
 
-- Chat is private during the active day.
-- End-of-day public output is summarized rather than exposing raw private chat transcripts by default.
+- Earlier private-during-the-day assumptions are superseded by the Stage 06 live public activity direction.
+- Full public transcript means player-visible transcript only, not internal prompts or operational metadata.

@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] planning | clarify live public gameplay direction
+
+- Updated the MVP roadmap and Stage 06 planning direction so gameplay is intended to be public live from the beginning, across all daily games.
+- Clarified that this is a docs-only planning change: no live activity route, Convex query, schema change, UI implementation, or runtime behavior change is included.
+- Replaced older private-during-the-day/end-of-day-recap assumptions with player-visible public transcript language, while keeping internal prompts, account identifiers, model metadata, secrets, and operator-only fields private.
+
 ## [2026-05-01] operations | clarify build version scope
 
 - Updated the root and wiki agent rules so docs-only changes, wiki/planning updates, and agent skill installs/updates do not require build version bumps.

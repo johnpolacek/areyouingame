@@ -4,7 +4,7 @@ Create the formal legal-facing documents and acceptance surfaces needed before t
 
 ## Product Intent
 
-The MVP can warn players during gameplay that their play is public, but public launch needs explicit Terms and Conditions and Privacy Policy documents that explain what data is collected, how gameplay is published, and what users agree to when they participate.
+The MVP can warn players during gameplay that their player-visible gameplay is public live, but public launch needs explicit Terms and Conditions and Privacy Policy documents that explain what data is collected, how gameplay is published, and what users agree to when they participate.
 
 ## Scope
 
@@ -27,12 +27,12 @@ The MVP can warn players during gameplay that their play is public, but public l
 - Privacy Policy page exists and is reachable in-app.
 - The `Before we begin` checkbox references the published terms clearly.
 - Player acceptance stores enough version/date information to know which terms were accepted.
-- Public gameplay publication is disclosed in both the in-app gate and the formal documents.
+- Live public gameplay publication is disclosed in both the in-app gate and the formal documents.
 
 ## Data And State Notes
 
 - Store accepted terms version separately from the daily gameplay acknowledgement when formal terms exist.
-- Keep the daily public-gameplay acknowledgement even after formal terms exist, because it is contextual to each day's session.
+- Keep the daily public-gameplay acknowledgement even after formal terms exist, because it is contextual to each day's session and live transcript visibility.
 
 ## Verification
 
