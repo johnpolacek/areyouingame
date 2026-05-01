@@ -3,7 +3,7 @@ import { generateText } from "ai";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-export const defaultScenario = "day-1-opening-branch";
+export const defaultScenario = "yes-connected-path";
 export const playtestIndexJsonPath = "wiki/playtests/index.json";
 export const playtestIndexMarkdownPath = "wiki/playtests/index.md";
 
@@ -11,7 +11,7 @@ export function parsePlaytestArgs(argv) {
   const options = {
     baseUrl: "http://localhost:3000",
     build: null,
-    maxTurns: 4,
+    maxTurns: 10,
     persona: "",
     random: false,
     scenario: defaultScenario,
@@ -204,7 +204,7 @@ export async function generatePlayerTurn({
   turnKind,
 }) {
   if (!process.env.OPENAI_API_KEY) {
-    return createFallbackPlayerTurn({ persona, turnKind });
+    return createFallbackPlayerTurn({ gameText, persona, turnKind });
   }
 
   const { text } = await generateText({
@@ -361,7 +361,10 @@ function normalizePersona(persona, random, seed) {
     location: stringOr(persona.location, fallback.location),
     name: stringOr(persona.name, fallback.name),
     occupation: stringOr(persona.occupation, fallback.occupation),
-    openingResponse: stringOr(persona.openingResponse, fallback.openingResponse),
+    openingResponse: stringOr(
+      persona.openingResponse,
+      fallback.openingResponse,
+    ),
     playStyle: stringOr(persona.playStyle, fallback.playStyle),
     riskTolerance: stringOr(persona.riskTolerance, fallback.riskTolerance),
     speakingStyle: stringOr(persona.speakingStyle, fallback.speakingStyle),
@@ -385,8 +388,8 @@ export function createFallbackRequestedPersona(personaPrompt) {
     name: isAustralia ? "Maya Collins" : "Jordan Reyes",
     occupation: isTeacher ? "Secondary school teacher" : "Community organizer",
     openingResponse: isAustralia
-      ? "I am at my kitchen table in Melbourne marking essays before school, half-listening to magpies outside and trying not to wake the house."
-      : "I am at my kitchen table with my laptop open, trying to finish a normal task while the room keeps feeling less normal.",
+      ? "I am at my kitchen table in Melbourne late at night, marking essays I should have finished hours ago, half-listening to the quiet house and trying not to wake anyone."
+      : "I am at my kitchen table late at night with my laptop open, trying to finish a normal task while the room keeps feeling less normal.",
     playStyle: "Careful, emotionally observant, willing to push back when the game asks for trust too early.",
     riskTolerance: "Moderate",
     speakingStyle: "Plainspoken, specific, warm under pressure",
@@ -464,7 +467,7 @@ function normalizePlayerTurn(turn, persona, turnKind) {
   };
 }
 
-function createFallbackPlayerTurn({ persona, turnKind }) {
+function createFallbackPlayerTurn({ gameText = "", persona, turnKind }) {
   if (turnKind === "first_choice") {
     return {
       choice: "YES",
@@ -477,6 +480,10 @@ function createFallbackPlayerTurn({ persona, turnKind }) {
     };
   }
 
+  if (turnKind === "post_choice_action") {
+    return createFallbackActionTurn(gameText);
+  }
+
   return {
     choice: "DEFERRED",
     confusionLevel: 0.35,
@@ -485,6 +492,60 @@ function createFallbackPlayerTurn({ persona, turnKind }) {
     intent: "respond from the persona's immediate physical situation",
     responseText: persona.openingResponse,
     trustLevel: 0.32,
+  };
+}
+
+function createFallbackActionTurn(gameText) {
+  const normalized = gameText.toLowerCase();
+
+  if (/\borb\b/.test(normalized) && /\bforehead|accepted|accept\b/.test(normalized)) {
+    return {
+      choice: "DEFERRED",
+      confusionLevel: 0.4,
+      emotionalState: "cautious but committed",
+      engagementLevel: 0.82,
+      intent: "test the new connection while setting a boundary",
+      responseText:
+        "I ask what it can actually do, what it wants from me, and whether I can disconnect if this becomes unsafe.",
+      trustLevel: 0.42,
+    };
+  }
+
+  if (/\borb\b/.test(normalized)) {
+    return {
+      choice: "DEFERRED",
+      confusionLevel: 0.48,
+      emotionalState: "unnerved and protective",
+      engagementLevel: 0.84,
+      intent: "inspect the orb without surrendering judgment",
+      responseText:
+        "I do not put it on yet. I set it on the table, take a breath, and look for any markings, seams, heat, or response to my voice.",
+      trustLevel: 0.34,
+    };
+  }
+
+  if (/\bpackage|box|delivered|drone\b/.test(normalized)) {
+    return {
+      choice: "DEFERRED",
+      confusionLevel: 0.45,
+      emotionalState: "alarmed and methodical",
+      engagementLevel: 0.8,
+      intent: "open the delivery carefully while preserving evidence",
+      responseText:
+        "I photograph the package, move it to the kitchen table, and open it carefully without touching anything more than I have to.",
+      trustLevel: 0.36,
+    };
+  }
+
+  return {
+    choice: "DEFERRED",
+    confusionLevel: 0.42,
+    emotionalState: "watchful and unsettled",
+    engagementLevel: 0.76,
+    intent: "look for concrete evidence of what changed",
+    responseText:
+      "I put the pen down, unlock my phone again, and check whether anything concrete changed: messages, signal, apps, news, or anyone else awake seeing the same thing.",
+    trustLevel: 0.33,
   };
 }
 

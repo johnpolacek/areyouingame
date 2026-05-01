@@ -18,7 +18,7 @@ describe("persona playtest core", () => {
     expect(parsePlaytestArgs(["--", "a teacher in Australia"])).toMatchObject({
       persona: "a teacher in Australia",
       random: false,
-      scenario: "day-1-opening-branch",
+      scenario: "yes-connected-path",
     });
     expect(parsePlaytestArgs(["--random", "--seed", "abc"])).toMatchObject({
       random: true,

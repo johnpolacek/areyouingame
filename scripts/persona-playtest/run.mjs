@@ -149,28 +149,22 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
   }
 
   if (choiceTurn.choice === "NO") {
-    await browser.click('button:has-text("NO")');
+    await browser.clickExactButton("NO");
   } else if (choiceTurn.choice === "DEFERRED") {
     await browser.fill("#first-reveal-text-response", choiceTurn.responseText);
     await browser.click('button:has-text("Continue")');
   } else {
-    await browser.click('button:has-text("YES")');
+    await browser.clickExactButton("YES");
   }
   await browser.wait(4000);
 
-  const outcomeText = await browser.getBodyText();
-  turns.push({
-    gameText: outcomeText,
-    label: "First branch outcome",
-    persona: {
-      choice: "DEFERRED",
-      confusionLevel: choiceTurn.confusionLevel,
-      emotionalState: "absorbing the first consequence",
-      engagementLevel: choiceTurn.engagementLevel,
-      intent: "observe the game response",
-      responseText: "(The persona reads the consequence before deciding what to do next.)",
-      trustLevel: choiceTurn.trustLevel,
-    },
+  await continueThroughActionPrompts({
+    browser,
+    maxTurns: options.maxTurns,
+    model: llmModel,
+    persona,
+    scenario: options.scenario,
+    turns,
   });
 
   return await finishRun({
@@ -185,6 +179,67 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     syntheticUserId,
     turns,
   });
+}
+
+async function continueThroughActionPrompts({
+  browser,
+  maxTurns,
+  model,
+  persona,
+  scenario,
+  turns,
+}) {
+  let currentText = await browser.getBodyText();
+  let actionCount = 0;
+
+  while (turns.length < maxTurns) {
+    const canSubmitAction = await browser.hasEnabledActionPrompt();
+
+    if (!canSubmitAction) {
+      break;
+    }
+
+    actionCount += 1;
+    const actionTurn = await generatePlayerTurn({
+      gameText: currentText,
+      model,
+      persona,
+      scenario,
+      transcript: turns,
+      turnKind: "post_choice_action",
+    });
+
+    turns.push({
+      gameText: currentText,
+      label:
+        actionCount === 1
+          ? "First branch outcome"
+          : `Continuation prompt ${actionCount}`,
+      persona: actionTurn,
+    });
+
+    await browser.fill("#first-post-choice-action", actionTurn.responseText);
+    await browser.click('button:has-text("Continue")');
+    await browser.wait(5000);
+    currentText = await browser.getBodyText();
+  }
+
+  if (currentText && turns.at(-1)?.gameText !== currentText) {
+    turns.push({
+      gameText: currentText,
+      label: "Final observed state",
+      persona: {
+        choice: "DEFERRED",
+        confusionLevel: turns.at(-1)?.persona.confusionLevel ?? 0.4,
+        emotionalState: "observing where the current build stops",
+        engagementLevel: turns.at(-1)?.persona.engagementLevel ?? 0.7,
+        intent: "record the current end of the implemented flow",
+        responseText:
+          "(The runner stops here because the current build has no enabled next action, or the turn limit was reached.)",
+        trustLevel: turns.at(-1)?.persona.trustLevel ?? 0.35,
+      },
+    });
+  }
 }
 
 function getPlaytestModel() {
@@ -247,10 +302,10 @@ function createHelpText() {
     "Options:",
     "  --persona <text>    Persona request to expand",
     "  --random            Invent a grounded random persona",
-    "  --scenario <name>   Scenario label for the run",
+    "  --scenario <name>   Scenario label for the run, default yes-connected-path",
     "  --build <version>   Override build version label",
     "  --base-url <url>    Local app URL, default http://localhost:3000",
-    "  --max-turns <n>     Stop after this many captured player turns",
+    "  --max-turns <n>     Stop after this many player response turns, default 10",
     "  --seed <text>       Random persona seed/inspiration",
   ].join("\n");
 }
@@ -288,11 +343,33 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
 
   return {
     click: (selector) => run("click", [selector]),
+    clickExactButton: (label) =>
+      run("eval", [
+        `(() => {
+          const label = ${JSON.stringify(label)};
+          const button = Array.from(document.querySelectorAll("button"))
+            .find((candidate) => candidate.innerText.trim() === label && !candidate.disabled);
+          if (!button) throw new Error("Button not found: " + label);
+          button.click();
+          return true;
+        })()`,
+      ]),
+    eval: (script) => run("eval", [script]),
     fill: (selector, value) => run("fill", [selector, value]),
     getBodyText: async () => {
       const text = await run("eval", [createMainTextEval()]);
 
       return normalizeCapturedGameText(text);
+    },
+    hasEnabledActionPrompt: async () => {
+      const result = await run("eval", [
+        `(() => {
+          const input = document.querySelector("#first-post-choice-action");
+          return Boolean(input && !input.disabled && input.offsetParent !== null);
+        })()`,
+      ]);
+
+      return result.trim() === "true";
     },
     open: (pathname) => run("open", [new URL(pathname, baseUrl).toString()]),
     wait: (ms) => run("wait", [String(ms)]),
@@ -339,7 +416,12 @@ function createMainTextEval() {
         ? element.value
         : element.innerText || element.textContent || "";
       const normalized = text.replace(/\\s+/g, " ").trim();
-      if (normalized) lines.push(normalized);
+      if (!normalized) continue;
+      lines.push(
+        element.tagName.toLowerCase() === "blockquote"
+          ? "Prior player action: " + normalized
+          : normalized
+      );
     }
 
     return Array.from(new Set(lines)).join("\\n");
