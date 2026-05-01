@@ -65,6 +65,7 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
   const turns = [];
 
   await browser.open("/player/new");
+  await assertSyntheticAuthReachedPlayerForm(browser, options.baseUrl);
   await browser.fill('input[name="character-name"]', persona.name);
   await browser.fill('input[name="character-age"]', String(persona.age));
   await browser.fill('input[name="character-location"]', persona.location);
@@ -354,8 +355,9 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
       run("eval", [
         `(() => {
           const label = ${JSON.stringify(label)};
+          const normalize = (value) => value.replace(/\\s+/g, " ").trim().toLowerCase();
           const button = Array.from(document.querySelectorAll("button"))
-            .find((candidate) => candidate.innerText.trim() === label && !candidate.disabled);
+            .find((candidate) => normalize(candidate.innerText) === normalize(label) && !candidate.disabled);
           if (!button) throw new Error("Button not found: " + label);
           button.click();
           return true;
@@ -364,9 +366,10 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
     clickEnabledButton: (label) =>
       run("eval", [
         `(() => {
-          const label = ${JSON.stringify(label)}.toLowerCase();
+          const label = ${JSON.stringify(label)};
+          const normalize = (value) => value.replace(/\\s+/g, " ").trim().toLowerCase();
           const button = Array.from(document.querySelectorAll("button"))
-            .find((candidate) => candidate.innerText.trim().toLowerCase() === label && !candidate.disabled);
+            .find((candidate) => normalize(candidate.innerText) === normalize(label) && !candidate.disabled);
           if (!button) throw new Error("Enabled button not found: " + label);
           button.click();
           return true;
@@ -378,6 +381,14 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
       const text = await run("eval", [createMainTextEval()]);
 
       return normalizeCapturedGameText(text);
+    },
+    getUrl: () => run("get", ["url"]),
+    hasCharacterForm: async () => {
+      const result = await run("eval", [
+        `Boolean(document.querySelector('input[name="character-name"]'))`,
+      ]);
+
+      return result.trim() === "true";
     },
     hasEnabledActionPrompt: async () => {
       const result = await run("eval", [
@@ -416,6 +427,23 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
       throw new Error(`Timed out waiting for selector: ${selector}`);
     },
   };
+}
+
+async function assertSyntheticAuthReachedPlayerForm(browser, baseUrl) {
+  if (await browser.hasCharacterForm()) {
+    return;
+  }
+
+  const currentUrl = (await browser.getUrl()).trim();
+
+  throw new Error(
+    [
+      "Synthetic playtest auth did not reach /player/new.",
+      `Current URL: ${currentUrl || "unknown"}`,
+      "Start the local app with AREYOUIN_PLAYTEST_AUTH=1 or stop the existing dev server so this runner can start one.",
+      `Target base URL: ${baseUrl}`,
+    ].join(" "),
+  );
 }
 
 function createMainTextEval() {

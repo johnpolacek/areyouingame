@@ -12,6 +12,7 @@
     "convex:sync-secret": "node scripts/sync-convex-backend-secret.mjs",
     "convex:check-secret": "node scripts/check-convex-backend-secret.mjs",
     "playtest:persona": "node scripts/persona-playtest/run.mjs",
+    "agent-browser:cleanup-playtests": "node scripts/cleanup-agent-browser-playtests.mjs",
     "wt:create": "node scripts/worktrees.mjs create",
     "wt:list": "node scripts/worktrees.mjs list",
     "wt:doctor": "node scripts/worktrees.mjs doctor",

@@ -4,6 +4,7 @@ import { isLocalAdminHost } from "./admin-access";
 
 export const playtestAuthHeader = "x-areyouin-playtest";
 export const playtestUserHeader = "x-areyouin-playtest-user";
+export const playtestAuthEnvVar = "AREYOUIN_PLAYTEST_AUTH";
 
 export async function getAuthenticatedUserId(): Promise<string> {
   const playtestUserId = await getPlaytestUserIdForRequest();
@@ -33,6 +34,7 @@ export async function getPlaytestUserIdForRequest(): Promise<string | null> {
   const headerStore = await headers();
 
   return getPlaytestUserIdFromHeaders({
+    enabled: process.env[playtestAuthEnvVar],
     host: headerStore.get("host"),
     mode: process.env.NODE_ENV,
     playtestHeader: headerStore.get(playtestAuthHeader),
@@ -41,17 +43,20 @@ export async function getPlaytestUserIdForRequest(): Promise<string | null> {
 }
 
 export function getPlaytestUserIdFromHeaders({
+  enabled,
   host,
   mode,
   playtestHeader,
   userHeader,
 }: {
+  enabled: string | undefined;
   host: string | null;
   mode: string | undefined;
   playtestHeader: string | null;
   userHeader: string | null;
 }): string | null {
   if (
+    enabled !== "1" ||
     mode === "production" ||
     playtestHeader !== "1" ||
     !isLocalAdminHost(host) ||

@@ -5,6 +5,7 @@ describe("getPlaytestUserIdFromHeaders", () => {
   it("accepts local development playtest users when explicitly enabled", () => {
     expect(
       getPlaytestUserIdFromHeaders({
+        enabled: "1",
         host: "localhost:3000",
         mode: "development",
         playtestHeader: "1",
@@ -15,6 +16,7 @@ describe("getPlaytestUserIdFromHeaders", () => {
 
   it("rejects production and non-local requests", () => {
     const input = {
+      enabled: "1",
       host: "localhost:3000",
       mode: "production",
       playtestHeader: "1",
@@ -33,6 +35,7 @@ describe("getPlaytestUserIdFromHeaders", () => {
 
   it("requires the playtest header and a safe synthetic id", () => {
     const input = {
+      enabled: "1",
       host: "localhost:3000",
       mode: "development",
       playtestHeader: "1",
@@ -43,5 +46,20 @@ describe("getPlaytestUserIdFromHeaders", () => {
       getPlaytestUserIdFromHeaders({ ...input, playtestHeader: "0" }),
     ).toBeNull();
     expect(getPlaytestUserIdFromHeaders(input)).toBeNull();
+  });
+
+  it("rejects synthetic auth without the explicit server opt-in", () => {
+    const input = {
+      host: "localhost:3000",
+      mode: "development",
+      playtestHeader: "1",
+      userHeader: "playtest:0-1-2:teacher:day-1-opening-branch",
+    };
+
+    expect(
+      getPlaytestUserIdFromHeaders({ ...input, enabled: undefined }),
+    ).toBeNull();
+    expect(getPlaytestUserIdFromHeaders({ ...input, enabled: "0" })).toBeNull();
+    expect(getPlaytestUserIdFromHeaders({ ...input, enabled: "true" })).toBeNull();
   });
 });
