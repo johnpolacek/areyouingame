@@ -291,7 +291,7 @@ export function AnimatedHomeHero() {
       <h1
         ref={titleRef}
         id="entry-title"
-        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-700 via-amber-500 to-amber-200 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90"
+        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
         Are You In?
