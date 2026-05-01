@@ -326,11 +326,13 @@ export const getAiUsageEventsForAdmin = queryGeneric({
   handler: async (ctx, args) => {
     requireBackendSecret(args.backendSecret);
 
-    return await ctx.db
+    const events = await ctx.db
       .query("aiUsageEvents")
       .withIndex("by_createdAt")
       .order("desc")
       .take(Math.min(Math.max(args.limit ?? 200, 1), 2000));
+
+    return events.map(toAiUsageEvent);
   },
 });
 
@@ -1508,6 +1510,33 @@ function toDailyPlayer(source: any) {
       : {}),
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
+  };
+}
+
+function toAiUsageEvent(source: any) {
+  return {
+    id: source.id,
+    provider: source.provider,
+    model: source.model,
+    operation: source.operation,
+    ...(source.dailyGameId !== undefined
+      ? { dailyGameId: source.dailyGameId }
+      : {}),
+    ...(source.playerId !== undefined ? { playerId: source.playerId } : {}),
+    ...(source.clerkUserId !== undefined
+      ? { clerkUserId: source.clerkUserId }
+      : {}),
+    inputTokens: source.inputTokens,
+    cachedInputTokens: source.cachedInputTokens,
+    outputTokens: source.outputTokens,
+    reasoningTokens: source.reasoningTokens,
+    totalTokens: source.totalTokens,
+    estimatedCostUsd: source.estimatedCostUsd,
+    pricingSourceUrl: source.pricingSourceUrl,
+    pricingEffectiveDate: source.pricingEffectiveDate,
+    status: source.status,
+    ...(source.errorType !== undefined ? { errorType: source.errorType } : {}),
+    createdAt: source.createdAt,
   };
 }
 

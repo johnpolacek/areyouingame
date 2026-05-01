@@ -11,7 +11,7 @@ import {
 import { MoonIcon, SunIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { type Theme, themeStorageKey } from "./theme";
+import { isTheme, type Theme, themeCookieKey, themeStorageKey } from "./theme";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -26,19 +26,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyTheme(theme);
+    persistTheme(theme);
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
       setTheme: (nextTheme) => {
-        window.localStorage.setItem(themeStorageKey, nextTheme);
         setThemeState(nextTheme);
       },
       toggleTheme: () => {
         const nextTheme = theme === "dark" ? "light" : "dark";
 
-        window.localStorage.setItem(themeStorageKey, nextTheme);
         setThemeState(nextTheme);
       },
     }),
@@ -95,6 +94,15 @@ export function useTheme() {
 }
 
 function getInitialTheme(): Theme {
+  if (typeof window !== "undefined") {
+    const storedTheme =
+      window.localStorage.getItem(themeStorageKey) ?? undefined;
+
+    if (isTheme(storedTheme)) {
+      return storedTheme;
+    }
+  }
+
   if (typeof document !== "undefined") {
     return document.documentElement.classList.contains("light")
       ? "light"
@@ -108,4 +116,14 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.remove("light", "dark");
   document.documentElement.classList.add(theme);
   document.documentElement.dataset.theme = theme;
+}
+
+function persistTheme(theme: Theme) {
+  window.localStorage.setItem(themeStorageKey, theme);
+  document.cookie = [
+    `${themeCookieKey}=${theme}`,
+    "Path=/",
+    "Max-Age=31536000",
+    "SameSite=Lax",
+  ].join("; ");
 }

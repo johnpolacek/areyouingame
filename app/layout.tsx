@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import { cookies } from "next/headers";
 import { Rethink_Sans, Rubik_80s_Fade, Stalinist_One } from "next/font/google";
-import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
+import { AccountControls } from "./account-controls";
 import { CommandEnterSubmit } from "./command-enter-submit";
-import { themeInitializationScript } from "./theme";
-import { ThemeProvider, ThemeToggle } from "./theme-provider";
+import { isTheme, themeCookieKey } from "./theme";
+import { ThemeProvider } from "./theme-provider";
 import { BUILD_VERSION_LABEL } from "@/lib/build-version";
 import "./globals.css";
 
@@ -31,34 +32,30 @@ export const metadata: Metadata = {
     "A daily persistent simulation of humanity's first contact with artificial superintelligence.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const storedTheme = cookieStore.get(themeCookieKey)?.value;
+  const theme = isTheme(storedTheme) ? storedTheme : "dark";
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      className={theme}
+      data-theme={theme}
+      lang="en"
+      suppressHydrationWarning
+    >
       <body
         data-build-version={BUILD_VERSION_LABEL}
         className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-background`}
       >
-        <Script
-          id="theme-initialization"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeInitializationScript() }}
-        />
         <ThemeProvider>
           <ClerkProvider>
             <CommandEnterSubmit />
-            <div
-              className="fixed top-5 right-5 z-20 inline-flex items-center gap-3"
-              aria-label="Account and display settings"
-            >
-              <ThemeToggle />
-              <Show when="signed-in">
-                <UserButton />
-              </Show>
-            </div>
+            <AccountControls />
             {children}
             <div
               className="fixed bottom-3 left-3 z-20 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-foreground/45"
