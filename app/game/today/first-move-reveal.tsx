@@ -25,7 +25,7 @@ const panelTextClass =
 const labelClass =
   "text-sm font-semibold tracking-[0.18em] text-primary uppercase dark:text-amber-200";
 const textareaClass =
-  "min-h-32 resize-y rounded-md border border-border bg-card/80 px-4 py-3 text-base leading-7 text-foreground shadow-2xl shadow-black/10 outline-none backdrop-blur-md placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-300/25 dark:bg-black/45 dark:text-amber-50 dark:shadow-black/25 dark:placeholder:text-amber-100/35 dark:focus:border-amber-200/80 dark:focus:ring-amber-300/25";
+  "min-h-32 resize-y rounded-md border border-border bg-card/80 px-4 py-3 text-base leading-7 text-foreground shadow-2xl shadow-black/10 outline-none backdrop-blur-md focus:border-primary/70 focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-300/25 dark:bg-black/45 dark:text-amber-50 dark:shadow-black/25 dark:focus:border-amber-200/80 dark:focus:ring-amber-300/25";
 const smallActionClass =
   "!h-11 !rounded-[3px] border border-primary/45 bg-primary/10 px-6 text-sm font-bold tracking-[0.18em] text-primary uppercase hover:border-primary/70 hover:bg-primary/15 dark:border-amber-300/45 dark:bg-amber-300/10 dark:text-amber-100 dark:hover:border-amber-200 dark:hover:bg-amber-300/20";
 
@@ -318,7 +318,6 @@ export function FirstMoveReveal({
             maxLength={1200}
             rows={4}
             className={textareaClass}
-            placeholder="Say yes, refuse, stall, ask, run, call someone, or try anything else."
           />
           <div className="flex justify-end">
             <Button
@@ -406,16 +405,6 @@ export function FirstChoiceConsequence({
   const historyTimelineEntries = timeline.slice(0, -1);
   const shouldUseConsoleLayout = timeline.length > 1;
   const playerMessageCount = timeline.length;
-  const actionFormPlaceholder =
-    decision.choice === "YES"
-      ? isConnectedAsiReadyForFirstAction
-        ? "Ask what is happening, ask what it can do, reach toward another presence, set a boundary, or request help."
-        : isOrbDecisionAvailable
-        ? "Place it on your forehead, refuse it, destroy it, hide it, ask chat, or try anything else."
-        : firstConnectedPath?.packageStatus === "available"
-        ? "Open the package, leave it closed, hide it, call someone, or try anything else."
-        : "Act in the world while you wait to learn what YES changed."
-      : "Check public reports, text a trusted person, inspect your device, document evidence, leave, wait, or keep refusing.";
   const actionFormDisabled =
     isSubmittingAction || (!isNoPathReadyForFirstAction && !isYesPathReadyForAction);
 
@@ -556,7 +545,6 @@ export function FirstChoiceConsequence({
 
             {isActionReady ? (
               <ActionPromptForm
-                actionFormPlaceholder={actionFormPlaceholder}
                 actionText={actionText}
                 isSubmittingAction={isSubmittingAction}
                 onActionTextChange={setActionText}
@@ -682,7 +670,6 @@ export function FirstChoiceConsequence({
 
       {isActionReady ? (
         <ActionPromptForm
-          actionFormPlaceholder={actionFormPlaceholder}
           actionText={actionText}
           isSubmittingAction={isSubmittingAction}
           onActionTextChange={setActionText}
@@ -820,13 +807,11 @@ function titleFromActionKind(actionKind: string | undefined): string | null {
 }
 
 function ActionPromptForm({
-  actionFormPlaceholder,
   actionText,
   isSubmittingAction,
   onActionTextChange,
   onSubmit,
 }: {
-  actionFormPlaceholder: string;
   actionText: string;
   isSubmittingAction: boolean;
   onActionTextChange: (value: string) => void;
@@ -848,7 +833,6 @@ function ActionPromptForm({
         maxLength={1200}
         rows={4}
         className={textareaClass}
-        placeholder={actionFormPlaceholder}
       />
       <div className="flex justify-end">
         <Button
@@ -881,8 +865,7 @@ function NextTurnPendingForm() {
         id="next-post-choice-action"
         disabled
         rows={4}
-        className="min-h-32 resize-y rounded-md border border-border bg-muted/70 px-4 py-3 text-base leading-7 text-muted-foreground shadow-2xl shadow-black/5 outline-none backdrop-blur-md placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-300/20 dark:bg-black/30 dark:text-amber-50 dark:shadow-black/20 dark:placeholder:text-amber-100/35"
-        placeholder="The line stays open."
+        className="min-h-32 resize-y rounded-md border border-border bg-muted/70 px-4 py-3 text-base leading-7 text-muted-foreground shadow-2xl shadow-black/5 outline-none backdrop-blur-md disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-300/20 dark:bg-black/30 dark:text-amber-50 dark:shadow-black/20"
       />
       <div className="flex justify-end">
         <Button
