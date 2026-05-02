@@ -20,7 +20,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 - Ground the narration in player context, daily game context, opening scene context, first YES decision, first YES consequence, and Day 1 global storyline context.
 - Persist connected-path state so refreshes and duplicate submissions are stable.
 - Append event-history records for meaningful YES-path transitions.
-- Render the YES branch under the large selected `YES` heading with a compact transcript and next action textarea.
+- Render the YES branch under the large selected `YES` heading with a compact transcript and next action textarea while play can continue.
 - Preserve the physicality and timing of the drone/package/orb path without prematurely simulating full connected cognition.
 - Let the first YES continuation proceed through the waiting period, deterministic package delivery eligibility, and optional unboxing into orb reveal.
 
@@ -66,6 +66,7 @@ Clarified product direction: the YES branch initially shares the same early-worl
 - Added a Clerk-protected first connected-path action route that loads Day 1 storyline context, computes deterministic connected-path transitions before generation, and sends those transitions to the AI SDK narrative boundary as canonical constraints.
 - Added event-history support for `connected_path_started`, `connected_path_turn_resolved`, `package_received`, and `orb_revealed`, with player action text, generated response text, player-visible facts, model metadata, and structured connected-path state stored separately.
 - Updated the post-choice UI so YES players keep the large selected `YES` heading, see compact transcript turns, continue acting through the same textarea, and stop at orb reveal without showing status chips.
+- Later UI polish removed the always-visible current-status panel and textarea placeholder copy; connected-path state remains structured in Convex and visible through narration, public activity, and live transcript pages rather than status chips.
 - Preserved the NO/unconnected continuation route separately; YES players no longer hit the NO-focused first post-choice endpoint.
 - Tuned YES waiting-period public-feed/news/broadcast actions to support short fictional blockquote fragments, matching the NO path transcript rendering.
 - Refactored the early post-choice narration layer so NO and pre-delivery YES share media context, public-feed timing, external-content policy, blockquote guidance, and response normalization while keeping branch-specific Convex state separate.

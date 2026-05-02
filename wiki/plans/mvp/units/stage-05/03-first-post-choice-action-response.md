@@ -18,7 +18,7 @@ Media context should be source material for the LLM, not a custom rendered feed 
 - Generate the first NO/unconnected post-choice action response through the existing AI SDK boundary.
 - Ground the generation in the player, daily game, Day 1 global storyline context, opening scene context, first NO choice, first consequence text, and submitted action.
 - Handle the social-feed example as the primary supported action shape.
-- Render the generated response under the selected `NO` heading in a compact transcript, followed by the next open action textarea.
+- Render the generated response under the selected `NO` heading in a compact transcript, followed by the next open action textarea when play can continue.
 - Provide fixed Day 1 media context to the LLM for relevant feed, public-web, or broadcast actions.
 - Keep the response open-world: players may attempt anything, and the LLM should adjudicate the action against directives and context even when no canned media context applies.
 - Support short fictional post/broadcast fragments in the generated prose and render quote-prefixed paragraphs as blockquotes.
@@ -77,7 +77,8 @@ Media context should be source material for the LLM, not a custom rendered feed 
 - Added a narrow append-only `gameplayEvents` table and first event type, `post_choice_turn_resolved`, for the first resolved NO/unconnected turn.
 - Added an AI SDK generation boundary for the first NO post-choice response that receives player context, Day 1 storyline context, and fixed Day 1 media source material for relevant public-feed, social, news, and broadcast actions.
 - Updated the protected first post-choice action route so generation succeeds before Convex state is mutated. Generation failure returns a retryable error and does not persist fallback copy.
-- Updated the post-choice UI to keep the large selected `NO` heading, render a compact transcript with the submitted action and generated response, render quote-prefixed generated paragraphs as blockquotes, and show a quiet disabled next-action textarea.
+- Updated the post-choice UI to keep the large selected `NO` heading, render a compact transcript with the submitted action and generated response, render quote-prefixed generated paragraphs as blockquotes, and keep the action form open while NO-path investigation can continue.
+- Later UI polish removed the always-visible current-status panel and textarea placeholder copy from the active game surface.
 - Removed the separate player-facing display of structured player-visible facts; those facts remain stored for event history and later turn context.
 - YES players are not routed through this NO-focused continuation. The YES path remains planned separately in Stage 05 Unit 04.
 

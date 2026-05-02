@@ -2,6 +2,32 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-02] documentation | reconcile live browser and narration drift
+
+- Reviewed wiki and planning pages against recent runtime changes through build `0.1.20`.
+- Updated Stage 06 docs from docs-only planning language to the current baseline public live browser implementation: `/live`, `/live/[gameId]`, `/live/[gameId]/[playerId]`, public activity records, and public player transcript assembly.
+- Recorded that realtime refresh/push behavior, public payload allowlist tests, route navigation polish, and broader daily lifecycle hardening remain open Stage 06 work.
+- Updated architecture notes for the live browser route hierarchy, public transcript visibility boundaries, shared narration style guidance in `lib/narrative-voice.ts`, punctuation sanitizing, and removal of the always-visible current-status panel/action placeholder copy.
+- Updated Stage 05 unit notes where they still described a quiet disabled next-action textarea or current-status style UI as the normal continuation surface.
+
+## [2026-05-02] implementation | tighten LLM narration style
+
+- Added shared `Narration Style` guidance to the player-facing game master prompt so generated narration should be shorter, punchier, sensory, and closer to tense interactive fiction.
+- Added player-facing narration sanitizing for colons, semicolons, and em dashes in current generated response paths.
+- Removed older connected-path guidance that encouraged `visibly true` / `remains unknown` recap framing.
+
+## [2026-05-02] implementation | add public live browser baseline
+
+- Added the first public live browser route hierarchy for public game rooms, public players within a game, and player-visible gameplay transcript pages.
+- Added Convex-backed public live game summaries, public live player summaries, and public live player queries that omit account identifiers.
+- Added public activity insertion alongside gameplay mutations so the live browser can summarize active games and player-visible events.
+
+## [2026-05-02] polish | remove status panel and action placeholders
+
+- Removed the always-visible current-status panel from the active Day 1 game surface.
+- Removed placeholder copy from player action textareas so the scene itself drives the next action.
+- Kept structured gameplay state in Convex and public transcript assembly rather than rendering separate status chips or recap panels.
+
 ## [2026-05-02] operations | rename worktree skill
 
 - Renamed the repo-local worktree workflow skill from `are-you-in-worktrees` to `use-worktrees` for easier natural-language invocation.
