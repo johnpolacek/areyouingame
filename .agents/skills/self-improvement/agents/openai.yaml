@@ -1,0 +1,4 @@
+interface:
+  display_name: "Self-Improvement"
+  short_description: "Capture durable Codex lessons"
+  default_prompt: "Use $self-improvement to capture a repeatable lesson from a failed attempt as concise agent knowledge."
