@@ -14,6 +14,7 @@ import type {
   FirstConnectedPath,
   DailyGameStats,
   FirstPostChoiceAction,
+  FirstPostChoiceTurn,
   FirstMoveReveal as FirstMoveRevealState,
   FirstRevealTextResponse,
   YesNoChoice,
@@ -42,6 +43,7 @@ type FirstChoiceConsequenceProps = {
   decision: FirstDecision;
   firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
+  firstPostChoiceTurns?: FirstPostChoiceTurn[];
   localTime: string;
 };
 
@@ -356,6 +358,7 @@ export function FirstChoiceConsequence({
   decision,
   firstConnectedPath,
   firstPostChoiceAction,
+  firstPostChoiceTurns = [],
   localTime,
 }: FirstChoiceConsequenceProps) {
   const router = useRouter();
@@ -366,9 +369,13 @@ export function FirstChoiceConsequence({
     decision.choice === "YES"
       ? "text-emerald-700 dark:text-emerald-200"
       : "text-red-700 dark:text-red-300";
-  const hasResolvedFirstTurn = Boolean(firstPostChoiceAction?.responseText);
+  const hasNoPathTurnHistory =
+    Boolean(firstPostChoiceAction?.responseText) ||
+    firstPostChoiceTurns.length > 0;
+  const hasResolvedFirstTurn =
+    decision.choice === "NO" ? false : Boolean(firstPostChoiceAction?.responseText);
   const isNoPathReadyForFirstAction =
-    decision.choice === "NO" && !firstPostChoiceAction;
+    decision.choice === "NO";
   const currentOrbLifecycle =
     firstConnectedPath?.orbLifecycle ??
     (firstConnectedPath?.packageStatus === "opened" &&
@@ -644,21 +651,26 @@ export function FirstChoiceConsequence({
 
       <CurrentStatusPanel status={playerFacingStatus} />
 
-      {firstPostChoiceAction ? (
-        <article className={cn("grid w-full gap-4 px-4 py-4 text-left", panelTextClass, panelClass)}>
-          <blockquote className="border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
-            {firstPostChoiceAction.actionText}
-          </blockquote>
-          {firstPostChoiceAction.responseText ? (
-            <div className="grid gap-4 text-foreground dark:text-amber-100">
-              {firstPostChoiceAction.responseText
-                .split(/\n{2,}/)
-                .map((paragraph) => (
+      {decision.choice === "NO" && hasNoPathTurnHistory ? (
+        <div className="grid w-full gap-4">
+          {timeline.slice(1).map((turn) => (
+            <article
+              className={cn("grid w-full gap-4 px-4 py-4 text-left", panelTextClass, panelClass)}
+              key={turn.id}
+            >
+              {turn.actionText ? (
+                <blockquote className="border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
+                  {turn.actionText}
+                </blockquote>
+              ) : null}
+              <div className="grid gap-4 text-foreground dark:text-amber-100">
+                {turn.responseText.split(/\n{2,}/).map((paragraph) => (
                   <TranscriptParagraph key={paragraph} text={paragraph} />
                 ))}
-            </div>
-          ) : null}
-        </article>
+              </div>
+            </article>
+          ))}
+        </div>
       ) : connectedPathTurns.length > 0 ? (
         <div className="grid w-full gap-4">
           {[...connectedPathTurns, ...orbDecisionTurns, ...connectedAsiTurns].map((turn) => (
@@ -766,10 +778,12 @@ function buildResponseTimeline({
   decision,
   firstConnectedPath,
   firstPostChoiceAction,
+  firstPostChoiceTurns,
 }: {
   decision: FirstDecision;
   firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
+  firstPostChoiceTurns?: FirstPostChoiceTurn[];
 }): TimelineEntry[] {
   const timeline: TimelineEntry[] = [
     {
@@ -780,14 +794,26 @@ function buildResponseTimeline({
     },
   ];
 
-  if (firstPostChoiceAction?.responseText) {
+  const noPathTurns =
+    firstPostChoiceTurns && firstPostChoiceTurns.length > 0
+      ? firstPostChoiceTurns
+      : firstPostChoiceAction?.responseText
+        ? [
+            {
+              ...firstPostChoiceAction,
+              responseText: firstPostChoiceAction.responseText,
+            },
+          ]
+        : [];
+
+  for (const turn of noPathTurns) {
     timeline.push({
-      id: firstPostChoiceAction.id,
-      actionText: firstPostChoiceAction.actionText,
-      responseText: firstPostChoiceAction.responseText,
+      id: turn.id,
+      actionText: turn.actionText,
+      responseText: turn.responseText,
       title:
-        firstPostChoiceAction.sceneTitle ??
-        titleFromActionKind(firstPostChoiceAction.actionKind) ??
+        turn.sceneTitle ??
+        titleFromActionKind(turn.actionKind) ??
         "The World Answers",
     });
   }

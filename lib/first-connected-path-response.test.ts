@@ -74,7 +74,7 @@ const player: DailyPlayer = {
 };
 
 describe("getNextConnectedPathTransition", () => {
-  it("makes the third non-disruptive YES path turn delivery eligible", () => {
+  it("makes the second non-disruptive YES path turn delivery eligible", () => {
     expect(
       getNextConnectedPathTransition({
         actionText: "I chill and keep watching the feeds.",
@@ -84,17 +84,85 @@ describe("getNextConnectedPathTransition", () => {
           deliveryStatus: "pending",
           packageStatus: "not_arrived",
           orbStatus: "unknown",
-          turnCount: 2,
+          turnCount: 1,
           turns: [],
           startedAt: "2026-04-30T20:03:00.000Z",
           updatedAt: "2026-04-30T20:04:00.000Z",
         },
       }),
     ).toMatchObject({
-      expectedTurnNumber: 3,
+      expectedTurnNumber: 2,
       transitionKind: "delivered",
       deliveryStatus: "delivered",
       packageStatus: "available",
+    });
+  });
+
+  it("keeps the first YES path turn in the grounded waiting beat", () => {
+    expect(
+      getNextConnectedPathTransition({
+        actionText: "I look around the room and check my phone.",
+      }),
+    ).toMatchObject({
+      expectedTurnNumber: 1,
+      transitionKind: "waiting",
+      deliveryStatus: "pending",
+      packageStatus: "not_arrived",
+    });
+  });
+
+  it.each([
+    "I am not opening it yet. I inspect the label and weight without breaking the seal.",
+    "If you want me to open it, say what changes first. Keep the package sealed.",
+    "I want comparison reports before opening anything.",
+  ])("keeps delay and inspection language from opening the package: %s", (actionText) => {
+    expect(
+      getNextConnectedPathTransition({
+        actionText,
+        firstConnectedPath: {
+          id: "connected-1",
+          status: "package_available",
+          deliveryStatus: "delivered",
+          packageStatus: "available",
+          orbStatus: "unknown",
+          turnCount: 3,
+          turns: [],
+          startedAt: "2026-04-30T20:03:00.000Z",
+          updatedAt: "2026-04-30T20:04:00.000Z",
+        },
+      }),
+    ).toMatchObject({
+      transitionKind: "unchanged",
+      packageStatus: "available",
+      orbStatus: "unknown",
+    });
+  });
+
+  it.each([
+    "I open the package.",
+    "I open package carefully.",
+    "I cut the seal.",
+    "I look inside.",
+  ])("opens the package only on affirmative opening actions: %s", (actionText) => {
+    expect(
+      getNextConnectedPathTransition({
+        actionText,
+        firstConnectedPath: {
+          id: "connected-1",
+          status: "package_available",
+          deliveryStatus: "delivered",
+          packageStatus: "available",
+          orbStatus: "unknown",
+          turnCount: 3,
+          turns: [],
+          startedAt: "2026-04-30T20:03:00.000Z",
+          updatedAt: "2026-04-30T20:04:00.000Z",
+        },
+      }),
+    ).toMatchObject({
+      transitionKind: "opened",
+      packageStatus: "opened",
+      orbStatus: "revealed",
     });
   });
 });
@@ -181,4 +249,45 @@ describe("createFirstConnectedPathTurnResponse", () => {
       );
     },
   );
+
+  it("instructs sealed-package turns to add a concrete new delta", async () => {
+    vi.mocked(trackedGenerateText).mockResolvedValueOnce({
+      text: JSON.stringify({
+        responseText:
+          "You keep the package sealed and turn it once in your hands. It is lighter than it looks, but one edge carries a shallow notch that was not visible from the doorway.\n\nThe room does not answer for it. The next fork is practical: photograph the notch, isolate the package, open it, or get another person to witness it before you do anything irreversible.",
+        sceneTitle: "Notch In The Seam",
+        actionKind: "inspect_sealed_package",
+        playerVisibleFacts: [
+          "The package remains sealed.",
+          "A shallow notch is visible on one edge.",
+        ],
+      }),
+    } as Awaited<ReturnType<typeof trackedGenerateText>>);
+
+    await createFirstConnectedPathTurnResponse({
+      actionText: "I inspect the package but do not open it.",
+      dailyGame,
+      day1GameplayContext: {} as never,
+      storylineContext: { sourceVersion: "test" } as never,
+      player: {
+        ...player,
+        firstConnectedPath: {
+          ...player.firstConnectedPath!,
+          status: "package_available",
+          deliveryStatus: "delivered",
+          packageStatus: "available",
+          turnCount: 3,
+        },
+      },
+    });
+
+    const firstCall = vi.mocked(trackedGenerateText).mock.calls[0]?.[0];
+
+    expect(firstCall?.system).toContain(
+      "each response must add a concrete new observable delta tied to the player's action",
+    );
+    expect(firstCall?.system).toContain(
+      "Do not repeat the previous connected-path scene",
+    );
+  });
 });

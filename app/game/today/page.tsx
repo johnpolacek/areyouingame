@@ -41,6 +41,7 @@ export default async function TodaysGamePage() {
   );
   const hasConsoleLayout = Boolean(
     player.firstPostChoiceAction?.responseText ||
+      (player.firstPostChoiceTurns?.length ?? 0) > 0 ||
       (player.firstConnectedPath?.turns.length ?? 0) > 0 ||
       (player.firstConnectedPath?.orbDecisionTurns?.length ?? 0) > 0,
   );
@@ -66,6 +67,7 @@ export default async function TodaysGamePage() {
           decision={player.firstDecision}
           firstConnectedPath={player.firstConnectedPath}
           firstPostChoiceAction={player.firstPostChoiceAction}
+          firstPostChoiceTurns={player.firstPostChoiceTurns}
           localTime={localGameStart}
         />
       ) : player.firstMoveReveal ? (

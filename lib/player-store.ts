@@ -18,6 +18,7 @@ export type DailyPlayer = PlayerDraftInput & {
   firstDecision?: FirstDecision;
   firstRevealTextResponses?: FirstRevealTextResponse[];
   firstPostChoiceAction?: FirstPostChoiceAction;
+  firstPostChoiceTurns?: FirstPostChoiceTurn[];
   firstConnectedPath?: FirstConnectedPath;
   firstMoveReveal?: FirstMoveReveal;
   openingSceneContext?: OpeningSceneContextQuestion;
@@ -91,6 +92,18 @@ export type FirstPostChoiceAction = {
   playerVisibleFacts?: string[];
   storylineContextSourceVersion?: string;
   resolvedAt?: string;
+};
+
+export type FirstPostChoiceTurn = FirstPostChoiceAction & {
+  turnNumber: number;
+  responseText: string;
+  sceneTitle: string;
+  responseModel: string;
+  responseSource: "ai";
+  actionKind: string;
+  playerVisibleFacts: string[];
+  storylineContextSourceVersion: string;
+  resolvedAt: string;
 };
 
 export type ConnectedDeliveryStatus = "pending" | "delivered";
