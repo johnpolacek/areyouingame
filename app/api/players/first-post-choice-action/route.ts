@@ -37,10 +37,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (existingPlayer.firstPostChoiceAction) {
-      return Response.json({ player: existingPlayer });
-    }
-
     if (existingPlayer.firstDecision.choice !== "NO") {
       return Response.json(
         { error: "The YES path continues in a later turn." },

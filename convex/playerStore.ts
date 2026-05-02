@@ -79,6 +79,21 @@ const firstPostChoiceAction = v.object({
   resolvedAt: v.optional(v.string()),
 });
 
+const firstPostChoiceTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  submittedAt: v.string(),
+  responseText: v.string(),
+  sceneTitle: v.string(),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  resolvedAt: v.string(),
+});
+
 const connectedDeliveryStatus = v.union(
   v.literal("pending"),
   v.literal("delivered"),
@@ -295,6 +310,7 @@ const player = v.object({
   firstDecision: v.optional(firstDecision),
   firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
   firstPostChoiceAction: v.optional(firstPostChoiceAction),
+  firstPostChoiceTurns: v.optional(v.array(firstPostChoiceTurn)),
   firstConnectedPath: v.optional(firstConnectedPath),
   firstMoveReveal: v.optional(firstMoveReveal),
   openingSceneContext: v.optional(openingSceneContext),
@@ -942,13 +958,47 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       throw new ConvexError("YES/NO choice is required first.");
     }
 
-    if (existingPlayer.firstPostChoiceAction) {
-      return toDailyPlayer(existingPlayer);
+    if (existingPlayer.firstDecision.choice !== "NO") {
+      throw new ConvexError("Post-choice investigation is only available after NO.");
     }
+
+    const legacyFirstTurn =
+      existingPlayer.firstPostChoiceAction?.responseText &&
+      !existingPlayer.firstPostChoiceTurns
+        ? [
+            {
+              ...existingPlayer.firstPostChoiceAction,
+              turnNumber: 1,
+              responseText: existingPlayer.firstPostChoiceAction.responseText,
+              sceneTitle:
+                existingPlayer.firstPostChoiceAction.sceneTitle ??
+                "The World Answers",
+              responseModel:
+                existingPlayer.firstPostChoiceAction.responseModel ?? "unknown",
+              responseSource:
+                existingPlayer.firstPostChoiceAction.responseSource ?? "ai",
+              actionKind:
+                existingPlayer.firstPostChoiceAction.actionKind ??
+                "open_world_action",
+              playerVisibleFacts:
+                existingPlayer.firstPostChoiceAction.playerVisibleFacts ?? [],
+              storylineContextSourceVersion:
+                existingPlayer.firstPostChoiceAction
+                  .storylineContextSourceVersion ?? "unknown",
+              resolvedAt:
+                existingPlayer.firstPostChoiceAction.resolvedAt ??
+                existingPlayer.firstPostChoiceAction.submittedAt,
+            },
+          ]
+        : [];
+    const existingTurns =
+      existingPlayer.firstPostChoiceTurns ?? legacyFirstTurn;
+    const turnNumber = existingTurns.length + 1;
 
     const now = new Date().toISOString();
     const firstPostChoiceActionRecord = {
-      id: `${args.dailyGameId}:${existingPlayer.id}:first-post-choice-action`,
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-post-choice-action:${turnNumber}`,
+      turnNumber,
       actionText: args.actionText,
       submittedAt: now,
       responseText: args.responseText,
@@ -960,8 +1010,28 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       storylineContextSourceVersion: args.storylineContextSourceVersion,
       resolvedAt: now,
     };
+    const firstPostChoiceTurns = [
+      ...existingTurns,
+      firstPostChoiceActionRecord,
+    ];
+    const firstPostChoiceActionSnapshot = {
+      id: firstPostChoiceActionRecord.id,
+      actionText: firstPostChoiceActionRecord.actionText,
+      submittedAt: firstPostChoiceActionRecord.submittedAt,
+      responseText: firstPostChoiceActionRecord.responseText,
+      sceneTitle: firstPostChoiceActionRecord.sceneTitle,
+      responseModel: firstPostChoiceActionRecord.responseModel,
+      responseSource: firstPostChoiceActionRecord.responseSource,
+      actionKind: firstPostChoiceActionRecord.actionKind,
+      playerVisibleFacts: firstPostChoiceActionRecord.playerVisibleFacts,
+      storylineContextSourceVersion:
+        firstPostChoiceActionRecord.storylineContextSourceVersion,
+      resolvedAt: firstPostChoiceActionRecord.resolvedAt,
+    };
+    const firstPostChoiceAction =
+      existingPlayer.firstPostChoiceAction ?? firstPostChoiceActionSnapshot;
     const eventRecord = {
-      id: `${args.dailyGameId}:${existingPlayer.id}:post-choice-turn-resolved`,
+      id: `${args.dailyGameId}:${existingPlayer.id}:post-choice-turn-resolved:${turnNumber}`,
       dailyGameId: args.dailyGameId,
       playerId: existingPlayer.id,
       clerkUserId: args.clerkUserId,
@@ -980,7 +1050,8 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
     };
 
     await ctx.db.patch(existingPlayer._id, {
-      firstPostChoiceAction: firstPostChoiceActionRecord,
+      firstPostChoiceAction,
+      firstPostChoiceTurns,
       updatedAt: now,
     });
     await ctx.db.insert("gameplayEvents", eventRecord);
@@ -1000,7 +1071,8 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
 
     return toDailyPlayer({
       ...existingPlayer,
-      firstPostChoiceAction: firstPostChoiceActionRecord,
+      firstPostChoiceAction,
+      firstPostChoiceTurns,
       updatedAt: now,
     });
   },
@@ -1731,6 +1803,9 @@ function toDailyPlayer(source: any) {
       : {}),
     ...(source.firstPostChoiceAction
       ? { firstPostChoiceAction: source.firstPostChoiceAction }
+      : {}),
+    ...(source.firstPostChoiceTurns
+      ? { firstPostChoiceTurns: source.firstPostChoiceTurns }
       : {}),
     ...(source.firstConnectedPath
       ? { firstConnectedPath: source.firstConnectedPath }

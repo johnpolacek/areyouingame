@@ -307,6 +307,12 @@ function getPlayerKnownFacts(player: DailyPlayer): string[] {
     );
   }
 
+  for (const turn of player.firstPostChoiceTurns ?? []) {
+    knownFacts.push(
+      `NO-path investigation turn ${turn.turnNumber}: ${turn.actionText}`,
+    );
+  }
+
   if (player.firstConnectedPath) {
     knownFacts.push(
       `The player's connected path delivery status is ${player.firstConnectedPath.deliveryStatus}.`,

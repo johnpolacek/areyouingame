@@ -65,6 +65,21 @@ const firstPostChoiceAction = v.object({
   resolvedAt: v.optional(v.string()),
 });
 
+const firstPostChoiceTurn = v.object({
+  id: v.string(),
+  turnNumber: v.number(),
+  actionText: v.string(),
+  submittedAt: v.string(),
+  responseText: v.string(),
+  sceneTitle: v.string(),
+  responseModel: v.string(),
+  responseSource: v.literal("ai"),
+  actionKind: v.string(),
+  playerVisibleFacts: v.array(v.string()),
+  storylineContextSourceVersion: v.string(),
+  resolvedAt: v.string(),
+});
+
 const connectedDeliveryStatus = v.union(
   v.literal("pending"),
   v.literal("delivered"),
@@ -295,6 +310,7 @@ export default defineSchema({
     firstDecision: v.optional(firstDecision),
     firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
     firstPostChoiceAction: v.optional(firstPostChoiceAction),
+    firstPostChoiceTurns: v.optional(v.array(firstPostChoiceTurn)),
     firstConnectedPath: v.optional(firstConnectedPath),
     firstMoveReveal: v.optional(firstMoveReveal),
     openingSceneContext: v.optional(openingSceneContext),
