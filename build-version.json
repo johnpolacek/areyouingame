@@ -1,6 +1,6 @@
 {
-  "version": "0.1.16",
-  "label": "Build 0.1.16",
+  "version": "0.1.17",
+  "label": "Build 0.1.17",
   "updatedAt": "2026-05-02",
   "summary": "Improve Day 1 action loop continuity"
 }
