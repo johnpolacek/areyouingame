@@ -1,6 +1,45 @@
 {
-  "generatedAt": "2026-05-02T02:09:01.611Z",
+  "generatedAt": "2026-05-02T02:48:16.644Z",
   "runs": [
+    {
+      "buildLabel": "Build 0.1.16",
+      "buildVersion": "0.1.16",
+      "completedAt": "2026-05-02T02:48:08.926Z",
+      "findingCount": 6,
+      "id": "0-1-16__yes-connected-path-late-night-apartment__mara-ilyin__2026-05-02t02-45-45-773z",
+      "personaName": "Mara Ilyin",
+      "personaSummary": "freelance translation project manager, Tbilisi, Georgia",
+      "reportPath": "wiki/playtests/0-1-16__yes-connected-path-late-night-apartment__mara-ilyin__2026-05-02t02-45-45-773z.md",
+      "scenario": "yes-connected-path-late-night-apartment",
+      "status": "passed",
+      "topFinding": "State tracking is clear and reliable across multiple turns"
+    },
+    {
+      "buildLabel": "Build 0.1.16",
+      "buildVersion": "0.1.16",
+      "completedAt": "2026-05-02T02:42:59.244Z",
+      "findingCount": 5,
+      "id": "0-1-16__yes-connected-path-late-night-apartment__marisol-vega__2026-05-02t02-40-48-674z",
+      "personaName": "Marisol Vega",
+      "personaSummary": "Operations coordinator at a regional courier company, El Paso, Texas",
+      "reportPath": "wiki/playtests/0-1-16__yes-connected-path-late-night-apartment__marisol-vega__2026-05-02t02-40-48-674z.md",
+      "scenario": "yes-connected-path-late-night-apartment",
+      "status": "needs_review",
+      "topFinding": "The investigation path becomes a repetitive confirmation loop"
+    },
+    {
+      "buildLabel": "Build 0.1.16",
+      "buildVersion": "0.1.16",
+      "completedAt": "2026-05-02T02:40:27.775Z",
+      "findingCount": 5,
+      "id": "0-1-16__no-public-lookup__mara-ilyin__2026-05-02t02-38-51-711z",
+      "personaName": "Mara Ilyin",
+      "personaSummary": "Freight scheduling coordinator for a mid-sized port logistics firm, Rotterdam, Netherlands",
+      "reportPath": "wiki/playtests/0-1-16__no-public-lookup__mara-ilyin__2026-05-02t02-38-51-711z.md",
+      "scenario": "no-public-lookup",
+      "status": "passed",
+      "topFinding": "Objective repeats without enough state progression in the UI"
+    },
     {
       "buildLabel": "Build 0.1.13",
       "buildVersion": "0.1.13",

@@ -395,6 +395,9 @@ export function FirstChoiceConsequence({
   const isYesPathReadyForAction =
     decision.choice === "YES" &&
     (!isConnectedPathComplete || isConnectedAsiReadyForFirstAction);
+  const isActionReady = isNoPathReadyForFirstAction || isYesPathReadyForAction;
+  const shouldShowNextTurnPending =
+    !isActionReady && (hasResolvedFirstTurn || isConnectedPathComplete);
   const playerFacingStatus = buildPlayerFacingStatus({
     decision,
     firstConnectedPath,
@@ -405,6 +408,7 @@ export function FirstChoiceConsequence({
     decision,
     firstConnectedPath,
     firstPostChoiceAction,
+    firstPostChoiceTurns,
   });
   const currentTimelineEntry = timeline[timeline.length - 1];
   const historyTimelineEntries = timeline.slice(0, -1);
@@ -419,7 +423,7 @@ export function FirstChoiceConsequence({
         : firstConnectedPath?.packageStatus === "available"
         ? "Open the package, leave it closed, hide it, call someone, or try anything else."
         : "Act in the world while you wait to learn what YES changed."
-      : "Act in the world now that the answer has been given.";
+      : "Check public reports, text a trusted person, inspect your device, document evidence, leave, wait, or keep refusing.";
   const actionFormDisabled =
     isSubmittingAction || (!isNoPathReadyForFirstAction && !isYesPathReadyForAction);
 
@@ -563,7 +567,7 @@ export function FirstChoiceConsequence({
               </div>
             </article>
 
-            {isNoPathReadyForFirstAction || isYesPathReadyForAction ? (
+            {isActionReady ? (
               <ActionPromptForm
                 actionFormPlaceholder={actionFormPlaceholder}
                 actionText={actionText}
@@ -573,7 +577,7 @@ export function FirstChoiceConsequence({
               />
             ) : null}
 
-            {hasResolvedFirstTurn || isConnectedPathComplete ? (
+            {shouldShowNextTurnPending ? (
               <NextTurnPendingForm />
             ) : null}
 
@@ -691,7 +695,7 @@ export function FirstChoiceConsequence({
         </div>
       ) : null}
 
-      {isNoPathReadyForFirstAction || isYesPathReadyForAction ? (
+      {isActionReady ? (
         <ActionPromptForm
           actionFormPlaceholder={actionFormPlaceholder}
           actionText={actionText}
@@ -701,7 +705,7 @@ export function FirstChoiceConsequence({
         />
       ) : null}
 
-      {hasResolvedFirstTurn || isConnectedPathComplete ? (
+      {shouldShowNextTurnPending ? (
         <NextTurnPendingForm />
       ) : null}
 

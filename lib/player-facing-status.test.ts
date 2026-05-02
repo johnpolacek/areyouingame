@@ -37,7 +37,7 @@ describe("buildPlayerFacingStatus", () => {
       unknown:
         "Source, permanence, and reversibility are unknown in-world.",
       currentObjective:
-        "Keep observing, investigating, waiting, or acting in your scene.",
+        "Look for proof: check public channels, contact someone nearby, test an ordinary action, leave, wait, or keep watching your scene.",
     });
   });
 
@@ -50,7 +50,7 @@ describe("buildPlayerFacingStatus", () => {
     ).toMatchObject({
       known: "No visible physical change yet.",
       currentObjective:
-        "Keep observing, investigating, waiting, or acting in your scene.",
+        "Look for proof: check public channels, contact someone nearby, test an ordinary action, leave, wait, or keep watching your scene.",
     });
   });
 
@@ -69,6 +69,57 @@ describe("buildPlayerFacingStatus", () => {
       known: "A sealed package is present.",
       currentObjective:
         "A sealed package is present. You can inspect, move, photograph, ignore, or open it.",
+    });
+  });
+
+  it("advances the package objective after repeated verification", () => {
+    expect(
+      buildPlayerFacingStatus({
+        decision: baseDecision,
+        firstConnectedPath: {
+          ...baseConnectedPath,
+          status: "package_available",
+          deliveryStatus: "delivered",
+          packageStatus: "available",
+          turns: [
+            {
+              id: "turn-1",
+              turnNumber: 1,
+              actionText: "I inspect it.",
+              responseText: "The package remains sealed.",
+              sceneTitle: "Inspection",
+              responseModel: "test-model",
+              responseSource: "ai",
+              actionKind: "inspect_sealed_package",
+              playerVisibleFacts: ["The package remains sealed."],
+              storylineContextSourceVersion: "test",
+              deliveryStatus: "delivered",
+              packageStatus: "available",
+              orbStatus: "unknown",
+              resolvedAt: "2026-04-30T20:05:00.000Z",
+            },
+            {
+              id: "turn-2",
+              turnNumber: 2,
+              actionText: "I measure it.",
+              responseText: "The package dimensions hold.",
+              sceneTitle: "Measurement",
+              responseModel: "test-model",
+              responseSource: "ai",
+              actionKind: "measure_package",
+              playerVisibleFacts: ["The package dimensions hold."],
+              storylineContextSourceVersion: "test",
+              deliveryStatus: "delivered",
+              packageStatus: "available",
+              orbStatus: "unknown",
+              resolvedAt: "2026-04-30T20:06:00.000Z",
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      currentObjective:
+        "You have documented the sealed package. Now choose a next commitment: isolate it, show someone, report it, keep refusing to open it, or open it.",
     });
   });
 
@@ -148,7 +199,7 @@ describe("buildPlayerFacingStatus", () => {
       unknown:
         "Source, permanence, reversibility, and consequences are unknown in-world.",
       currentObjective:
-        "Keep observing, investigating, waiting, or acting in your scene.",
+        "Investigate the refusal: check public reports, contact someone you trust, inspect your device, document evidence, or wait and watch.",
     });
   });
 });

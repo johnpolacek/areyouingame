@@ -21,7 +21,7 @@ export function buildPlayerFacingStatus({
       unknown:
         "Source, permanence, reversibility, and consequences are unknown in-world.",
       currentObjective:
-        "Keep observing, investigating, waiting, or acting in your scene.",
+        "Investigate the refusal: check public reports, contact someone you trust, inspect your device, document evidence, or wait and watch.",
     };
   }
 
@@ -67,13 +67,26 @@ export function buildPlayerFacingStatus({
   }
 
   if (firstConnectedPath?.packageStatus === "available") {
+    const hasRepeatedSealedPackageActions =
+      firstConnectedPath.turns.filter(
+        (turn) =>
+          turn.actionKind.includes("inspect") ||
+          turn.actionKind.includes("measure") ||
+          turn.actionKind.includes("weigh") ||
+          turn.actionKind.includes("verify") ||
+          turn.actionKind.includes("photo") ||
+          turn.actionKind.includes("document") ||
+          turn.actionKind.includes("compare"),
+      ).length >= 2;
+
     return {
       answer: "YES has been recorded.",
       known: "A sealed package is present.",
       unknown:
         "Its source, contents, permanence, reversibility, and purpose are unknown in-world.",
-      currentObjective:
-        "A sealed package is present. You can inspect, move, photograph, ignore, or open it.",
+      currentObjective: hasRepeatedSealedPackageActions
+        ? "You have documented the sealed package. Now choose a next commitment: isolate it, show someone, report it, keep refusing to open it, or open it."
+        : "A sealed package is present. You can inspect, move, photograph, ignore, or open it.",
     };
   }
 
@@ -83,7 +96,7 @@ export function buildPlayerFacingStatus({
     unknown:
       "Source, permanence, and reversibility are unknown in-world.",
     currentObjective:
-      "Keep observing, investigating, waiting, or acting in your scene.",
+      "Look for proof: check public channels, contact someone nearby, test an ordinary action, leave, wait, or keep watching your scene.",
   };
 }
 

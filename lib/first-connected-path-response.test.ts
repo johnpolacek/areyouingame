@@ -289,5 +289,81 @@ describe("createFirstConnectedPathTurnResponse", () => {
     expect(firstCall?.system).toContain(
       "Do not repeat the previous connected-path scene",
     );
+    expect(firstCall?.system).toContain(
+      "For sealed-package caution, let non-opening actions matter.",
+    );
+    expect(firstCall?.system).toContain(
+      "After two sealed-package verification turns",
+    );
+  });
+
+  it("passes sealed-package verification count for escalation", async () => {
+    vi.mocked(trackedGenerateText).mockResolvedValueOnce({
+      text: JSON.stringify({
+        responseText:
+          "You stop measuring because the numbers are no longer changing. The practical choice shifts: isolate it, show someone else, report the exact details, or open the seam.",
+        sceneTitle: "No New Numbers",
+        actionKind: "isolate_package",
+        playerVisibleFacts: [
+          "Further measurement adds no new visible facts.",
+          "The package remains sealed.",
+        ],
+      }),
+    } as Awaited<ReturnType<typeof trackedGenerateText>>);
+
+    await createFirstConnectedPathTurnResponse({
+      actionText: "I measure it again and keep it sealed.",
+      dailyGame,
+      day1GameplayContext: {} as never,
+      storylineContext: { sourceVersion: "test" } as never,
+      player: {
+        ...player,
+        firstConnectedPath: {
+          ...player.firstConnectedPath!,
+          status: "package_available",
+          deliveryStatus: "delivered",
+          packageStatus: "available",
+          turnCount: 5,
+          turns: [
+            {
+              id: "turn-1",
+              turnNumber: 1,
+              actionText: "I inspect the package.",
+              responseText: "The package remains sealed.",
+              sceneTitle: "Inspection",
+              responseModel: "test-model",
+              responseSource: "ai",
+              actionKind: "inspect_sealed_package",
+              playerVisibleFacts: ["The package remains sealed."],
+              storylineContextSourceVersion: "test",
+              deliveryStatus: "delivered",
+              packageStatus: "available",
+              orbStatus: "unknown",
+              resolvedAt: "2026-04-30T20:05:00.000Z",
+            },
+            {
+              id: "turn-2",
+              turnNumber: 2,
+              actionText: "I measure the package.",
+              responseText: "The dimensions hold.",
+              sceneTitle: "Measurement",
+              responseModel: "test-model",
+              responseSource: "ai",
+              actionKind: "measure_package",
+              playerVisibleFacts: ["The dimensions hold."],
+              storylineContextSourceVersion: "test",
+              deliveryStatus: "delivered",
+              packageStatus: "available",
+              orbStatus: "unknown",
+              resolvedAt: "2026-04-30T20:06:00.000Z",
+            },
+          ],
+        },
+      },
+    });
+
+    const firstCall = vi.mocked(trackedGenerateText).mock.calls[0]?.[0];
+
+    expect(firstCall?.prompt).toContain('"sealedPackageVerificationCount": 2');
   });
 });

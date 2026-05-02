@@ -73,6 +73,9 @@ export async function createFirstConnectedPathTurnResponse({
       "If the package is already available and the player picks it up, brings it inside, stages it, photographs it, starts a livestream, waits for likes, reads chat, or otherwise delays, keep the package sealed and present. Do not reveal the orb until they explicitly open, unbox, unwrap, or look inside.",
       "If the package is already available and remains sealed, each response must add a concrete new observable delta tied to the player's action: a marking, weight, sound, temperature, sensor reading, public reaction, nearby person's response, safety constraint, or changed access to the package.",
       "Do not repeat the previous connected-path scene. The current turn must give the player a sharper fork, new information, or a changed risk even when the canonical package/orb state is unchanged.",
+      "If the player repeats a prior check, inspection, or public-feed action, treat repetition as caution: preserve continuity, then reveal a different observable detail or a changed public/local reaction.",
+      "For sealed-package caution, let non-opening actions matter. Photographing, weighing, shielding, moving, labeling, scanning, or asking another person should each produce a distinct clue or constraint while keeping the package closed.",
+      "After two sealed-package verification turns, stop rewarding more measurement with more measurement. If the player keeps the package closed, escalate the decision space with an outside interruption, a handling constraint, a social consequence, or a clear preservation/reporting path. It is acceptable to say further measuring adds no new facts.",
       "For livestream or chat actions around the sealed package, make the public reaction messy and useful for later NO/unconnected discovery: viewers ask for proof, warn them not to open it, dare them to open it, compare other YES/package reports, and argue over whether it is fake or dangerous.",
       "If the transition is opened, describe the player opening the small sleek package and finding a smooth featureless orb with the instruction to place it at the center of their forehead. Do not simulate full connected cognition yet.",
       "If the player tries something drastic that plausibly prevents delivery, respect the supplied waiting transition and make the delay feel causal.",
@@ -83,6 +86,9 @@ export async function createFirstConnectedPathTurnResponse({
     player,
     promptExtras: {
       previousConnectedPath: player.firstConnectedPath ?? null,
+      sealedPackageVerificationCount: countSealedPackageVerificationTurns(
+        player.firstConnectedPath,
+      ),
       transition,
     },
     responseValidation:
@@ -131,6 +137,21 @@ function validateDeliveredConnectedPathResponse({
   }
 
   return "Delivered connected-path turns must visibly narrate a plausible drone delivering a small package nearby. The player-facing response cannot skip or hide the deterministic delivery transition.";
+}
+
+function countSealedPackageVerificationTurns(
+  firstConnectedPath?: FirstConnectedPath,
+): number {
+  return (firstConnectedPath?.turns ?? []).filter(
+    (turn) =>
+      turn.actionKind.includes("inspect") ||
+      turn.actionKind.includes("measure") ||
+      turn.actionKind.includes("weigh") ||
+      turn.actionKind.includes("verify") ||
+      turn.actionKind.includes("photo") ||
+      turn.actionKind.includes("document") ||
+      turn.actionKind.includes("compare"),
+  ).length;
 }
 
 export function getNextConnectedPathTransition({

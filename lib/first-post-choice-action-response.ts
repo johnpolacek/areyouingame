@@ -37,6 +37,8 @@ export async function createFirstNoPostChoiceActionResponse({
       "Do not claim drone/package/orb reports are personally verified by the player unless the provided context supports it.",
       "Treat the NO path as an active investigation branch, not an ending.",
       "Each response should give the player at least one concrete new thing they can do next: compare public reports, contact a specific person, inspect a device, leave the room, wait, document evidence, or protect someone nearby.",
+      "If the player repeats a verification action from a prior NO-path turn, do not repeat the same scene. Acknowledge the repeat behavior briefly, then advance with a new source, contradiction, reply, timestamp, device clue, or local consequence.",
+      "End each NO-path response with 2 to 4 concrete next forks that preserve the player's refusal instead of implying they must answer YES.",
       "If the player asks what NO means, state the player-visible truth plainly: their NO is recorded, they have no visible physical change, and source, permanence, reversibility, and consequences remain unknown in-world.",
       "Let cautious verification produce progress. Do not just restate confusion; add a specific clue, contradiction, reply, or environmental consequence that follows from the action.",
       "Keep connected-path experiences secondhand, uncertain, and messy unless the player explicitly observes a public claim. NO players cannot personally verify YES-only delivery or orb facts on Day 1.",
