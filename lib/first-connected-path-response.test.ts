@@ -210,12 +210,12 @@ describe("createFirstConnectedPathTurnResponse", () => {
   });
 
   it.each(["Can I back out?", "What changed?"])(
-    "instructs terms questions to separate visible truth, unknowns, and next steps: %s",
+    "instructs terms questions to use scene facts, limits, and choices: %s",
     async (actionText) => {
       vi.mocked(trackedGenerateText).mockResolvedValueOnce({
         text: JSON.stringify({
           responseText:
-            "Your room remains physically unchanged, but the question has left you watching everything differently.\n\nWhat is visibly true: your answer is recorded and the world outside is still reacting. What remains unknown: who made the offer, whether it can be reversed, and what control means now. What you can do next: keep checking people and devices around you, ask for help, wait, leave, or test one ordinary action at a time.",
+            "The room does not change.\n\nYour phone stays dark in your hand. Outside, people keep posting the same question from different rooms.\n\nYou can ask someone nearby. You can check public reports. Or you can wait and watch one ordinary thing at a time.",
           sceneTitle: "No Clear Terms",
           actionKind: "ask_about_terms",
           playerVisibleFacts: [
@@ -242,8 +242,9 @@ describe("createFirstConnectedPathTurnResponse", () => {
       const firstCall = vi.mocked(trackedGenerateText).mock.calls[0]?.[0];
 
       expect(firstCall?.system).toContain(
-        "what is visibly true now, what remains unknown in-world, and what the player can do next",
+        "answer through concrete scene facts, limits, and choices",
       );
+      expect(firstCall?.system).toContain("Do not use recap headings");
       expect(firstCall?.system).toContain(
         "Do not strand the player in dead-end phrasing",
       );

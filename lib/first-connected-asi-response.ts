@@ -4,7 +4,10 @@ import type {
   Day1StorylineContext,
 } from "./day-1-storyline-context";
 import type { DailyGame } from "./daily-game";
-import { createPlayerFacingNarrativePrompt } from "./narrative-voice";
+import {
+  createPlayerFacingNarrativePrompt,
+  sanitizePlayerFacingNarration,
+} from "./narrative-voice";
 import { getOpenAINarrativeModel } from "./openai-models";
 import type { DailyPlayer } from "./player-store";
 
@@ -95,7 +98,8 @@ export async function createFirstConnectedAsiTurnResponse({
       "Do not casually perform Tier 3 or Tier 4 actions in this first interaction.",
       "Preserve uncertainty. Use verified, estimated, inferred, partial, or gated framing where appropriate.",
       "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
-      "responseText should be 2 to 5 short paragraphs of second-person present-tense narration. ASI speech may be rendered as concise quoted sentences inside the narration.",
+      "responseText should be 2 to 4 short paragraphs of second-person present-tense narration. ASI speech may be rendered as concise quoted sentences inside the narration.",
+      "Keep responseText concise. Aim for no more than 130 words unless the player action truly needs more.",
       "sceneTitle should be a short evocative title, 2 to 6 words, title case.",
       "actionKind should be a short snake_case phrase describing the attempted connected interaction.",
       "playerVisibleFacts should contain 2 to 5 short durable facts learned or established, not literary prose.",
@@ -177,13 +181,15 @@ function normalizeResponseText(value: unknown): string {
     throw new Error("Generated response text is missing.");
   }
 
-  const normalized = value.replace(/\n{3,}/g, "\n\n").trim();
+  const normalized = sanitizePlayerFacingNarration(
+    value.replace(/\n{3,}/g, "\n\n"),
+  );
 
   if (normalized.length < 40) {
     throw new Error("Generated response text is too short.");
   }
 
-  return normalized.slice(0, 1800);
+  return normalized.slice(0, 1100);
 }
 
 function normalizeSceneTitle(value: unknown): string {
@@ -193,7 +199,8 @@ function normalizeSceneTitle(value: unknown): string {
 
   const normalized = value
     .replace(/\s+/g, " ")
-    .replace(/[^\w\s:'-]/g, "")
+    .replace(/[;:\u2014]/g, "")
+    .replace(/[^\w\s'-]/g, "")
     .trim()
     .slice(0, 80);
 

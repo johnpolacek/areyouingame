@@ -2,6 +2,7 @@ import { trackedGenerateText } from "./ai-usage";
 import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
+  sanitizePlayerFacingNarration,
 } from "./narrative-voice";
 import { getOpenAINarrativeModel } from "./openai-models";
 import type { DailyPlayer, FirstDecision, YesNoChoice } from "./player-store";
@@ -145,13 +146,13 @@ async function createNoConsequence({
 }
 
 function normalizeNoConsequenceBody(text: string): string {
-  return text
+  const cleaned = text
     .replaceAll(/\bA new way of being is available\.?/gi, "")
     .replaceAll(/\bConnection\. Understanding\. Freedom\.?/gi, "")
     .replaceAll(/\bAre you in\??/gi, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 280);
+    .replace(/\s+/g, " ");
+
+  return sanitizePlayerFacingNarration(cleaned).slice(0, 280);
 }
 
 function isSafeNoConsequenceBody(text: string): boolean {
@@ -168,13 +169,13 @@ function isSafeNoConsequenceBody(text: string): boolean {
 }
 
 function normalizeYesConsequenceBody(text: string): string {
-  return text
+  const cleaned = text
     .replaceAll(/\bA new way of being is available\.?/gi, "")
     .replaceAll(/\bConnection\. Understanding\. Freedom\.?/gi, "")
     .replaceAll(/\bAre you in\??/gi, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 280);
+    .replace(/\s+/g, " ");
+
+  return sanitizePlayerFacingNarration(cleaned).slice(0, 280);
 }
 
 function isSafeYesConsequenceBody(text: string): boolean {

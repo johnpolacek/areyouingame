@@ -3,6 +3,7 @@ import type { DailyGame } from "./daily-game";
 import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
+  sanitizePlayerFacingNarration,
 } from "./narrative-voice";
 import { getOpenAINarrativeModel } from "./openai-models";
 import type { DailyPlayer, FirstMoveReveal } from "./player-store";
@@ -114,7 +115,9 @@ function normalizeSceneIntro(text: string): string[] {
     .replaceAll(/\bConnection\. Understanding\. Freedom\.?/gi, "")
     .replaceAll(/\bAre you in\??/gi, "")
     .split(/\n{2,}/)
-    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .map((paragraph) =>
+      sanitizePlayerFacingNarration(paragraph.replace(/\s+/g, " ")),
+    )
     .filter(Boolean)
     .slice(0, 2)
     .map((paragraph) => limitWords(paragraph, 22).slice(0, 200));

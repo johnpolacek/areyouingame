@@ -2,6 +2,7 @@ import { trackedGenerateText } from "./ai-usage";
 import {
   createPlayerFacingNarrativePrompt,
   narrativeOutputShapePresets,
+  sanitizePlayerFacingNarration,
 } from "./narrative-voice";
 import {
   getOpenAIClassifierModel,
@@ -218,13 +219,13 @@ async function createInterruptionText({
 }
 
 function normalizeInterruptionText(text: string): string {
-  return text
+  const cleaned = text
     .replaceAll(/\bA new way of being is available\.?/gi, "")
     .replaceAll(/\bConnection\. Understanding\. Freedom\.?/gi, "")
     .replaceAll(/\bAre you in\??/gi, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 260);
+    .replace(/\s+/g, " ");
+
+  return sanitizePlayerFacingNarration(cleaned).slice(0, 260);
 }
 
 function isSafeInterruptionText(text: string): boolean {
