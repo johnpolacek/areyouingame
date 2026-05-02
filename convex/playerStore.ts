@@ -324,6 +324,63 @@ const aiUsageEvent = v.object({
   createdAt: v.string(),
 });
 
+const playerTurnImageStatus = v.union(
+  v.literal("pending"),
+  v.literal("generating"),
+  v.literal("ready"),
+  v.literal("error"),
+);
+
+const playerTurnImageKind = v.union(
+  v.literal("post_choice_turn"),
+  v.literal("connected_path_turn"),
+  v.literal("orb_decision_turn"),
+  v.literal("connected_asi_turn"),
+);
+
+const playerTurnImage = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  playerId: v.string(),
+  clerkUserId: v.string(),
+  sourceTurnId: v.string(),
+  sourceTurnKind: playerTurnImageKind,
+  status: playerTurnImageStatus,
+  prompt: v.optional(v.string()),
+  promptModel: v.optional(v.string()),
+  imageModel: v.optional(v.string()),
+  quality: v.optional(v.literal("low")),
+  size: v.optional(v.literal("1024x1024")),
+  bucket: v.optional(v.string()),
+  objectKey: v.optional(v.string()),
+  contentType: v.optional(v.string()),
+  errorMessage: v.optional(v.string()),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+  generatedAt: v.optional(v.string()),
+});
+
+const publicPlayerTurnImage = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  playerId: v.string(),
+  sourceTurnId: v.string(),
+  sourceTurnKind: playerTurnImageKind,
+  status: playerTurnImageStatus,
+  prompt: v.optional(v.string()),
+  promptModel: v.optional(v.string()),
+  imageModel: v.optional(v.string()),
+  quality: v.optional(v.literal("low")),
+  size: v.optional(v.literal("1024x1024")),
+  bucket: v.optional(v.string()),
+  objectKey: v.optional(v.string()),
+  contentType: v.optional(v.string()),
+  errorMessage: v.optional(v.string()),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+  generatedAt: v.optional(v.string()),
+});
+
 const publicCharacterSnapshot = v.object({
   name: v.string(),
   age: v.string(),
@@ -411,6 +468,7 @@ const publicLivePlayer = v.object({
   openingResponse: v.optional(v.string()),
   openingResponseSubmittedAt: v.optional(v.string()),
   publicGameplayAgreementAcceptedAt: v.optional(v.string()),
+  turnImages: v.optional(v.array(publicPlayerTurnImage)),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -431,6 +489,7 @@ const player = v.object({
   openingResponse: v.optional(v.string()),
   openingResponseSubmittedAt: v.optional(v.string()),
   publicGameplayAgreementAcceptedAt: v.optional(v.string()),
+  turnImages: v.optional(v.array(playerTurnImage)),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -604,7 +663,16 @@ export const getPublicLivePlayer = queryGeneric({
       (candidate) => candidate.id === args.playerId,
     );
 
-    return selectedPlayer ? toPublicLivePlayer(selectedPlayer) : null;
+    if (!selectedPlayer) {
+      return null;
+    }
+
+    const turnImages = await ctx.db
+      .query("playerTurnImages")
+      .withIndex("by_playerId", (q) => q.eq("playerId", selectedPlayer.id))
+      .collect();
+
+    return toPublicLivePlayer({ ...selectedPlayer, turnImages });
   },
 });
 
@@ -624,6 +692,198 @@ export const getAiUsageEventsForAdmin = queryGeneric({
       .take(Math.min(Math.max(args.limit ?? 200, 1), 2000));
 
     return events.map(toAiUsageEvent);
+  },
+});
+
+export const getPlayerTurnImagesForUserGame = queryGeneric({
+  args: authenticatedArgs,
+  returns: v.array(playerTurnImage),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+
+    return await ctx.db
+      .query("playerTurnImages")
+      .withIndex("by_playerId", (q) => q.eq("playerId", existingPlayer.id))
+      .collect();
+  },
+});
+
+export const getPlayerTurnImageForUserGame = queryGeneric({
+  args: {
+    ...authenticatedArgs,
+    sourceTurnId: v.string(),
+  },
+  returns: v.union(playerTurnImage, v.null()),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+    const image = await findPlayerTurnImage(ctx, args.sourceTurnId);
+
+    if (!image || image.playerId !== existingPlayer.id) {
+      return null;
+    }
+
+    return image;
+  },
+});
+
+export const getPublicPlayerTurnImage = queryGeneric({
+  args: {
+    sourceTurnId: v.string(),
+  },
+  returns: v.union(publicPlayerTurnImage, v.null()),
+  handler: async (ctx, args) => {
+    const image = await findPlayerTurnImage(ctx, args.sourceTurnId);
+
+    if (!image || image.status !== "ready") {
+      return null;
+    }
+
+    return toPublicPlayerTurnImage(image, { includeStorage: true });
+  },
+});
+
+export const claimPlayerTurnImageGeneration = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    sourceTurnId: v.string(),
+  },
+  returns: v.union(playerTurnImage, v.null()),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+    const image = await findPlayerTurnImage(ctx, args.sourceTurnId);
+
+    if (!image || image.playerId !== existingPlayer.id) {
+      return null;
+    }
+
+    if (image.status === "ready" || image.status === "generating") {
+      return image;
+    }
+
+    const now = new Date().toISOString();
+    const nextImage = {
+      ...image,
+      status: "generating" as const,
+      errorMessage: undefined,
+      updatedAt: now,
+    };
+
+    await ctx.db.patch(image._id, {
+      status: nextImage.status,
+      errorMessage: undefined,
+      updatedAt: now,
+    });
+
+    return nextImage;
+  },
+});
+
+export const completePlayerTurnImageGeneration = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    sourceTurnId: v.string(),
+    prompt: v.string(),
+    promptModel: v.string(),
+    imageModel: v.string(),
+    bucket: v.string(),
+    objectKey: v.string(),
+    contentType: v.string(),
+  },
+  returns: v.union(playerTurnImage, v.null()),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const image = await findPlayerTurnImage(ctx, args.sourceTurnId);
+
+    if (!image) {
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const nextImage = {
+      ...image,
+      status: "ready" as const,
+      prompt: args.prompt,
+      promptModel: args.promptModel,
+      imageModel: args.imageModel,
+      quality: "low" as const,
+      size: "1024x1024" as const,
+      bucket: args.bucket,
+      objectKey: args.objectKey,
+      contentType: args.contentType,
+      errorMessage: undefined,
+      updatedAt: now,
+      generatedAt: now,
+    };
+
+    await ctx.db.patch(image._id, {
+      status: nextImage.status,
+      prompt: args.prompt,
+      promptModel: args.promptModel,
+      imageModel: args.imageModel,
+      quality: nextImage.quality,
+      size: nextImage.size,
+      bucket: args.bucket,
+      objectKey: args.objectKey,
+      contentType: args.contentType,
+      errorMessage: undefined,
+      updatedAt: now,
+      generatedAt: now,
+    });
+
+    return nextImage;
+  },
+});
+
+export const failPlayerTurnImageGeneration = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    sourceTurnId: v.string(),
+    errorMessage: v.string(),
+  },
+  returns: v.union(playerTurnImage, v.null()),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const image = await findPlayerTurnImage(ctx, args.sourceTurnId);
+
+    if (!image) {
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const nextImage = {
+      ...image,
+      status: "error" as const,
+      errorMessage: args.errorMessage,
+      updatedAt: now,
+    };
+
+    await ctx.db.patch(image._id, {
+      status: nextImage.status,
+      errorMessage: args.errorMessage,
+      updatedAt: now,
+    });
+
+    return nextImage;
   },
 });
 
@@ -1276,6 +1536,14 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
+    await insertPendingPlayerTurnImage(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      sourceTurnId: firstPostChoiceActionRecord.id,
+      sourceTurnKind: "post_choice_turn",
+      now,
+    });
     await ctx.db.insert("gameplayEvents", eventRecord);
     await insertPublicActivityEvent(ctx, {
       choice: existingPlayer.firstDecision.choice,
@@ -1444,6 +1712,14 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       firstConnectedPath: firstConnectedPathRecord,
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
+    });
+    await insertPendingPlayerTurnImage(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      sourceTurnId: turnRecord.id,
+      sourceTurnKind: "connected_path_turn",
+      now,
     });
     await ctx.db.insert("gameplayEvents", {
       ...baseEvent,
@@ -1641,6 +1917,14 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
+    await insertPendingPlayerTurnImage(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      sourceTurnId: turnRecord.id,
+      sourceTurnKind: "orb_decision_turn",
+      now,
+    });
     await ctx.db.insert("gameplayEvents", {
       ...baseEvent,
       id: `${turnRecord.id}:orb-action-resolved`,
@@ -1819,6 +2103,14 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
       firstConnectedPath: firstConnectedPathRecord,
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
+    });
+    await insertPendingPlayerTurnImage(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      playerId: existingPlayer.id,
+      sourceTurnId: turnRecord.id,
+      sourceTurnKind: "connected_asi_turn",
+      now,
     });
     await ctx.db.insert("gameplayEvents", {
       ...baseEvent,
@@ -2312,6 +2604,7 @@ export const deleteDailyGameForAdmin = mutationGeneric({
     deletedGameplayEvents: v.number(),
     deletedPublicActivityEvents: v.number(),
     deletedAiUsageEvents: v.number(),
+    deletedPlayerTurnImages: v.number(),
     deletedStorylineContexts: v.number(),
     deletedArtifactObjects: v.number(),
   }),
@@ -2332,6 +2625,7 @@ export const deleteAllDailyGamesForAdmin = mutationGeneric({
     deletedGameplayEvents: v.number(),
     deletedPublicActivityEvents: v.number(),
     deletedAiUsageEvents: v.number(),
+    deletedPlayerTurnImages: v.number(),
     deletedStorylineContexts: v.number(),
     deletedArtifactObjects: v.number(),
   }),
@@ -2423,6 +2717,13 @@ async function deleteDailyGameRecords(ctx: any, dailyGameId: string) {
       .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
       .collect(),
   );
+  totals.deletedPlayerTurnImages += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("playerTurnImages")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
   totals.deletedStorylineContexts += await deleteDocuments(
     ctx,
     await ctx.db
@@ -2456,6 +2757,7 @@ function createDeleteDailyGameTotals() {
     deletedGameplayEvents: 0,
     deletedPublicActivityEvents: 0,
     deletedAiUsageEvents: 0,
+    deletedPlayerTurnImages: 0,
     deletedStorylineContexts: 0,
     deletedArtifactObjects: 0,
   };
@@ -2470,6 +2772,7 @@ function addDeleteDailyGameTotals(
   totals.deletedGameplayEvents += next.deletedGameplayEvents;
   totals.deletedPublicActivityEvents += next.deletedPublicActivityEvents;
   totals.deletedAiUsageEvents += next.deletedAiUsageEvents;
+  totals.deletedPlayerTurnImages += next.deletedPlayerTurnImages;
   totals.deletedStorylineContexts += next.deletedStorylineContexts;
   totals.deletedArtifactObjects += next.deletedArtifactObjects;
 }
@@ -2506,6 +2809,56 @@ async function findPlayerOrThrow(
   }
 
   return existingPlayer;
+}
+
+async function findPlayerTurnImage(ctx: any, sourceTurnId: string) {
+  return await ctx.db
+    .query("playerTurnImages")
+    .withIndex("by_sourceTurnId", (q: any) =>
+      q.eq("sourceTurnId", sourceTurnId),
+    )
+    .first();
+}
+
+async function insertPendingPlayerTurnImage(
+  ctx: any,
+  {
+    clerkUserId,
+    dailyGameId,
+    now,
+    playerId,
+    sourceTurnId,
+    sourceTurnKind,
+  }: {
+    clerkUserId: string;
+    dailyGameId: string;
+    now: string;
+    playerId: string;
+    sourceTurnId: string;
+    sourceTurnKind:
+      | "post_choice_turn"
+      | "connected_path_turn"
+      | "orb_decision_turn"
+      | "connected_asi_turn";
+  },
+) {
+  const existingImage = await findPlayerTurnImage(ctx, sourceTurnId);
+
+  if (existingImage) {
+    return;
+  }
+
+  await ctx.db.insert("playerTurnImages", {
+    id: `${sourceTurnId}:image`,
+    dailyGameId,
+    playerId,
+    clerkUserId,
+    sourceTurnId,
+    sourceTurnKind,
+    status: "pending",
+    createdAt: now,
+    updatedAt: now,
+  });
 }
 
 function requireBackendSecret(secret: string) {
@@ -2619,6 +2972,7 @@ function toDailyPlayer(source: any) {
             source.publicGameplayAgreementAcceptedAt,
         }
       : {}),
+    ...(source.turnImages ? { turnImages: source.turnImages } : {}),
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
   };
@@ -2723,6 +3077,34 @@ function toPublicActivityEvent(source: any) {
   };
 }
 
+function toPublicPlayerTurnImage(
+  source: any,
+  { includeStorage = false }: { includeStorage?: boolean } = {},
+) {
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    playerId: source.playerId,
+    sourceTurnId: source.sourceTurnId,
+    sourceTurnKind: source.sourceTurnKind,
+    status: source.status,
+    ...(includeStorage && source.prompt ? { prompt: source.prompt } : {}),
+    ...(includeStorage && source.promptModel
+      ? { promptModel: source.promptModel }
+      : {}),
+    ...(source.imageModel ? { imageModel: source.imageModel } : {}),
+    ...(source.quality ? { quality: source.quality } : {}),
+    ...(source.size ? { size: source.size } : {}),
+    ...(includeStorage && source.bucket ? { bucket: source.bucket } : {}),
+    ...(includeStorage && source.objectKey ? { objectKey: source.objectKey } : {}),
+    ...(source.contentType ? { contentType: source.contentType } : {}),
+    ...(source.errorMessage ? { errorMessage: source.errorMessage } : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+    ...(source.generatedAt ? { generatedAt: source.generatedAt } : {}),
+  };
+}
+
 function toPublicLivePlayerSummary(source: any) {
   const gameplayTurns = [
     ...(source.firstPostChoiceTurns ?? []),
@@ -2807,6 +3189,9 @@ function toPublicLivePlayer(source: any) {
           publicGameplayAgreementAcceptedAt:
             source.publicGameplayAgreementAcceptedAt,
         }
+      : {}),
+    ...(source.turnImages
+      ? { turnImages: source.turnImages.map(toPublicPlayerTurnImage) }
       : {}),
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,

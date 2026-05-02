@@ -15,7 +15,8 @@ export type AiUsageOperation =
   | "post_choice_turn"
   | "connected_path_turn"
   | "orb_decision_turn"
-  | "connected_asi_turn";
+  | "connected_asi_turn"
+  | "player_turn_image_prompt";
 
 export type AiUsageStatus = "success" | "error";
 

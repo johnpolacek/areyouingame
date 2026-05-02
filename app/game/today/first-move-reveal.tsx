@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterInfoPanel } from "@/components/character-info-panel";
+import { PlayerTurnImage } from "@/components/player-turn-image";
 import { cn } from "@/lib/utils";
 import type { CharacterInfo } from "@/lib/character-info";
 import type {
@@ -15,6 +16,7 @@ import type {
   FirstPostChoiceTurn,
   FirstMoveReveal as FirstMoveRevealState,
   FirstRevealTextResponse,
+  PlayerTurnImage as PlayerTurnImageState,
   YesNoChoice,
 } from "@/lib/player-store";
 
@@ -44,6 +46,7 @@ type FirstChoiceConsequenceProps = {
   firstPostChoiceAction?: FirstPostChoiceAction;
   firstPostChoiceTurns?: FirstPostChoiceTurn[];
   localTime: string;
+  turnImages?: PlayerTurnImageState[];
 };
 
 export function FirstMoveRevealPending() {
@@ -359,6 +362,7 @@ export function FirstChoiceConsequence({
   firstPostChoiceAction,
   firstPostChoiceTurns = [],
   localTime,
+  turnImages = [],
 }: FirstChoiceConsequenceProps) {
   const router = useRouter();
   const [actionText, setActionText] = useState("");
@@ -404,7 +408,11 @@ export function FirstChoiceConsequence({
     firstConnectedPath,
     firstPostChoiceAction,
     firstPostChoiceTurns,
+    turnImages,
   });
+  const imagesByTurnId = new Map(
+    turnImages.map((image) => [image.sourceTurnId, image]),
+  );
   const currentTimelineEntry = timeline[timeline.length - 1];
   const historyTimelineEntries = timeline.slice(0, -1);
   const shouldUseConsoleLayout = timeline.length > 1;
@@ -545,6 +553,15 @@ export function FirstChoiceConsequence({
                   {currentTimelineEntry.actionText}
                 </blockquote>
               ) : null}
+              {currentTimelineEntry.turnImage ? (
+                <div className="mt-6 max-w-md">
+                  <PlayerTurnImage
+                    image={currentTimelineEntry.turnImage}
+                    sourceTurnId={currentTimelineEntry.id}
+                    triggerGeneration
+                  />
+                </div>
+              ) : null}
               <div className="mt-6 grid gap-4 text-base leading-8 font-medium text-foreground dark:text-amber-100/90 sm:text-lg sm:leading-9">
                 {currentTimelineEntry.responseText
                   .split(/\n{2,}/)
@@ -593,6 +610,15 @@ export function FirstChoiceConsequence({
                       <blockquote className="mt-4 border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/25 dark:text-amber-50/60">
                         {entry.actionText}
                       </blockquote>
+                    ) : null}
+                    {entry.turnImage ? (
+                      <div className="mt-4 max-w-xs">
+                        <PlayerTurnImage
+                          image={entry.turnImage}
+                          sourceTurnId={entry.id}
+                          triggerGeneration
+                        />
+                      </div>
                     ) : null}
                     <div className="mt-4 grid gap-3 text-sm leading-7 text-foreground dark:text-amber-100/82">
                       {entry.responseText.split(/\n{2,}/).map((paragraph) => (
@@ -651,6 +677,13 @@ export function FirstChoiceConsequence({
                   {turn.actionText}
                 </blockquote>
               ) : null}
+              {imagesByTurnId.get(turn.id) ? (
+                <PlayerTurnImage
+                  image={imagesByTurnId.get(turn.id)}
+                  sourceTurnId={turn.id}
+                  triggerGeneration
+                />
+              ) : null}
               <div className="grid gap-4 text-foreground dark:text-amber-100">
                 {turn.responseText.split(/\n{2,}/).map((paragraph) => (
                   <TranscriptParagraph key={paragraph} text={paragraph} />
@@ -669,6 +702,13 @@ export function FirstChoiceConsequence({
               <blockquote className="border-l border-border pl-3 text-sm leading-6 text-muted-foreground italic dark:border-amber-200/35 dark:text-amber-50/70">
                 {turn.actionText}
               </blockquote>
+              {imagesByTurnId.get(turn.id) ? (
+                <PlayerTurnImage
+                  image={imagesByTurnId.get(turn.id)}
+                  sourceTurnId={turn.id}
+                  triggerGeneration
+                />
+              ) : null}
               <div className="grid gap-4 text-foreground dark:text-amber-100">
                 {turn.responseText.split(/\n{2,}/).map((paragraph) => (
                   <TranscriptParagraph key={paragraph} text={paragraph} />
@@ -722,6 +762,7 @@ type TimelineEntry = {
   actionText?: string;
   responseText: string;
   title: string;
+  turnImage?: PlayerTurnImageState;
 };
 
 function buildResponseTimeline({
@@ -729,12 +770,17 @@ function buildResponseTimeline({
   firstConnectedPath,
   firstPostChoiceAction,
   firstPostChoiceTurns,
+  turnImages,
 }: {
   decision: FirstDecision;
   firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
   firstPostChoiceTurns?: FirstPostChoiceTurn[];
+  turnImages?: PlayerTurnImageState[];
 }): TimelineEntry[] {
+  const imagesByTurnId = new Map(
+    (turnImages ?? []).map((image) => [image.sourceTurnId, image]),
+  );
   const timeline: TimelineEntry[] = [
     {
       id: decision.id,
@@ -765,6 +811,7 @@ function buildResponseTimeline({
         turn.sceneTitle ??
         titleFromActionKind(turn.actionKind) ??
         "The World Answers",
+      turnImage: imagesByTurnId.get(turn.id),
     });
   }
 
@@ -777,6 +824,7 @@ function buildResponseTimeline({
         turn.sceneTitle ??
         titleFromActionKind(turn.actionKind) ??
         `Connected Turn ${turn.turnNumber}`,
+      turnImage: imagesByTurnId.get(turn.id),
     });
   }
 
@@ -789,6 +837,7 @@ function buildResponseTimeline({
         turn.sceneTitle ??
         titleFromActionKind(turn.actionKind) ??
         `Orb Turn ${turn.turnNumber}`,
+      turnImage: imagesByTurnId.get(turn.id),
     });
   }
 
@@ -801,6 +850,7 @@ function buildResponseTimeline({
         turn.sceneTitle ??
         titleFromActionKind(turn.actionKind) ??
         `Connected ASI Turn ${turn.turnNumber}`,
+      turnImage: imagesByTurnId.get(turn.id),
     });
   }
 

@@ -8,12 +8,14 @@ import {
 import { notFound } from "next/navigation";
 import { HeroBackgroundVideo } from "../../../hero-background-video";
 import { CharacterInfoPanel } from "@/components/character-info-panel";
+import { PlayerTurnImage } from "@/components/player-turn-image";
 import { getPublicLivePlayer, type PublicLivePlayer } from "@/lib/live-browser";
 import type {
   FirstConnectedAsiTurn,
   FirstConnectedPathTurn,
   FirstOrbDecisionTurn,
   FirstPostChoiceTurn,
+  PlayerTurnImage as PlayerTurnImageState,
 } from "@/lib/player-store";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,7 @@ type GameplayEntry = {
   gameText?: string;
   narratorText?: string;
   meta?: string;
+  turnImage?: PlayerTurnImageState;
 };
 
 export default async function LivePlayerPage({
@@ -118,6 +121,14 @@ export default async function LivePlayerPage({
                   {entry.playerText ? (
                     <TranscriptBlock label="Player" text={entry.playerText} />
                   ) : null}
+                  {entry.turnImage ? (
+                    <div className="max-w-md">
+                      <PlayerTurnImage
+                        image={entry.turnImage}
+                        sourceTurnId={entry.id}
+                      />
+                    </div>
+                  ) : null}
                   {entry.narratorText ? (
                     <TranscriptBlock label="Narrator" text={entry.narratorText} />
                   ) : null}
@@ -148,6 +159,9 @@ export default async function LivePlayerPage({
 
 function buildGameplayEntries(player: PublicLivePlayer): GameplayEntry[] {
   const entries: GameplayEntry[] = [];
+  const imagesByTurnId = new Map(
+    (player.turnImages ?? []).map((image) => [image.sourceTurnId, image]),
+  );
 
   if (player.openingResponse && player.openingResponseSubmittedAt) {
     entries.push({
@@ -210,78 +224,85 @@ function buildGameplayEntries(player: PublicLivePlayer): GameplayEntry[] {
   }
 
   for (const turn of player.firstPostChoiceTurns ?? []) {
-    entries.push(postChoiceEntry(player.id, turn));
+    entries.push(postChoiceEntry(turn, imagesByTurnId));
   }
 
   for (const turn of player.firstConnectedPath?.turns ?? []) {
-    entries.push(connectedPathEntry(player.id, turn));
+    entries.push(connectedPathEntry(turn, imagesByTurnId));
   }
 
   for (const turn of player.firstConnectedPath?.orbDecisionTurns ?? []) {
-    entries.push(orbDecisionEntry(player.id, turn));
+    entries.push(orbDecisionEntry(turn, imagesByTurnId));
   }
 
   for (const turn of player.firstConnectedPath?.connectedAsiTurns ?? []) {
-    entries.push(connectedAsiEntry(player.id, turn));
+    entries.push(connectedAsiEntry(turn, imagesByTurnId));
   }
 
   return entries.sort((a, b) => a.at.localeCompare(b.at));
 }
 
-function postChoiceEntry(playerId: string, turn: FirstPostChoiceTurn): GameplayEntry {
+function postChoiceEntry(
+  turn: FirstPostChoiceTurn,
+  imagesByTurnId: Map<string, PlayerTurnImageState>,
+): GameplayEntry {
   return {
-    id: `${playerId}:post-choice:${turn.id}`,
+    id: turn.id,
     at: turn.resolvedAt,
     label: `Turn ${turn.turnNumber}`,
     title: turn.sceneTitle,
     playerText: turn.actionText,
     narratorText: turn.responseText,
     meta: turn.actionKind,
+    turnImage: imagesByTurnId.get(turn.id),
   };
 }
 
 function connectedPathEntry(
-  playerId: string,
   turn: FirstConnectedPathTurn,
+  imagesByTurnId: Map<string, PlayerTurnImageState>,
 ): GameplayEntry {
   return {
-    id: `${playerId}:connected:${turn.id}`,
+    id: turn.id,
     at: turn.resolvedAt,
     label: `Connected path ${turn.turnNumber}`,
     title: turn.sceneTitle ?? "Connected path",
     playerText: turn.actionText,
     narratorText: turn.responseText,
     meta: `${turn.deliveryStatus} / ${turn.packageStatus} / ${turn.orbStatus}`,
+    turnImage: imagesByTurnId.get(turn.id),
   };
 }
 
 function orbDecisionEntry(
-  playerId: string,
   turn: FirstOrbDecisionTurn,
+  imagesByTurnId: Map<string, PlayerTurnImageState>,
 ): GameplayEntry {
   return {
-    id: `${playerId}:orb:${turn.id}`,
+    id: turn.id,
     at: turn.resolvedAt,
     label: `Orb ${turn.turnNumber}`,
     title: turn.sceneTitle ?? "Orb decision",
     playerText: turn.actionText,
     narratorText: turn.responseText,
     meta: turn.orbLifecycle,
+    turnImage: imagesByTurnId.get(turn.id),
   };
 }
 
 function connectedAsiEntry(
-  playerId: string,
   turn: FirstConnectedAsiTurn,
+  imagesByTurnId: Map<string, PlayerTurnImageState>,
 ): GameplayEntry {
   return {
-    id: `${playerId}:asi:${turn.id}`,
+    id: turn.id,
     at: turn.resolvedAt,
     label: `ASI ${turn.turnNumber}`,
     title: turn.sceneTitle ?? "Connected ASI",
     playerText: turn.actionText,
     narratorText: turn.responseText,
     meta: turn.actionKind,
+    turnImage: imagesByTurnId.get(turn.id),
   };
 }
 

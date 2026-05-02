@@ -9,6 +9,7 @@ import { cn } from "../../../lib/utils";
 import {
   getDailyGameStats,
   getPlayerForUserGame,
+  getPlayerTurnImagesForUserGame,
 } from "../../../lib/player-store";
 import { getAuthenticatedUserId } from "../../../lib/playtest-auth";
 import { BeforeWeBegin } from "./before-we-begin";
@@ -25,9 +26,10 @@ export default async function TodaysGamePage() {
 
   const requestTimeZone = (await getRequestTimeZone()) ?? "UTC";
   const todayGame = await getTodayGameForRequest(new Date(), requestTimeZone);
-  const [player, dailyGameStats] = await Promise.all([
+  const [player, dailyGameStats, turnImages] = await Promise.all([
     getPlayerForUserGame(userId, todayGame.id),
     getDailyGameStats(todayGame.id),
+    getPlayerTurnImagesForUserGame(userId, todayGame.id),
   ]);
 
   if (!player) {
@@ -70,6 +72,7 @@ export default async function TodaysGamePage() {
           firstPostChoiceAction={player.firstPostChoiceAction}
           firstPostChoiceTurns={player.firstPostChoiceTurns}
           localTime={localGameStart}
+          turnImages={turnImages}
         />
       ) : player.firstMoveReveal ? (
         <FirstMoveReveal

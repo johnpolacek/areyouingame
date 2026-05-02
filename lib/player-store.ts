@@ -31,6 +31,7 @@ export type DailyPlayer = PlayerDraftInput & {
   openingResponse?: string;
   openingResponseSubmittedAt?: string;
   publicGameplayAgreementAcceptedAt?: string;
+  turnImages?: PlayerTurnImage[];
   createdAt: string;
   updatedAt: string;
 };
@@ -194,6 +195,40 @@ export type FirstConnectedPath = {
   updatedAt: string;
 };
 
+export type PlayerTurnImageStatus =
+  | "pending"
+  | "generating"
+  | "ready"
+  | "error";
+
+export type PlayerTurnImageKind =
+  | "post_choice_turn"
+  | "connected_path_turn"
+  | "orb_decision_turn"
+  | "connected_asi_turn";
+
+export type PlayerTurnImage = {
+  id: string;
+  dailyGameId: string;
+  playerId: string;
+  clerkUserId?: string;
+  sourceTurnId: string;
+  sourceTurnKind: PlayerTurnImageKind;
+  status: PlayerTurnImageStatus;
+  prompt?: string;
+  promptModel?: string;
+  imageModel?: string;
+  quality?: "low";
+  size?: "1024x1024";
+  bucket?: string;
+  objectKey?: string;
+  contentType?: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+  generatedAt?: string;
+};
+
 export type OpeningSceneContextQuestion = {
   id: string;
   scope: "opening_scene";
@@ -227,6 +262,53 @@ const getDailyGameStatsRef = makeFunctionReference<
   },
   DailyGameStats
 >("playerStore:getDailyGameStats");
+
+const getPlayerTurnImagesForUserGameRef = makeFunctionReference<
+  "query",
+  AuthenticatedPlayerArgs,
+  PlayerTurnImage[]
+>("playerStore:getPlayerTurnImagesForUserGame");
+
+const getPlayerTurnImageForUserGameRef = makeFunctionReference<
+  "query",
+  AuthenticatedPlayerArgs & {
+    sourceTurnId: string;
+  },
+  PlayerTurnImage | null
+>("playerStore:getPlayerTurnImageForUserGame");
+
+const claimPlayerTurnImageGenerationRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    sourceTurnId: string;
+  },
+  PlayerTurnImage | null
+>("playerStore:claimPlayerTurnImageGeneration");
+
+const completePlayerTurnImageGenerationRef = makeFunctionReference<
+  "mutation",
+  {
+    backendSecret: string;
+    sourceTurnId: string;
+    prompt: string;
+    promptModel: string;
+    imageModel: string;
+    bucket: string;
+    objectKey: string;
+    contentType: string;
+  },
+  PlayerTurnImage | null
+>("playerStore:completePlayerTurnImageGeneration");
+
+const failPlayerTurnImageGenerationRef = makeFunctionReference<
+  "mutation",
+  {
+    backendSecret: string;
+    sourceTurnId: string;
+    errorMessage: string;
+  },
+  PlayerTurnImage | null
+>("playerStore:failPlayerTurnImageGeneration");
 
 const createPlayerForUserGameRef = makeFunctionReference<
   "mutation",
@@ -431,6 +513,94 @@ export async function getDailyGameStats(
   return await fetchQuery(getDailyGameStatsRef, {
     backendSecret: getBackendSecret(),
     dailyGameId,
+  });
+}
+
+export async function getPlayerTurnImagesForUserGame(
+  clerkUserId: string,
+  dailyGameId: string,
+): Promise<PlayerTurnImage[]> {
+  return await fetchQuery(getPlayerTurnImagesForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+  });
+}
+
+export async function getPlayerTurnImageForUserGame({
+  clerkUserId,
+  dailyGameId,
+  sourceTurnId,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  sourceTurnId: string;
+}): Promise<PlayerTurnImage | null> {
+  return await fetchQuery(getPlayerTurnImageForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    sourceTurnId,
+  });
+}
+
+export async function claimPlayerTurnImageGeneration({
+  clerkUserId,
+  dailyGameId,
+  sourceTurnId,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  sourceTurnId: string;
+}): Promise<PlayerTurnImage | null> {
+  return await fetchMutation(claimPlayerTurnImageGenerationRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    sourceTurnId,
+  });
+}
+
+export async function completePlayerTurnImageGeneration({
+  bucket,
+  contentType,
+  imageModel,
+  objectKey,
+  prompt,
+  promptModel,
+  sourceTurnId,
+}: {
+  bucket: string;
+  contentType: string;
+  imageModel: string;
+  objectKey: string;
+  prompt: string;
+  promptModel: string;
+  sourceTurnId: string;
+}): Promise<PlayerTurnImage | null> {
+  return await fetchMutation(completePlayerTurnImageGenerationRef, {
+    backendSecret: getBackendSecret(),
+    bucket,
+    contentType,
+    imageModel,
+    objectKey,
+    prompt,
+    promptModel,
+    sourceTurnId,
+  });
+}
+
+export async function failPlayerTurnImageGeneration({
+  errorMessage,
+  sourceTurnId,
+}: {
+  errorMessage: string;
+  sourceTurnId: string;
+}): Promise<PlayerTurnImage | null> {
+  return await fetchMutation(failPlayerTurnImageGenerationRef, {
+    backendSecret: getBackendSecret(),
+    errorMessage,
+    sourceTurnId,
   });
 }
 
