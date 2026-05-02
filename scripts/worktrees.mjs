@@ -17,6 +17,7 @@ const commands = new Map([
   ["list", listWorktrees],
   ["doctor", doctorWorktrees],
   ["overlap", overlapWorktrees],
+  ["finish", finishWorktree],
   ["prune", pruneWorktrees],
   ["clean", cleanWorktrees],
 ]);
@@ -28,12 +29,14 @@ Usage:
   pnpm wt:list
   pnpm wt:doctor
   pnpm wt:overlap
+  pnpm wt:finish <branch> [--base main] [--keep-branch] [--no-clean] [--no-pull]
   pnpm wt:prune
   pnpm wt:clean [--older-than-days 14] [--force]
 
 Examples:
   pnpm wt:create feature/orb-rejection
   pnpm wt:create polish --polish
+  pnpm wt:finish feature/orb-rejection
   pnpm wt:create state/schema-test --convex isolated
 `;
 
@@ -183,6 +186,22 @@ function formatBytes(bytes) {
 
 function statusShort(path) {
   return runGit(["status", "--short"], { cwd: path });
+}
+
+function currentBranch(path = repoRoot) {
+  return runGit(["branch", "--show-current"], { cwd: path });
+}
+
+function remoteBranchExists(remote, branch) {
+  return runCommand("git", ["show-ref", "--verify", "--quiet", `refs/remotes/${remote}/${branch}`], {
+    cwd: repoRoot,
+  }).status === 0;
+}
+
+function countRevRange(range) {
+  const output = runGit(["rev-list", "--count", range]);
+  const count = Number.parseInt(output, 10);
+  return Number.isNaN(count) ? 0 : count;
 }
 
 function changedFiles(path) {
@@ -386,6 +405,92 @@ async function overlapWorktrees() {
   }
 
   process.exitCode = 1;
+}
+
+async function finishWorktree(argv) {
+  const { flags, positional } = parseFlags(argv);
+  const branch = positional[0];
+  const base = flags.base ?? "main";
+  const keepBranch = Boolean(flags.keep_branch) || branch === "polish";
+  const shouldClean = !flags.no_clean;
+  const shouldPull = !flags.no_pull;
+
+  if (!branch) {
+    console.error("Missing branch name.");
+    usage(1);
+  }
+
+  if (branch === base) {
+    throw new Error(`Refusing to finish the integration branch "${base}".`);
+  }
+
+  if (statusShort(repoRoot)) {
+    throw new Error(`Main checkout has uncommitted changes. Commit or stash before finishing ${branch}.`);
+  }
+
+  const integrationBranch = currentBranch(repoRoot);
+  if (integrationBranch !== base) {
+    throw new Error(`Main checkout must be on ${base}; currently on ${integrationBranch || "(detached)"}.`);
+  }
+
+  const worktree = parseWorktrees().find((entry) => entry.branch === branch);
+  if (!worktree) {
+    throw new Error(`No active worktree found for branch "${branch}".`);
+  }
+
+  if (worktree.path === repoRoot) {
+    throw new Error(`Branch "${branch}" is checked out in the main checkout; use a linked worktree branch.`);
+  }
+
+  if (!worktree.path.startsWith(defaultWorktreesRoot)) {
+    throw new Error(`Refusing to clean worktree outside ${defaultWorktreesRoot}: ${worktree.path}`);
+  }
+
+  if (statusShort(worktree.path)) {
+    throw new Error(`Worktree ${branch} has uncommitted changes. Commit or stash before finishing.`);
+  }
+
+  console.log(`Finishing ${branch} from ${worktree.path}`);
+
+  if (shouldPull) {
+    if (remoteBranchExists("origin", base)) {
+      console.log(`Updating ${base} with git pull --ff-only origin ${base}`);
+      runGit(["pull", "--ff-only", "origin", base], { stdio: "inherit" });
+    } else {
+      console.log(`Skipping pull: origin/${base} is not available locally.`);
+    }
+  }
+
+  console.log("Checking changed-file overlap across active worktrees...");
+  await overlapWorktrees();
+  if (process.exitCode) {
+    throw new Error("Resolve changed-file overlap before finishing the worktree.");
+  }
+
+  const ahead = countRevRange(`${base}..${branch}`);
+  if (ahead === 0) {
+    console.log(`${branch} has no commits ahead of ${base}; skipping merge.`);
+  } else {
+    console.log(`Merging ${ahead} commit${ahead === 1 ? "" : "s"} from ${branch} into ${base}.`);
+    runGit(["merge", "--no-ff", "--log", branch], { stdio: "inherit" });
+  }
+
+  if (shouldClean) {
+    console.log(`Removing worktree ${worktree.path}`);
+    runGit(["worktree", "remove", worktree.path], { stdio: "inherit" });
+  } else {
+    console.log("Keeping worktree because --no-clean was provided.");
+  }
+
+  if (!keepBranch) {
+    console.log(`Deleting merged branch ${branch}`);
+    runGit(["branch", "-d", branch], { stdio: "inherit" });
+  } else {
+    console.log(`Keeping branch ${branch}.`);
+  }
+
+  await pruneWorktrees();
+  console.log(`Finished ${branch}.`);
 }
 
 async function pruneWorktrees() {

@@ -54,6 +54,7 @@ Add a small `scripts/worktrees/` toolset and package scripts:
 - `pnpm wt:list` shows active worktrees, branch names, paths, disk usage, and likely dev URLs.
 - `pnpm wt:doctor` checks whether Portless is installed/trusted, whether `pnpm install` has been run, whether `.env.local` exists, and whether Convex is pointed at the intended deployment.
 - `pnpm wt:clean` removes stale worktrees only after verifying their branches are merged, pushed, or explicitly confirmed.
+- `pnpm wt:finish <branch>` completes a committed worktree branch by checking for dirty state, updating `main` with `git pull --ff-only` when possible, running overlap detection, merging into `main`, removing the linked worktree, pruning metadata, and deleting the merged branch unless asked to keep it.
 - `pnpm wt:prune` runs `git worktree prune` and uses Portless orphan cleanup when the installed Portless version exposes it.
 - `pnpm wt:overlap` compares changed files across active worktrees before merge/rebase.
 
@@ -169,5 +170,6 @@ Start small: add Portless and a basic worktree create/list/doctor script set bef
 - `pnpm wt:create <branch>` creates a worktree under `../AreYouIn.worktrees/<branch-slug>`, copies env files, installs dependencies, and prints the expected Portless URL.
 - `pnpm wt:create polish --polish` creates the recommended light-fix/UI-tweak lane.
 - `pnpm wt:list`, `pnpm wt:doctor`, `pnpm wt:overlap`, `pnpm wt:prune`, and `pnpm wt:clean` cover inspection, health checks, overlap detection, and cleanup. With Portless `0.10.3`, route cleanup is manual through `portless list`/proxy lifecycle because `portless prune` is not exposed.
+- `pnpm wt:finish <branch>` is the preferred completion path for committed worktree work: it merges back to `main`, removes the worktree, prunes metadata, and deletes the branch after Git verifies it is merged. It keeps `polish` by default because that lane is intentionally reusable.
 - `pnpm playtest:persona` isolates `agent-browser` config/profile/download state per worktree so persona playtests can run in parallel.
 - `pnpm agent-browser:doctor` and `pnpm agent-browser:cleanup-playtests` inspect and clean only AreYouIn `ayi-*` playtest browser artifacts.

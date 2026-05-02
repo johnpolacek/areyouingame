@@ -18,6 +18,7 @@
     "wt:list": "node scripts/worktrees.mjs list",
     "wt:doctor": "node scripts/worktrees.mjs doctor",
     "wt:overlap": "node scripts/worktrees.mjs overlap",
+    "wt:finish": "node scripts/worktrees.mjs finish",
     "wt:prune": "node scripts/worktrees.mjs prune",
     "wt:clean": "node scripts/worktrees.mjs clean",
     "version:bump": "node scripts/bump-build-version.mjs",

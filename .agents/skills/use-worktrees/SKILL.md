@@ -16,6 +16,7 @@ Use this skill to set up or explain the repo's worktree workflow for parallel fe
 - Start from `/Users/johnpolacek/Workspace/AreYouIn` unless the current checkout is clearly the intended integration checkout.
 - Before creating or merging worktrees, run `pnpm wt:doctor` when practical.
 - Before merging or assigning overlapping work, run `pnpm wt:overlap`.
+- When a worktree branch is complete and committed, prefer `pnpm wt:finish <branch>` from the main checkout to merge it, remove the linked worktree, prune stale metadata, and delete the merged branch.
 - Let Portless derive the readable route from the worktree branch slug. Do not use fixed localhost ports for runner targets.
 - Persona playtests use worktree-local `agent-browser` isolation and may run in parallel across worktrees.
 - Respect dirty worktrees. Never delete, reset, or overwrite user changes.
@@ -114,6 +115,14 @@ Cleanup must target only AreYouIn `ayi-*` playtest sessions/artifacts. Do not cl
 - Keep `main` as the integration checkout.
 - Work in each feature worktree with its own CLI Codex session.
 - Commit inside each worktree after tests/build pass.
+- When the branch is ready, finish it from the main checkout:
+
+  ```bash
+  cd /Users/johnpolacek/Workspace/AreYouIn
+  pnpm wt:finish <branch>
+  ```
+
+  `pnpm wt:finish` refuses dirty main/worktree checkouts, pulls `main` with `--ff-only` when `origin/main` exists, runs overlap detection, merges the branch into `main`, removes the linked worktree, prunes worktree metadata, and deletes the branch after Git confirms it is merged. Use `--keep-branch` to preserve a merged feature branch, `--no-clean` to keep the worktree directory, or `--no-pull` when offline.
 - Merge `polish` into `main` frequently.
 - After merging `polish` or any shared fix into `main`, merge or rebase `main` into active feature worktrees.
 - Before merging a feature branch into `main`, run:
@@ -129,6 +138,7 @@ Use cleanup commands from the main checkout:
 
 ```bash
 pnpm wt:list
+pnpm wt:finish <branch>
 pnpm wt:clean
 pnpm wt:prune
 pnpm agent-browser:cleanup-playtests -- --dry-run
