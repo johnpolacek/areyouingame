@@ -638,12 +638,6 @@ async function waitForChoiceResolution(browser) {
       return;
     }
 
-    const text = await browser.getBodyText();
-
-    if (/Current Status/i.test(text) && /\bhas been recorded\b/i.test(text)) {
-      return;
-    }
-
     await browser.wait(500);
   }
 

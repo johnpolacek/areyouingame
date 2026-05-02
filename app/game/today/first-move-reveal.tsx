@@ -4,10 +4,6 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  buildPlayerFacingStatus,
-  type PlayerFacingStatus,
-} from "@/lib/player-facing-status";
 import { cn } from "@/lib/utils";
 import type {
   FirstDecision,
@@ -398,10 +394,6 @@ export function FirstChoiceConsequence({
   const isActionReady = isNoPathReadyForFirstAction || isYesPathReadyForAction;
   const shouldShowNextTurnPending =
     !isActionReady && (hasResolvedFirstTurn || isConnectedPathComplete);
-  const playerFacingStatus = buildPlayerFacingStatus({
-    decision,
-    firstConnectedPath,
-  });
   const connectedPathTurns = firstConnectedPath?.turns ?? [];
   const orbDecisionTurns = firstConnectedPath?.orbDecisionTurns ?? [];
   const timeline = buildResponseTimeline({
@@ -535,11 +527,6 @@ export function FirstChoiceConsequence({
                 </p>
               </div>
             </dl>
-
-            <CurrentStatusPanel
-              className="mt-6"
-              status={playerFacingStatus}
-            />
           </aside>
 
           <div className="grid min-h-0 min-w-0 content-start gap-7 overflow-y-auto overscroll-contain pr-1 lg:pr-3">
@@ -653,8 +640,6 @@ export function FirstChoiceConsequence({
         </p>
       </div>
 
-      <CurrentStatusPanel status={playerFacingStatus} />
-
       {decision.choice === "NO" && hasNoPathTurnHistory ? (
         <div className="grid w-full gap-4">
           {timeline.slice(1).map((turn) => (
@@ -730,45 +715,6 @@ function TranscriptParagraph({ text }: { text: string }) {
   }
 
   return <p>{text}</p>;
-}
-
-function CurrentStatusPanel({
-  className,
-  status,
-}: {
-  className?: string;
-  status: PlayerFacingStatus;
-}) {
-  const rows = [
-    ["Answer", status.answer],
-    ["Known", status.known],
-    ["Unknown", status.unknown],
-    ["Current objective", status.currentObjective],
-  ] as const;
-
-  return (
-    <section
-      aria-label="Current Status"
-      className={cn("w-full rounded-md border border-border bg-card/70 px-4 py-4 text-left backdrop-blur-md dark:border-amber-200/20 dark:bg-black/35", className)}
-      data-playtest-active="true"
-    >
-      <h2 className="text-xs font-bold tracking-[0.18em] text-primary uppercase dark:text-amber-300/80">
-        Current Status
-      </h2>
-      <dl className="mt-3 grid gap-3">
-        {rows.map(([label, value]) => (
-          <div className="grid gap-1" key={label}>
-            <dt className="text-[0.7rem] font-bold tracking-[0.16em] text-muted-foreground uppercase dark:text-amber-100/50">
-              {label}
-            </dt>
-            <dd className="text-sm leading-6 font-medium text-foreground dark:text-amber-100/85">
-              {value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
 }
 
 type TimelineEntry = {
