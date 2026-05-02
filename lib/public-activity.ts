@@ -1,5 +1,6 @@
 import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
+import type { CharacterImage } from "./character-image";
 
 export type PublicActivityEventKind =
   | "opening_response_submitted"
@@ -22,6 +23,7 @@ export type PublicCharacterSnapshot = {
   location: string;
   occupation: string;
   bio: string;
+  characterImage?: CharacterImage;
 };
 
 export type PublicActivityPlaytestMetadata = {

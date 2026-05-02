@@ -62,6 +62,7 @@ export function HomeEntryActions({
         occupation: draft.occupation.trim(),
         bio: draft.bio.trim(),
         timeZone: getDraftTimeZone(),
+        characterImageDataUrl: draft.characterImageDataUrl,
       }),
     );
   }
@@ -103,7 +104,16 @@ export function HomeEntryActions({
           </>
         }
       >
-        <CharacterSetupForm draft={draft} onChange={updateDraft} />
+        <CharacterSetupForm
+          draft={draft}
+          onChange={updateDraft}
+          onImageChange={(characterImageDataUrl) =>
+            setDraft((currentDraft) => ({
+              ...currentDraft,
+              characterImageDataUrl,
+            }))
+          }
+        />
       </PlayerCreationView>
     );
   }

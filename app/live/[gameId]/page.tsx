@@ -77,6 +77,15 @@ export default async function LiveGamePage({
                 href={`/live/${encodeURIComponent(dailyGameId)}/${encodeURIComponent(player.id)}`}
                 key={player.id}
               >
+                {player.characterImage ? (
+                  <div className="aspect-[4/3] overflow-hidden rounded-md border border-border/80 bg-background/70 dark:border-amber-200/15">
+                    <img
+                      alt={`${player.name} character portrait`}
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      src={player.characterImage.url}
+                    />
+                  </div>
+                ) : null}
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

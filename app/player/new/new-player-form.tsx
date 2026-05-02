@@ -19,6 +19,7 @@ import {
   primaryActionClass,
   PrimaryActionLabel,
 } from "../../character-draft-form";
+import type { CharacterImage } from "@/lib/character-image";
 
 type NewPlayerFormProps = {
   successHref: string;
@@ -30,6 +31,7 @@ export function NewPlayerForm({
   const router = useRouter();
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPreparingImage, setIsPreparingImage] = useState(false);
   const [error, setError] = useState("");
   const canCreatePlayer = isCompleteDraft(draft) && !isSubmitting;
   const hasEnteredAllFields =
@@ -61,6 +63,10 @@ export function NewPlayerForm({
             ? parsedDraft.occupation
             : "",
         bio: typeof parsedDraft.bio === "string" ? parsedDraft.bio : "",
+        characterImageDataUrl:
+          typeof parsedDraft.characterImageDataUrl === "string"
+            ? parsedDraft.characterImageDataUrl
+            : "",
       });
     } catch {
       window.sessionStorage.removeItem(pendingDraftStorageKey);
@@ -75,8 +81,17 @@ export function NewPlayerForm({
     setError("");
   }
 
+  function updateImage(imageDataUrl: string) {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      characterImage: undefined,
+      characterImageDataUrl: imageDataUrl,
+    }));
+    setError("");
+  }
+
   async function createPlayer() {
-    if (!hasEnteredAllFields) {
+    if (!hasEnteredAllFields || !draft.characterImageDataUrl) {
       setError("Please fill out all fields");
       return;
     }
@@ -89,6 +104,7 @@ export function NewPlayerForm({
     setError("");
 
     try {
+      const characterImage = draft.characterImage ?? await uploadCharacterImage(draft.characterImageDataUrl);
       const response = await fetch("/api/players", {
         method: "POST",
         headers: {
@@ -103,6 +119,7 @@ export function NewPlayerForm({
             occupation: draft.occupation.trim(),
             bio: draft.bio.trim(),
             timeZone: getDraftTimeZone(),
+            characterImage,
           },
         }),
       });
@@ -146,9 +163,41 @@ export function NewPlayerForm({
     >
       <CharacterSetupForm
         draft={draft}
+        isPreparingImage={isPreparingImage}
         onChange={updateDraft}
+        onImageChange={(imageDataUrl) => {
+          setIsPreparingImage(true);
+          updateImage(imageDataUrl);
+          setIsPreparingImage(false);
+        }}
         onSubmit={createPlayer}
       />
     </PlayerCreationView>
   );
+}
+
+async function uploadCharacterImage(imageDataUrl?: string): Promise<CharacterImage> {
+  if (!imageDataUrl) {
+    throw new Error("Character image is required.");
+  }
+
+  const blob = await (await fetch(imageDataUrl)).blob();
+  const formData = new FormData();
+
+  formData.append("image", blob, "character.webp");
+
+  const response = await fetch("/api/players/character-image", {
+    method: "POST",
+    body: formData,
+  });
+  const result = (await response.json()) as {
+    image?: CharacterImage;
+    error?: string;
+  };
+
+  if (!response.ok || !result.image) {
+    throw new Error(result.error || "Unable to upload character image.");
+  }
+
+  return result.image;
 }

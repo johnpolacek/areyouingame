@@ -77,9 +77,20 @@ export default async function LivePlayerPage({
                 {player.bio}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Metric label="Choice" value={player.firstDecision?.choice ?? "-"} />
-              <Metric label="Turns" value={entries.length.toString()} />
+            <div className="grid gap-3">
+              {player.characterImage ? (
+                <div className="aspect-square overflow-hidden rounded-lg border border-border bg-card/80 shadow-2xl shadow-black/10 dark:bg-black/35">
+                  <img
+                    alt={`${player.name} character portrait`}
+                    className="h-full w-full object-cover"
+                    src={player.characterImage.url}
+                  />
+                </div>
+              ) : null}
+              <div className="grid grid-cols-2 gap-3">
+                <Metric label="Choice" value={player.firstDecision?.choice ?? "-"} />
+                <Metric label="Turns" value={entries.length.toString()} />
+              </div>
             </div>
           </div>
         </header>
