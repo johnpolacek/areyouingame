@@ -2,10 +2,13 @@
 
 Generated persona playthrough reports for AreYouIn builds.
 
-Last generated: 2026-05-02T02:09:01.611Z
+Last generated: 2026-05-02T02:48:16.644Z
 
 | Run | Build | Persona | Scenario | Status | Findings | Top Finding |
 | --- | --- | --- | --- | --- | ---: | --- |
+| [0-1-16__yes-connected-path-late-night-apartment__mara-ilyin__2026-05-02t02-45-45-773z](0-1-16__yes-connected-path-late-night-apartment__mara-ilyin__2026-05-02t02-45-45-773z.md) | 0.1.16 | Mara Ilyin | yes-connected-path-late-night-apartment | passed | 6 | State tracking is clear and reliable across multiple turns |
+| [0-1-16__yes-connected-path-late-night-apartment__marisol-vega__2026-05-02t02-40-48-674z](0-1-16__yes-connected-path-late-night-apartment__marisol-vega__2026-05-02t02-40-48-674z.md) | 0.1.16 | Marisol Vega | yes-connected-path-late-night-apartment | needs_review | 5 | The investigation path becomes a repetitive confirmation loop |
+| [0-1-16__no-public-lookup__mara-ilyin__2026-05-02t02-38-51-711z](0-1-16__no-public-lookup__mara-ilyin__2026-05-02t02-38-51-711z.md) | 0.1.16 | Mara Ilyin | no-public-lookup | passed | 5 | Objective repeats without enough state progression in the UI |
 | [0-1-13__no-public-lookup__mina-desai__2026-05-02t02-06-48-785z](0-1-13__no-public-lookup__mina-desai__2026-05-02t02-06-48-785z.md) | 0.1.13 | Mina Desai | no-public-lookup | needs_review | 5 | The NO choice is recorded well, but subsequent agency is too shallow |
 | [0-1-13__yes-connected-path-post-fix-night-shift__mara-kessler__2026-05-02t02-00-20-950z](0-1-13__yes-connected-path-post-fix-night-shift__mara-kessler__2026-05-02t02-00-20-950z.md) | 0.1.13 | Mara Kessler | yes-connected-path-post-fix-night-shift | passed | 5 | Package opening appears to bypass the player’s stated delay/inspection intent |
 | [0-1-13__yes-connected-path-rural-farm__evelyn-mercer__2026-05-02t01-50-24-615z](0-1-13__yes-connected-path-rural-farm__evelyn-mercer__2026-05-02t01-50-24-615z.md) | 0.1.13 | Evelyn Mercer | yes-connected-path-rural-farm | needs_review | 5 | The scene repeats with too little new player leverage |
