@@ -13,7 +13,7 @@ import type {
   FirstConnectedPathStatus,
 } from "./player-store";
 
-const DELIVERY_ELIGIBLE_TURN = 3;
+const DELIVERY_ELIGIBLE_TURN = 2;
 const PRE_DELIVERY_REVEAL_TERMS =
   /\b(drone|drones|package|packages|orb|orbs|delivery|delivered|deliveries|box|boxes|parcel|parcels)\b/i;
 const DELIVERY_DRONE_TERMS = /\b(drone|drones)\b/i;
@@ -68,8 +68,11 @@ export async function createFirstConnectedPathTurnResponse({
       "When the player asks about terms, reversibility, control, consequences, or what changed, explicitly distinguish what is visibly true now, what remains unknown in-world, and what the player can do next.",
       "Do not strand the player in dead-end phrasing such as 'No terms' or 'No receipt' unless the same response also gives an actionable next step grounded in the current scene.",
       "If the transition is delivered, describe a small, minimal, sleek package delivered by a plausible drone to a nearby place. Keep it physical and logistical, not magical.",
+      "Fit the delivery to the player's current situation. If they are moving through public transit, a workplace, a crowd, or another constrained place, the drone should deliver to the nearest plausible reachable surface or threshold without contradicting the scene.",
       "If delivery happens while the player looks through a window or checks outside, the package can be visible nearby before they touch it.",
       "If the package is already available and the player picks it up, brings it inside, stages it, photographs it, starts a livestream, waits for likes, reads chat, or otherwise delays, keep the package sealed and present. Do not reveal the orb until they explicitly open, unbox, unwrap, or look inside.",
+      "If the package is already available and remains sealed, each response must add a concrete new observable delta tied to the player's action: a marking, weight, sound, temperature, sensor reading, public reaction, nearby person's response, safety constraint, or changed access to the package.",
+      "Do not repeat the previous connected-path scene. The current turn must give the player a sharper fork, new information, or a changed risk even when the canonical package/orb state is unchanged.",
       "For livestream or chat actions around the sealed package, make the public reaction messy and useful for later NO/unconnected discovery: viewers ask for proof, warn them not to open it, dare them to open it, compare other YES/package reports, and argue over whether it is fake or dangerous.",
       "If the transition is opened, describe the player opening the small sleek package and finding a smooth featureless orb with the instruction to place it at the center of their forehead. Do not simulate full connected cognition yet.",
       "If the player tries something drastic that plausibly prevents delivery, respect the supplied waiting transition and make the delay feel causal.",
@@ -204,6 +207,17 @@ function wantsToOpenPackage(actionText: string): boolean {
   const normalizedAction = actionText.toLowerCase();
 
   if (
+    /\b(?:not|don't|do not|won't|will not|without|before|delay|wait|hold off|leave (?:it|the package|the box) closed|keep (?:it|the package|the box) sealed)\b.{0,80}\b(?:open|opening|unbox|unwrap|unpack|break (?:the )?seal|cut (?:the )?seal|tear)\b/.test(
+      normalizedAction,
+    ) ||
+    /\b(?:open|opening|unbox|unwrap|unpack|break (?:the )?seal|cut (?:the )?seal|tear)\b.{0,80}\b(?:not|don't|do not|won't|will not|without|before|delay|wait|hold off|closed|sealed)\b/.test(
+      normalizedAction,
+    )
+  ) {
+    return false;
+  }
+
+  if (
     /\b(livestream|live stream|stream|premiere|countdown|likes?|chat|viewers?|picture|photo|photograph|camera|record|film|post|upload)\b/.test(
       normalizedAction,
     )
@@ -211,7 +225,7 @@ function wantsToOpenPackage(actionText: string): boolean {
     return false;
   }
 
-  return /\b(open|unbox|unwrap|unpack|break (?:the )?seal|cut (?:the )?seal|tear (?:it|the package|the box)? open|inspect inside|look inside)\b/i.test(
+  return /\b(open|unbox|unwrap|unpack)\s+(?:it|(?:the\s+)?package|(?:the\s+)?box|(?:the\s+)?parcel)\b|\b(?:break|cut)\s+(?:the\s+)?seal\b|\btear\s+(?:it|(?:the\s+)?package|(?:the\s+)?box|(?:the\s+)?parcel)\s+open\b|\binspect inside\b|\blook inside\b/i.test(
     actionText,
   );
 }
