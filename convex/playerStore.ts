@@ -241,6 +241,52 @@ const aiUsageEvent = v.object({
   createdAt: v.string(),
 });
 
+const publicCharacterSnapshot = v.object({
+  name: v.string(),
+  age: v.string(),
+  location: v.string(),
+  occupation: v.string(),
+  bio: v.string(),
+});
+
+const publicActivityPlaytestMetadata = v.object({
+  synthetic: v.literal(true),
+  build: v.optional(v.string()),
+  persona: v.optional(v.string()),
+  scenario: v.optional(v.string()),
+  run: v.optional(v.string()),
+});
+
+const publicActivityEventKind = v.union(
+  v.literal("opening_response_submitted"),
+  v.literal("opening_context_answered"),
+  v.literal("first_reveal_presented"),
+  v.literal("first_choice_submitted"),
+  v.literal("first_reveal_text_response_submitted"),
+  v.literal("post_choice_turn_resolved"),
+  v.literal("connected_path_turn_resolved"),
+  v.literal("package_received"),
+  v.literal("orb_revealed"),
+  v.literal("orb_action_resolved"),
+  v.literal("orb_accepted"),
+  v.literal("orb_lost"),
+  v.literal("connected_asi_interaction_resolved"),
+);
+
+const publicActivityEvent = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  createdAt: v.string(),
+  character: publicCharacterSnapshot,
+  eventKind: publicActivityEventKind,
+  gameText: v.optional(v.string()),
+  playerInput: v.optional(v.string()),
+  choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
+  narratorResponse: v.optional(v.string()),
+  sceneTitle: v.optional(v.string()),
+  playtest: v.optional(publicActivityPlaytestMetadata),
+});
+
 const player = v.object({
   id: v.string(),
   clerkUserId: v.string(),
@@ -314,6 +360,32 @@ export const getDailyGameStats = queryGeneric({
         gameplayEvents.map((event) => event.sourceTurnId),
       ).size,
     };
+  },
+});
+
+export const getPublicActivityEvents = queryGeneric({
+  args: {
+    dailyGameId: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(publicActivityEvent),
+  handler: async (ctx, args) => {
+    const limit = Math.min(Math.max(args.limit ?? 80, 1), 200);
+    const events = args.dailyGameId
+      ? await ctx.db
+          .query("publicActivityEvents")
+          .withIndex("by_dailyGameId_and_createdAt", (q) =>
+            q.eq("dailyGameId", args.dailyGameId),
+          )
+          .order("desc")
+          .take(limit)
+      : await ctx.db
+          .query("publicActivityEvents")
+          .withIndex("by_createdAt")
+          .order("desc")
+          .take(limit);
+
+    return events.map(toPublicActivityEvent);
   },
 });
 
@@ -516,6 +588,16 @@ export const submitOpeningResponseForUserGame = mutationGeneric({
       openingResponseSubmittedAt: now,
       updatedAt: now,
     });
+    await insertPublicActivityEvent(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "opening_response_submitted",
+      gameText: "Where are you and what are you doing?",
+      id: `${args.dailyGameId}:${existingPlayer.id}:public:opening-response`,
+      player: existingPlayer,
+      playerInput: args.openingResponse,
+      createdAt: now,
+    });
 
     return toDailyPlayer({
       ...existingPlayer,
@@ -568,6 +650,16 @@ export const answerOpeningSceneContextForUserGame = mutationGeneric({
       openingSceneContext: openingSceneContextRecord,
       updatedAt: now,
     });
+    await insertPublicActivityEvent(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "opening_context_answered",
+      gameText: existingPlayer.openingSceneContext.promptText,
+      id: `${args.dailyGameId}:${existingPlayer.id}:public:opening-context-answer`,
+      player: existingPlayer,
+      playerInput: args.answerText,
+      createdAt: now,
+    });
 
     return toDailyPlayer({
       ...existingPlayer,
@@ -606,6 +698,22 @@ export const saveFirstMoveRevealForUserGame = mutationGeneric({
     await ctx.db.patch(existingPlayer._id, {
       firstMoveReveal: args.reveal,
       updatedAt: args.reveal.generatedAt,
+    });
+    await insertPublicActivityEvent(ctx, {
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "first_reveal_presented",
+      gameText: "Are you in?",
+      id: `${args.dailyGameId}:${existingPlayer.id}:public:first-reveal`,
+      narratorResponse: [
+        ...args.reveal.sceneIntro,
+        args.reveal.revealCopy.availability,
+        args.reveal.revealCopy.promise,
+        args.reveal.revealCopy.question,
+      ].join("\n\n"),
+      player: existingPlayer,
+      sceneTitle: "First reveal",
+      createdAt: args.reveal.generatedAt,
     });
 
     return toDailyPlayer({
@@ -653,6 +761,18 @@ export const submitFirstDecisionForUserGame = mutationGeneric({
     await ctx.db.patch(existingPlayer._id, {
       firstDecision: firstDecisionRecord,
       updatedAt: now,
+    });
+    await insertPublicActivityEvent(ctx, {
+      choice: args.choice,
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "first_choice_submitted",
+      gameText: "Are you in?",
+      id: `${args.dailyGameId}:${existingPlayer.id}:public:first-choice`,
+      narratorResponse: firstDecisionRecord.consequenceBody,
+      player: existingPlayer,
+      sceneTitle: firstDecisionRecord.consequenceTitle || "Choice recorded",
+      createdAt: now,
     });
 
     return toDailyPlayer({
@@ -735,6 +855,18 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
         firstRevealTextResponses,
         updatedAt: now,
       });
+      await insertPublicActivityEvent(ctx, {
+        clerkUserId: args.clerkUserId,
+        dailyGameId: args.dailyGameId,
+        eventKind: "first_reveal_text_response_submitted",
+        gameText: "Please respond yes or no.",
+        id: `${responseRecord.id}:public`,
+        narratorResponse:
+          args.interruptionText ?? args.dayEndText ?? undefined,
+        player: existingPlayer,
+        playerInput: args.responseText,
+        createdAt: now,
+      });
 
       return toDailyPlayer({
         ...existingPlayer,
@@ -756,6 +888,19 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
       firstDecision: firstDecisionRecord,
       firstRevealTextResponses,
       updatedAt: now,
+    });
+    await insertPublicActivityEvent(ctx, {
+      choice: args.classification,
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "first_reveal_text_response_submitted",
+      gameText: "Please respond yes or no.",
+      id: `${responseRecord.id}:public`,
+      narratorResponse: firstDecisionRecord.consequenceBody,
+      player: existingPlayer,
+      playerInput: args.responseText,
+      sceneTitle: firstDecisionRecord.consequenceTitle || "Choice recorded",
+      createdAt: now,
     });
 
     return toDailyPlayer({
@@ -839,6 +984,19 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       updatedAt: now,
     });
     await ctx.db.insert("gameplayEvents", eventRecord);
+    await insertPublicActivityEvent(ctx, {
+      choice: existingPlayer.firstDecision.choice,
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "post_choice_turn_resolved",
+      gameText: "What do you do next?",
+      id: `${firstPostChoiceActionRecord.id}:public`,
+      narratorResponse: args.responseText,
+      player: existingPlayer,
+      playerInput: args.actionText,
+      sceneTitle: args.sceneTitle,
+      createdAt: now,
+    });
 
     return toDailyPlayer({
       ...existingPlayer,
@@ -989,12 +1147,37 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
           ? ("connected_path_started" as const)
           : ("connected_path_turn_resolved" as const),
     });
+    await insertPublicActivityEvent(ctx, {
+      choice: existingPlayer.firstDecision.choice,
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "connected_path_turn_resolved",
+      gameText: "What do you do next?",
+      id: `${turnRecord.id}:public:connected-path-turn-resolved`,
+      narratorResponse: args.responseText,
+      player: existingPlayer,
+      playerInput: args.actionText,
+      sceneTitle: args.sceneTitle,
+      createdAt: now,
+    });
 
     if (!wasDelivered && args.deliveryStatus === "delivered") {
       await ctx.db.insert("gameplayEvents", {
         ...baseEvent,
         id: `${turnRecord.id}:package-received`,
         eventType: "package_received" as const,
+      });
+      await insertPublicActivityEvent(ctx, {
+        choice: existingPlayer.firstDecision.choice,
+        clerkUserId: args.clerkUserId,
+        dailyGameId: args.dailyGameId,
+        eventKind: "package_received",
+        id: `${turnRecord.id}:public:package-received`,
+        narratorResponse: args.responseText,
+        player: existingPlayer,
+        playerInput: args.actionText,
+        sceneTitle: args.sceneTitle || "Package received",
+        createdAt: now,
       });
     }
 
@@ -1003,6 +1186,18 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
         ...baseEvent,
         id: `${turnRecord.id}:orb-revealed`,
         eventType: "orb_revealed" as const,
+      });
+      await insertPublicActivityEvent(ctx, {
+        choice: existingPlayer.firstDecision.choice,
+        clerkUserId: args.clerkUserId,
+        dailyGameId: args.dailyGameId,
+        eventKind: "orb_revealed",
+        id: `${turnRecord.id}:public:orb-revealed`,
+        narratorResponse: args.responseText,
+        player: existingPlayer,
+        playerInput: args.actionText,
+        sceneTitle: args.sceneTitle || "Orb revealed",
+        createdAt: now,
       });
     }
 
@@ -1133,12 +1328,37 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       id: `${turnRecord.id}:orb-action-resolved`,
       eventType: "orb_action_resolved" as const,
     });
+    await insertPublicActivityEvent(ctx, {
+      choice: existingPlayer.firstDecision.choice,
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "orb_action_resolved",
+      gameText: "What do you do next?",
+      id: `${turnRecord.id}:public:orb-action-resolved`,
+      narratorResponse: args.responseText,
+      player: existingPlayer,
+      playerInput: args.actionText,
+      sceneTitle: args.sceneTitle,
+      createdAt: now,
+    });
 
     if (args.orbLifecycle === "orb_accepted") {
       await ctx.db.insert("gameplayEvents", {
         ...baseEvent,
         id: `${turnRecord.id}:orb-accepted`,
         eventType: "orb_accepted" as const,
+      });
+      await insertPublicActivityEvent(ctx, {
+        choice: existingPlayer.firstDecision.choice,
+        clerkUserId: args.clerkUserId,
+        dailyGameId: args.dailyGameId,
+        eventKind: "orb_accepted",
+        id: `${turnRecord.id}:public:orb-accepted`,
+        narratorResponse: args.responseText,
+        player: existingPlayer,
+        playerInput: args.actionText,
+        sceneTitle: args.sceneTitle || "Orb accepted",
+        createdAt: now,
       });
     }
 
@@ -1147,6 +1367,18 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
         ...baseEvent,
         id: `${turnRecord.id}:orb-lost`,
         eventType: "orb_lost" as const,
+      });
+      await insertPublicActivityEvent(ctx, {
+        choice: existingPlayer.firstDecision.choice,
+        clerkUserId: args.clerkUserId,
+        dailyGameId: args.dailyGameId,
+        eventKind: "orb_lost",
+        id: `${turnRecord.id}:public:orb-lost`,
+        narratorResponse: args.responseText,
+        player: existingPlayer,
+        playerInput: args.actionText,
+        sceneTitle: args.sceneTitle || "Orb lost",
+        createdAt: now,
       });
     }
 
@@ -1262,6 +1494,19 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
       ...baseEvent,
       id: `${turnRecord.id}:connected-asi-interaction-resolved`,
       eventType: "connected_asi_interaction_resolved" as const,
+    });
+    await insertPublicActivityEvent(ctx, {
+      choice: existingPlayer.firstDecision.choice,
+      clerkUserId: args.clerkUserId,
+      dailyGameId: args.dailyGameId,
+      eventKind: "connected_asi_interaction_resolved",
+      gameText: "What do you do next?",
+      id: `${turnRecord.id}:public:connected-asi-interaction-resolved`,
+      narratorResponse: args.responseText,
+      player: existingPlayer,
+      playerInput: args.actionText,
+      sceneTitle: args.sceneTitle,
+      createdAt: now,
     });
 
     if (args.expectedTurnNumber === 1) {
@@ -1537,6 +1782,110 @@ function toAiUsageEvent(source: any) {
     status: source.status,
     ...(source.errorType !== undefined ? { errorType: source.errorType } : {}),
     createdAt: source.createdAt,
+  };
+}
+
+async function insertPublicActivityEvent(
+  ctx: any,
+  event: {
+    id: string;
+    dailyGameId: string;
+    createdAt: string;
+    clerkUserId: string;
+    player: {
+      name: string;
+      age: string;
+      location: string;
+      occupation: string;
+      bio: string;
+    };
+    eventKind:
+      | "opening_response_submitted"
+      | "opening_context_answered"
+      | "first_reveal_presented"
+      | "first_choice_submitted"
+      | "first_reveal_text_response_submitted"
+      | "post_choice_turn_resolved"
+      | "connected_path_turn_resolved"
+      | "package_received"
+      | "orb_revealed"
+      | "orb_action_resolved"
+      | "orb_accepted"
+      | "orb_lost"
+      | "connected_asi_interaction_resolved";
+    gameText?: string;
+    playerInput?: string;
+    choice?: "YES" | "NO";
+    narratorResponse?: string;
+    sceneTitle?: string;
+  },
+) {
+  const playtest = getPlaytestMetadata(event.clerkUserId);
+
+  await ctx.db.insert("publicActivityEvents", {
+    id: event.id,
+    dailyGameId: event.dailyGameId,
+    createdAt: event.createdAt,
+    character: toPublicCharacterSnapshot(event.player),
+    eventKind: event.eventKind,
+    ...(event.gameText ? { gameText: event.gameText } : {}),
+    ...(event.playerInput ? { playerInput: event.playerInput } : {}),
+    ...(event.choice ? { choice: event.choice } : {}),
+    ...(event.narratorResponse
+      ? { narratorResponse: event.narratorResponse }
+      : {}),
+    ...(event.sceneTitle ? { sceneTitle: event.sceneTitle } : {}),
+    ...(playtest ? { playtest } : {}),
+  });
+}
+
+function toPublicActivityEvent(source: any) {
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    createdAt: source.createdAt,
+    character: toPublicCharacterSnapshot(source.character),
+    eventKind: source.eventKind,
+    ...(source.gameText ? { gameText: source.gameText } : {}),
+    ...(source.playerInput ? { playerInput: source.playerInput } : {}),
+    ...(source.choice ? { choice: source.choice } : {}),
+    ...(source.narratorResponse
+      ? { narratorResponse: source.narratorResponse }
+      : {}),
+    ...(source.sceneTitle ? { sceneTitle: source.sceneTitle } : {}),
+    ...(source.playtest ? { playtest: source.playtest } : {}),
+  };
+}
+
+function toPublicCharacterSnapshot(source: {
+  name: string;
+  age: string;
+  location: string;
+  occupation: string;
+  bio: string;
+}) {
+  return {
+    name: source.name,
+    age: source.age,
+    location: source.location,
+    occupation: source.occupation,
+    bio: source.bio,
+  };
+}
+
+function getPlaytestMetadata(clerkUserId: string) {
+  if (!clerkUserId.startsWith("playtest:")) {
+    return null;
+  }
+
+  const [, build, persona, scenario, run] = clerkUserId.split(":");
+
+  return {
+    synthetic: true as const,
+    ...(build ? { build } : {}),
+    ...(persona ? { persona } : {}),
+    ...(scenario ? { scenario } : {}),
+    ...(run ? { run } : {}),
   };
 }
 
