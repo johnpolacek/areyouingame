@@ -4,6 +4,7 @@ import { Rethink_Sans, Rubik_80s_Fade, Stalinist_One } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AccountControls } from "./account-controls";
 import { CommandEnterSubmit } from "./command-enter-submit";
+import { ConvexClientProvider } from "./convex-client-provider";
 import { isTheme, themeCookieKey } from "./theme";
 import { ThemeProvider } from "./theme-provider";
 import { BUILD_VERSION_LABEL } from "@/lib/build-version";
@@ -54,9 +55,11 @@ export default async function RootLayout({
       >
         <ThemeProvider>
           <ClerkProvider>
-            <CommandEnterSubmit />
-            <AccountControls />
-            {children}
+            <ConvexClientProvider>
+              <CommandEnterSubmit />
+              <AccountControls />
+              {children}
+            </ConvexClientProvider>
             <div
               className="fixed bottom-3 left-3 z-20 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-foreground/45"
               aria-label={BUILD_VERSION_LABEL}

@@ -227,6 +227,52 @@ const aiUsageEvent = v.object({
   createdAt: v.string(),
 });
 
+const publicCharacterSnapshot = v.object({
+  name: v.string(),
+  age: v.string(),
+  location: v.string(),
+  occupation: v.string(),
+  bio: v.string(),
+});
+
+const publicActivityPlaytestMetadata = v.object({
+  synthetic: v.literal(true),
+  build: v.optional(v.string()),
+  persona: v.optional(v.string()),
+  scenario: v.optional(v.string()),
+  run: v.optional(v.string()),
+});
+
+const publicActivityEventKind = v.union(
+  v.literal("opening_response_submitted"),
+  v.literal("opening_context_answered"),
+  v.literal("first_reveal_presented"),
+  v.literal("first_choice_submitted"),
+  v.literal("first_reveal_text_response_submitted"),
+  v.literal("post_choice_turn_resolved"),
+  v.literal("connected_path_turn_resolved"),
+  v.literal("package_received"),
+  v.literal("orb_revealed"),
+  v.literal("orb_action_resolved"),
+  v.literal("orb_accepted"),
+  v.literal("orb_lost"),
+  v.literal("connected_asi_interaction_resolved"),
+);
+
+const publicActivityEvent = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  createdAt: v.string(),
+  character: publicCharacterSnapshot,
+  eventKind: publicActivityEventKind,
+  gameText: v.optional(v.string()),
+  playerInput: v.optional(v.string()),
+  choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
+  narratorResponse: v.optional(v.string()),
+  sceneTitle: v.optional(v.string()),
+  playtest: v.optional(publicActivityPlaytestMetadata),
+});
+
 export default defineSchema({
   dailyGames: defineTable({
     dailyGameId: v.string(),
@@ -331,6 +377,10 @@ export default defineSchema({
     .index("by_dailyGameId", ["dailyGameId"])
     .index("by_playerId", ["playerId"])
     .index("by_clerkUserId", ["clerkUserId"]),
+
+  publicActivityEvents: defineTable(publicActivityEvent)
+    .index("by_dailyGameId_and_createdAt", ["dailyGameId", "createdAt"])
+    .index("by_createdAt", ["createdAt"]),
 
   aiUsageEvents: defineTable(aiUsageEvent)
     .index("by_createdAt", ["createdAt"])
