@@ -4,7 +4,10 @@ import type {
   Day1StorylineContext,
 } from "./day-1-storyline-context";
 import type { DailyGame } from "./daily-game";
-import { createPlayerFacingNarrativePrompt } from "./narrative-voice";
+import {
+  createPlayerFacingNarrativePrompt,
+  sanitizePlayerFacingNarration,
+} from "./narrative-voice";
 import { getOpenAINarrativeModel } from "./openai-models";
 import type { DailyPlayer } from "./player-store";
 
@@ -147,7 +150,8 @@ export async function createEarlyPostChoiceTurnResponse({
         "Do not call, scrape, quote, or imply access to real Twitter, X, Bluesky, Facebook, news sites, broadcasts, or external services.",
         "Do not introduce deleted, disappearing, or vanishing posts unless future canonical state explicitly establishes that behavior.",
         "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
-        "responseText should be 2 to 5 short paragraphs of second-person present-tense narration. Blockquote paragraphs count toward this limit.",
+        "responseText should be 2 to 4 short paragraphs of second-person present-tense narration. Blockquote paragraphs count toward this limit.",
+        "Keep responseText concise. Aim for no more than 130 words unless the player action truly needs more.",
         "sceneTitle should be a short evocative title, 2 to 6 words, title case, made from the current scene rather than the player's literal input.",
         "actionKind should be a short snake_case phrase describing the attempted action in broad terms.",
         "playerVisibleFacts should contain 2 to 5 short durable facts the player learned or established, not literary prose.",
@@ -241,13 +245,15 @@ function normalizeResponseText(value: unknown): string {
     throw new Error("Generated response text is missing.");
   }
 
-  const normalized = value.replace(/\n{3,}/g, "\n\n").trim();
+  const normalized = sanitizePlayerFacingNarration(
+    value.replace(/\n{3,}/g, "\n\n"),
+  );
 
   if (normalized.length < 40) {
     throw new Error("Generated response text is too short.");
   }
 
-  return normalized.slice(0, 1800);
+  return normalized.slice(0, 1100);
 }
 
 function normalizeSceneTitle(value: unknown): string {
@@ -257,7 +263,8 @@ function normalizeSceneTitle(value: unknown): string {
 
   const normalized = value
     .replace(/\s+/g, " ")
-    .replace(/[^\w\s:'-]/g, "")
+    .replace(/[;:\u2014]/g, "")
+    .replace(/[^\w\s'-]/g, "")
     .trim()
     .slice(0, 80);
 
