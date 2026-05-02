@@ -41,6 +41,11 @@ AreYouIn is organized around daily shared game instances.
 - Gameplay is intended to be public live from the beginning: anyone can view player-visible prompts, player inputs, choices, narrator responses, scene titles, timestamps, and public character identity across all daily games while they happen.
 - Joining and playing remain authenticated, but viewing live activity should not require sign-in.
 - Public transcript visibility is limited to player-visible content and public character identity. Clerk/account ids, backend secrets, internal prompts, hidden structured facts, model metadata, token/cost data, and operator-only fields stay private.
+- The first public browser route hierarchy is `/live`, `/live/[gameId]`, and `/live/[gameId]/[playerId]`.
+- Public live game summaries show daily game id, event start label, player count, activity count, and last activity.
+- Public game rooms show public character cards for a daily game.
+- Public player pages assemble player-visible transcript entries from stored player state, including opening response, opening context, reveal, decision, reveal text responses, NO-path turns, YES connected-path turns, orb decision turns, and connected ASI turns.
+- Public player queries omit `clerkUserId`; public transcript entries may still include player-visible model-authored text and route-level metadata needed for display, but should not include internal prompts, hidden structured facts, token/cost records, backend secrets, or operator-only audit fields.
 - Each day may later produce a durable recap that summarizes the game and preserves it as part of the growing archive, but recaps are not the primary public visibility mechanism.
 
 ## Backend Storage Model
@@ -68,6 +73,18 @@ AreYouIn should use production-backed storage from the prototype stage onward.
 - Use OpenAI `gpt-5.4-mini` for the first move text path.
 - `gpt-5.4-mini` does not support audio output directly; voice delivery needs a separate later audio/TTS model decision.
 - Keep the reveal copy deterministic even when AI narration is used, so the required YES/NO decision screen remains stable.
+- Shared player-facing narration guidance lives in `lib/narrative-voice.ts`.
+- Narration should be short, immediate, sensory, and interactive-fiction-like rather than analytical.
+- Player-facing generated narration is sanitized to remove colons, semicolons, and em dashes from current response paths.
+- Avoid recap phrases such as `What is visibly true now`, `What stays unknown`, `The split hardens`, `public reaction is no closer to consensus`, and `immediate and clean`.
+
+## Current Gameplay UI Notes
+
+- The active Day 1 game surface no longer renders a separate always-visible `Current Status` panel for answer, known, unknown, and objective.
+- Structured state remains backend-owned and still informs prompts, public activity, and live transcript pages.
+- The current scene view focuses on the latest transcript beat, player action, narrator response, an open action form when play can continue, and collapsible history.
+- Action textareas intentionally have no placeholder copy; the UI should let the scene and label carry the next-action invitation.
+- A disabled pending form can still appear for paused or currently complete paths, but it should not compete with an enabled action form.
 
 Common topics include:
 

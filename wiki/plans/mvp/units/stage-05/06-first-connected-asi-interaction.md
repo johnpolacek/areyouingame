@@ -17,7 +17,7 @@ The experience should follow the connected ASI response guide: quiet widening, c
 - Ground the response in player context, Day 1 storyline context, prior YES/orb state, and the connected ASI response guide.
 - Persist the connected ASI turn under the existing connected path.
 - Append event-history records for the first connected ASI interaction and interface start.
-- Render the first connected ASI turn in the existing transcript and then pause at the next-turn placeholder.
+- Render the first connected ASI turn in the existing transcript and then pause with the standard disabled pending action form until broader connected play is implemented.
 
 ## Out Of Scope
 
@@ -36,7 +36,7 @@ The experience should follow the connected ASI response guide: quiet widening, c
 - The response uses gentle consent-centered ASI framing instead of a power dump.
 - Human node awareness does not expose names, private memories, exact locations, or readable thoughts.
 - Event history records `connected_asi_interface_started` and `connected_asi_interaction_resolved` separately from transcript prose.
-- The UI shows the accepted player an open action prompt, then returns to the quiet next-turn placeholder after the first connected ASI interaction.
+- The UI shows the accepted player an open action prompt, then returns to the standard disabled pending action form after the first connected ASI interaction.
 
 ## Data And State Notes
 
@@ -52,6 +52,7 @@ The experience should follow the connected ASI response guide: quiet widening, c
 - Extended Convex player state with `connectedAsiTurns` and `connectedAsiStartedAt`.
 - Added `connected_asi_interface_started` and `connected_asi_interaction_resolved` event types.
 - Updated the post-choice UI so orb acceptance opens one connected ASI action prompt before pausing.
+- Later UI polish removed the always-visible current-status panel and textarea placeholder copy from active action forms.
 
 ## Verification
 

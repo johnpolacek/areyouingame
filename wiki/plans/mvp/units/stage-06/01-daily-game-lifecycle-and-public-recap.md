@@ -1,8 +1,10 @@
 # Stage 06, Unit 01: Daily Game Lifecycle And Live Public Activity
 
-Plan the lifecycle for accumulating daily games and making player-visible gameplay activity public live from the beginning.
+Plan and begin implementing the lifecycle for accumulating daily games and making player-visible gameplay activity public live from the beginning.
 
-This is a docs-only planning update. It does not implement the live activity route, add Convex queries, change schemas, publish transcripts, or alter current app behavior.
+Status: baseline implemented after the original docs-only planning pass.
+
+The current app includes public live browser routes and Convex-backed public activity records. Realtime refresh/push behavior and stricter public payload tests remain follow-up work.
 
 ## Product Intent
 
@@ -15,14 +17,15 @@ Every global day starts a new game, but prior games persist. The archive grows o
 - Store a global event time that can vary by day.
 - Display the event time to players in their local timezone where relevant.
 - Track daily game status in a way that supports persistent active and historical games.
-- Plan a public `/live` surface that is readable without authentication.
+- Implement a public `/live` surface that is readable without authentication.
+- Implement public game-room and public player-transcript routes under `/live/[gameId]` and `/live/[gameId]/[playerId]`.
+- Store public activity records and public player/character snapshots separate from internal operator event history.
 - Plan realtime activity across all daily games, defaulting to newest activity first with grouping or filtering by daily game.
 - Plan a public transcript event stream containing player-visible prompts, player inputs, YES/NO choices, narrator responses, scene titles, branch/status labels, timestamps, daily game id, and public character identity.
 - Treat end-of-day recaps as a later archive/summarization layer, not the first public visibility mechanism.
 
 ## Out Of Scope
 
-- Runtime implementation in this docs-only update.
 - Public exposure of internal prompts, developer prompts, hidden structured facts, model metadata, token/cost data, Clerk/account identifiers, backend secrets, or operator-only audit fields.
 - Moderation queues, approval workflows, or redaction passes for v1.
 - Full automated world simulation for every recap.
@@ -37,7 +40,8 @@ Every global day starts a new game, but prior games persist. The archive grows o
 - Each daily game stores an event time that can be rendered in user-local time.
 - Unauthenticated visitors can view live gameplay activity.
 - The public live view includes activity from all daily games, not only today's game.
-- New player-visible activity appears without a manual page reload.
+- Public live routes are readable without authentication.
+- Follow-up: new player-visible activity appears without a manual page reload.
 - Public transcript content matches what the player saw or submitted.
 - Public character identity includes character name, broad location, and occupation.
 - Public payloads do not include account identifiers, internal prompts, hidden state facts, model metadata, secrets, token/cost data, or operator-only fields.
@@ -51,6 +55,15 @@ Every global day starts a new game, but prior games persist. The archive grows o
 - Existing internal gameplay events should remain auditable for operators even when the public stream exposes only player-visible transcript content.
 - Recap records, if added later, should link to the daily game id and preserve generated or manually approved summary content as archive material.
 
+## Implementation Notes
+
+- Added public live routes: `/live`, `/live/[gameId]`, and `/live/[gameId]/[playerId]`.
+- Added `lib/live-browser.ts` as the Next.js query adapter for public live game summaries, public players for a game, and public player transcript views.
+- Added Convex public query helpers for live game summaries, live player summaries, and a public live player view with `clerkUserId` omitted.
+- Public player transcript pages assemble opening response, opening context, reveal, decision, reveal text responses, NO post-choice turns, YES connected-path turns, orb decision turns, and connected ASI turns from stored player state.
+- Gameplay mutations insert public activity records as player-visible events are created.
+- Recent UI polish removed the always-visible current-status panel and action textarea placeholder copy from the active game surface; structured state still exists but is not rendered as a separate status block.
+
 ## Verification
 
 - Test date-to-game-id stability.
@@ -60,9 +73,11 @@ Every global day starts a new game, but prior games persist. The archive grows o
 - Test all-games activity ordering and per-game grouping/filtering.
 - Test public payload allowlists so internal-only fields cannot leak.
 - Test authenticated join/play remains the only mutation path.
+- Test public live route access without authentication.
+- Test public player transcript assembly for all current Day 1 turn types.
 
 ## Manual Steps
 
 - Confirm the global timezone standard for date ids.
 - Confirm whether the event time is random within a configured window or any time in the global day.
-- Confirm final route naming and navigation placement before implementation.
+- Confirm final navigation placement for `/live`.

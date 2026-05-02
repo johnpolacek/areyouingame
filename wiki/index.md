@@ -17,7 +17,7 @@ The project is built around a strict separation between canonical world state, i
 - [`roadmap.md`](roadmap.md) - durable roadmap and stage sequence once planning begins
 - [`plans/`](plans/README.md) - implementation plans and plan-track conventions
 - [`plans/worktrees/`](plans/worktrees/README.md) - parallel git worktree and AI-agent development workflow plan
-- [`Architecture.md`](Architecture.md) - cross-cutting reference page including locked initial stack decisions
+- [`Architecture.md`](Architecture.md) - cross-cutting reference page including locked stack decisions, public live browser boundaries, and current narration/UI guidance
 - [`Sources.md`](Sources.md) - human-facing page for imported and preserved source material
 - [`reference/connected-asi-response-guide.md`](reference/connected-asi-response-guide.md) - LLM response guide for the accepted YES/orb-connected experience
 - [`reference/local-agent-browser-auth.md`](reference/local-agent-browser-auth.md) - local synthetic persona auth, manual dogfood session, and cleanup conventions
