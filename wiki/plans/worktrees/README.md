@@ -79,7 +79,7 @@ Persona playtests use `agent-browser`, which stores daemon/session state under t
 - `.agent-browser-worktree/downloads/<run-id>/`
 - `.agent-browser-worktree/screenshots/<run-id>/`
 
-Playtest browser sessions are named with the current branch and run id, for example `ayi-feature-foo-2026-05-01t...`. Multiple worktrees may run persona playtests in parallel. Use `pnpm agent-browser:doctor` to inspect active sessions and `pnpm agent-browser:cleanup-playtests -- --dry-run` before removing only AreYouIn `ayi-*` playtest artifacts.
+Playtest browser sessions are named with the current branch and run id, for example `ayi-feature-foo-2026-05-01t...`. Multiple worktrees may run persona playtests in parallel only when their backend runtime state is isolated. With the shared Convex deployment, run one `pnpm convex:dev` checkout at a time because the deployment-wide function handler can be overwritten by whichever checkout deploys last. Use `pnpm agent-browser:doctor` to inspect active sessions and `pnpm agent-browser:cleanup-playtests -- --dry-run` before removing only AreYouIn `ayi-*` playtest artifacts.
 
 ## Phase 4: Convex And Runtime State Isolation
 
@@ -90,6 +90,7 @@ Default policy:
 - UI-only and prompt-only branches may use the shared dev Convex deployment.
 - Schema, migration-like data changes, generated Convex API changes, and seed/state changes should use an isolated Convex deployment per active worktree.
 - Any branch that changes authentication assumptions, player identity shape, daily game ids, or canonical gameplay state should be treated as stateful and isolated.
+- Shared Convex dev is guarded: `pnpm convex:dev` refuses to start when another checkout's Convex dev process is already active, and `pnpm wt:doctor` reports stale deleted-worktree runtime processes.
 
 Implementation approach:
 
@@ -97,6 +98,7 @@ Implementation approach:
 - For `isolated`, generate or select a branch-specific Convex dev deployment and write the resulting `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOY_KEY` into that worktree's `.env.local`.
 - Run `pnpm convex:sync-secret` after creating or changing a worktree-specific Convex deployment so `AREYOUIN_BACKEND_SECRET` matches.
 - Add `pnpm wt:doctor` checks that compare the local env fingerprint against the selected Convex deployment via the existing secret-check script.
+- Add `pnpm wt:runtime` to show active AreYouIn Next, Convex, and playtest runtime processes by checkout before merging or cleaning.
 - Add a rule that destructive data resets or schema experiments happen only in isolated deployments.
 
 Clerk remains shared for now. If auth callback URLs or user metadata tests become branch-sensitive, create a separate Clerk dev instance or configure branch hostnames as allowed origins in Clerk.
@@ -169,7 +171,7 @@ Start small: add Portless and a basic worktree create/list/doctor script set bef
 - `pnpm next:dev:app` remains the direct `next dev` escape hatch.
 - `pnpm wt:create <branch>` creates a worktree under `../AreYouIn.worktrees/<branch-slug>`, copies env files, installs dependencies, and prints the expected Portless URL.
 - `pnpm wt:create polish --polish` creates the recommended light-fix/UI-tweak lane.
-- `pnpm wt:list`, `pnpm wt:doctor`, `pnpm wt:overlap`, `pnpm wt:prune`, and `pnpm wt:clean` cover inspection, health checks, overlap detection, and cleanup. With Portless `0.10.3`, route cleanup is manual through `portless list`/proxy lifecycle because `portless prune` is not exposed.
+- `pnpm wt:list`, `pnpm wt:runtime`, `pnpm wt:doctor`, `pnpm wt:overlap`, `pnpm wt:prune`, and `pnpm wt:clean` cover inspection, runtime-process health, overlap detection, and cleanup. With Portless `0.10.3`, route cleanup is manual through `portless list`/proxy lifecycle because `portless prune` is not exposed.
 - `pnpm wt:finish <branch>` is the preferred completion path for committed worktree work: it merges back to `main`, removes the worktree, prunes metadata, and deletes the branch after Git verifies it is merged. It keeps `polish` by default because that lane is intentionally reusable.
-- `pnpm playtest:persona` isolates `agent-browser` config/profile/download state per worktree so persona playtests can run in parallel.
+- `pnpm playtest:persona` isolates `agent-browser` config/profile/download state per worktree, but parallel gameplay playtests still require isolated Convex deployments.
 - `pnpm agent-browser:doctor` and `pnpm agent-browser:cleanup-playtests` inspect and clean only AreYouIn `ayi-*` playtest browser artifacts.

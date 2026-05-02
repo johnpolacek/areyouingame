@@ -6,6 +6,12 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 - Renamed the repo-local worktree workflow skill from `are-you-in-worktrees` to `use-worktrees` for easier natural-language invocation.
 
+## [2026-05-02] operations | guard shared Convex worktrees
+
+- Added runtime guardrails after YES/NO playtest work exposed that multiple `convex dev` processes on the shared deployment can overwrite each other's handlers across worktrees.
+- `pnpm convex:dev` now refuses to start when another shared-deployment checkout is already serving Convex functions, and `pnpm wt:runtime` reports active AreYouIn runtime processes by checkout.
+- `pnpm wt:finish`, `pnpm wt:clean`, and `pnpm wt:doctor` now catch stale deleted-worktree runtime processes so worktree cleanup cannot leave a background Convex process serving code from a removed branch.
+
 ## [2026-05-01] operations | isolate agent-browser playtests
 
 - Updated persona playtests to use worktree-local agent-browser config, profiles, downloads, screenshots, and branch-prefixed `ayi-*` sessions.

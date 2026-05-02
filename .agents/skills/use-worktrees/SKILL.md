@@ -18,7 +18,8 @@ Use this skill to set up or explain the repo's worktree workflow for parallel fe
 - Before merging or assigning overlapping work, run `pnpm wt:overlap`.
 - When a worktree branch is complete and committed, prefer `pnpm wt:finish <branch>` from the main checkout to merge it, remove the linked worktree, prune stale metadata, and delete the merged branch.
 - Let Portless derive the readable route from the worktree branch slug. Do not use fixed localhost ports for runner targets.
-- Persona playtests use worktree-local `agent-browser` isolation and may run in parallel across worktrees.
+- Persona playtests use worktree-local `agent-browser` isolation, but shared Convex deployments are not parallel-safe. Run only one shared-deployment `pnpm convex:dev` at a time, or use `--convex isolated` for concurrent stateful/gameplay playtests.
+- `pnpm convex:dev` is guarded against shared-deployment races. If it refuses to start, run `pnpm wt:runtime` to find the conflicting process, then stop it or move the branch to isolated Convex.
 - Respect dirty worktrees. Never delete, reset, or overwrite user changes.
 
 ## Portless Routes
@@ -72,6 +73,14 @@ To run the app inside that worktree:
 pnpm convex:dev
 ```
 
+If `pnpm convex:dev` refuses to start, do not bypass it for normal playtests. Run:
+
+```bash
+pnpm wt:runtime
+```
+
+Then stop the listed stale/conflicting process or switch the branch to an isolated Convex deployment.
+
 In a second terminal in the same worktree, run Next through Portless:
 
 ```bash
@@ -110,6 +119,8 @@ pnpm agent-browser:cleanup-playtests
 
 Cleanup must target only AreYouIn `ayi-*` playtest sessions/artifacts. Do not close unrelated user sessions.
 
+Do not run browser persona playtests concurrently across multiple worktrees that share the same Convex dev deployment. The browser profiles are isolated, but the active Convex handler is deployment-wide and can be overwritten by another checkout.
+
 ## Ongoing Branch Workflow
 
 - Keep `main` as the integration checkout.
@@ -138,6 +149,7 @@ Use cleanup commands from the main checkout:
 
 ```bash
 pnpm wt:list
+pnpm wt:runtime
 pnpm wt:finish <branch>
 pnpm wt:clean
 pnpm wt:prune

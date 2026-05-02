@@ -3,6 +3,12 @@ import { existsSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
+import {
+  assertNoRuntimeProcessesForPath,
+  listRuntimeProcesses,
+  printRuntimeStatus,
+  worktreesRoot,
+} from "./worktree-runtime-guard.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const workspaceRoot = dirname(repoRoot);
@@ -16,6 +22,7 @@ const commands = new Map([
   ["create", createWorktree],
   ["list", listWorktrees],
   ["doctor", doctorWorktrees],
+  ["runtime", runtimeWorktrees],
   ["overlap", overlapWorktrees],
   ["finish", finishWorktree],
   ["prune", pruneWorktrees],
@@ -28,6 +35,7 @@ Usage:
   pnpm wt:create <branch> [--base main] [--path <path>] [--convex shared|isolated] [--no-install] [--polish]
   pnpm wt:list
   pnpm wt:doctor
+  pnpm wt:runtime
   pnpm wt:overlap
   pnpm wt:finish <branch> [--base main] [--keep-branch] [--no-clean] [--no-pull]
   pnpm wt:prune
@@ -372,9 +380,37 @@ async function doctorWorktrees() {
   const secretCheck = runCommand("pnpm", ["convex:check-secret"], { cwd: repoRoot });
   check("main Convex backend secret fingerprint", secretCheck.status === 0, secretCheck.stdout || secretCheck.stderr);
 
+  const runtimeProcesses = listRuntimeProcesses();
+  const staleRuntimeProcesses = runtimeProcesses.filter(
+    (processInfo) =>
+      processInfo.worktreePath &&
+      processInfo.worktreePath.startsWith(worktreesRoot) &&
+      !existsSync(processInfo.worktreePath),
+  );
+  const convexDevByPath = runtimeProcesses
+    .filter((processInfo) => processInfo.kind === "convex-dev" && processInfo.repoPath)
+    .reduce((paths, processInfo) => paths.add(processInfo.repoPath), new Set());
+
+  check(
+    "no stale deleted-worktree runtime processes",
+    staleRuntimeProcesses.length === 0,
+    staleRuntimeProcesses.map((processInfo) => `pid ${processInfo.pid}`).join(", "),
+    "error",
+  );
+  check(
+    "at most one active Convex dev checkout",
+    convexDevByPath.size <= 1,
+    [...convexDevByPath].join(", "),
+    "error",
+  );
+
   if (failures > 0) {
     process.exitCode = 1;
   }
+}
+
+async function runtimeWorktrees() {
+  printRuntimeStatus();
 }
 
 async function overlapWorktrees() {
@@ -450,6 +486,8 @@ async function finishWorktree(argv) {
     throw new Error(`Worktree ${branch} has uncommitted changes. Commit or stash before finishing.`);
   }
 
+  assertNoRuntimeProcessesForPath(worktree.path);
+
   console.log(`Finishing ${branch} from ${worktree.path}`);
 
   if (shouldPull) {
@@ -477,6 +515,7 @@ async function finishWorktree(argv) {
 
   if (shouldClean) {
     console.log(`Removing worktree ${worktree.path}`);
+    assertNoRuntimeProcessesForPath(worktree.path);
     runGit(["worktree", "remove", worktree.path], { stdio: "inherit" });
   } else {
     console.log("Keeping worktree because --no-clean was provided.");
@@ -547,6 +586,7 @@ async function cleanWorktrees(argv) {
     }
 
     console.log(`Removing ${candidate.branch} (${candidate.ageDays} days old): ${candidate.path}`);
+    assertNoRuntimeProcessesForPath(candidate.path);
     runGit(["worktree", "remove", candidate.path, ...(force ? ["--force"] : [])], { stdio: "inherit" });
     await rm(candidate.path, { recursive: true, force: true });
   }
