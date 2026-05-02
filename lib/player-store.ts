@@ -1,6 +1,11 @@
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
 import type { DailyGame } from "./daily-game";
+import type {
+  CharacterInfo,
+  CharacterInfoCorrectionInput,
+  CharacterInfoUpdate,
+} from "./character-info";
 
 export type PlayerDraftInput = {
   name: string;
@@ -15,6 +20,7 @@ export type DailyPlayer = PlayerDraftInput & {
   id: string;
   clerkUserId: string;
   dailyGameId: string;
+  characterInfo?: CharacterInfo;
   firstDecision?: FirstDecision;
   firstRevealTextResponses?: FirstRevealTextResponse[];
   firstPostChoiceAction?: FirstPostChoiceAction;
@@ -90,6 +96,7 @@ export type FirstPostChoiceAction = {
   responseSource?: "ai";
   actionKind?: string;
   playerVisibleFacts?: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion?: string;
   resolvedAt?: string;
 };
@@ -128,6 +135,7 @@ export type FirstConnectedPathTurn = {
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
   deliveryStatus: ConnectedDeliveryStatus;
   packageStatus: ConnectedPackageStatus;
@@ -145,6 +153,7 @@ export type FirstOrbDecisionTurn = {
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
   orbLifecycle: ConnectedOrbLifecycle;
   resolvedAt: string;
@@ -160,6 +169,7 @@ export type FirstConnectedAsiTurn = {
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
   resolvedAt: string;
 };
@@ -303,6 +313,7 @@ const submitFirstPostChoiceActionForUserGameRef = makeFunctionReference<
     responseSource: "ai";
     actionKind: string;
     playerVisibleFacts: string[];
+    characterInfoUpdates?: CharacterInfoUpdate[];
     storylineContextSourceVersion: string;
   },
   DailyPlayer
@@ -318,6 +329,7 @@ const submitFirstConnectedPathTurnForUserGameRef = makeFunctionReference<
     responseSource: "ai";
     actionKind: string;
     playerVisibleFacts: string[];
+    characterInfoUpdates?: CharacterInfoUpdate[];
     storylineContextSourceVersion: string;
     expectedTurnNumber: number;
     status: FirstConnectedPathStatus;
@@ -338,6 +350,7 @@ const submitFirstOrbDecisionTurnForUserGameRef = makeFunctionReference<
     responseSource: "ai";
     actionKind: string;
     playerVisibleFacts: string[];
+    characterInfoUpdates?: CharacterInfoUpdate[];
     storylineContextSourceVersion: string;
     expectedTurnNumber: number;
     orbLifecycle: ConnectedOrbLifecycle;
@@ -355,6 +368,7 @@ const submitFirstConnectedAsiTurnForUserGameRef = makeFunctionReference<
     responseSource: "ai";
     actionKind: string;
     playerVisibleFacts: string[];
+    characterInfoUpdates?: CharacterInfoUpdate[];
     storylineContextSourceVersion: string;
     expectedTurnNumber: number;
   },
@@ -372,6 +386,14 @@ const resetPlayerDayForUserGameRef = makeFunctionReference<
   AuthenticatedPlayerArgs,
   boolean
 >("playerStore:resetPlayerDayForUserGame");
+
+const correctCharacterInfoForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    correction: CharacterInfoCorrectionInput;
+  },
+  DailyPlayer
+>("playerStore:correctCharacterInfoForUserGame");
 
 export function validatePlayerDraft(input: unknown): PlayerDraftInput {
   if (!input || typeof input !== "object") {
@@ -629,6 +651,7 @@ export async function submitFirstPostChoiceActionForUserGame({
   responseSource,
   actionKind,
   playerVisibleFacts,
+  characterInfoUpdates,
   storylineContextSourceVersion,
 }: {
   clerkUserId: string;
@@ -640,6 +663,7 @@ export async function submitFirstPostChoiceActionForUserGame({
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
 }): Promise<DailyPlayer> {
   return await fetchMutation(submitFirstPostChoiceActionForUserGameRef, {
@@ -653,6 +677,7 @@ export async function submitFirstPostChoiceActionForUserGame({
     responseSource,
     actionKind,
     playerVisibleFacts,
+    ...(characterInfoUpdates ? { characterInfoUpdates } : {}),
     storylineContextSourceVersion,
   });
 }
@@ -667,6 +692,7 @@ export async function submitFirstConnectedPathTurnForUserGame({
   responseSource,
   actionKind,
   playerVisibleFacts,
+  characterInfoUpdates,
   storylineContextSourceVersion,
   expectedTurnNumber,
   status,
@@ -683,6 +709,7 @@ export async function submitFirstConnectedPathTurnForUserGame({
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
   expectedTurnNumber: number;
   status: FirstConnectedPathStatus;
@@ -701,6 +728,7 @@ export async function submitFirstConnectedPathTurnForUserGame({
     responseSource,
     actionKind,
     playerVisibleFacts,
+    ...(characterInfoUpdates ? { characterInfoUpdates } : {}),
     storylineContextSourceVersion,
     expectedTurnNumber,
     status,
@@ -720,6 +748,7 @@ export async function submitFirstOrbDecisionTurnForUserGame({
   responseSource,
   actionKind,
   playerVisibleFacts,
+  characterInfoUpdates,
   storylineContextSourceVersion,
   expectedTurnNumber,
   orbLifecycle,
@@ -733,6 +762,7 @@ export async function submitFirstOrbDecisionTurnForUserGame({
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
   expectedTurnNumber: number;
   orbLifecycle: ConnectedOrbLifecycle;
@@ -748,6 +778,7 @@ export async function submitFirstOrbDecisionTurnForUserGame({
     responseSource,
     actionKind,
     playerVisibleFacts,
+    ...(characterInfoUpdates ? { characterInfoUpdates } : {}),
     storylineContextSourceVersion,
     expectedTurnNumber,
     orbLifecycle,
@@ -764,6 +795,7 @@ export async function submitFirstConnectedAsiTurnForUserGame({
   responseSource,
   actionKind,
   playerVisibleFacts,
+  characterInfoUpdates,
   storylineContextSourceVersion,
   expectedTurnNumber,
 }: {
@@ -776,6 +808,7 @@ export async function submitFirstConnectedAsiTurnForUserGame({
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
   expectedTurnNumber: number;
 }): Promise<DailyPlayer> {
@@ -790,8 +823,57 @@ export async function submitFirstConnectedAsiTurnForUserGame({
     responseSource,
     actionKind,
     playerVisibleFacts,
+    ...(characterInfoUpdates ? { characterInfoUpdates } : {}),
     storylineContextSourceVersion,
     expectedTurnNumber,
+  });
+}
+
+export function validateCharacterInfoCorrection(input: unknown): CharacterInfoCorrectionInput {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("Character info correction is required.");
+  }
+
+  const source = input as Record<string, unknown>;
+  const section = source.section;
+
+  if (
+    section !== "currentSituation" &&
+    section !== "relationships" &&
+    section !== "resources" &&
+    section !== "constraints" &&
+    section !== "goals" &&
+    section !== "knowledge" &&
+    section !== "openThreads" &&
+    section !== "recentChanges"
+  ) {
+    throw new Error("Character info section is invalid.");
+  }
+
+  const text = readRequiredString(source.text, "Correction text", 180);
+  const itemId = readOptionalString(source.itemId, 120);
+
+  return {
+    section,
+    text,
+    ...(itemId ? { itemId } : {}),
+  };
+}
+
+export async function correctCharacterInfoForUserGame({
+  clerkUserId,
+  dailyGameId,
+  correction,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  correction: CharacterInfoCorrectionInput;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(correctCharacterInfoForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    correction,
   });
 }
 
