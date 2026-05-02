@@ -52,6 +52,12 @@ export default async function AdminPage() {
               </div>
               <Link
                 className="text-amber-200 hover:text-amber-100"
+                href="/admin/games"
+              >
+                Game cleanup
+              </Link>
+              <Link
+                className="text-amber-200 hover:text-amber-100"
                 href="/admin/playtests"
               >
                 Persona playtests

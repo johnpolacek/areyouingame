@@ -1,29 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { requireLocalAdminAccess } from "@/lib/admin-access";
+import { readPlaytestIndex } from "@/lib/playtest-reports";
+import {
+  DeleteAllPlaytestRunsButton,
+  DeletePlaytestRunButton,
+} from "./playtest-delete-controls";
 
 export const dynamic = "force-dynamic";
-
-type PlaytestIndex = {
-  generatedAt: string;
-  runs: PlaytestRunIndexEntry[];
-};
-
-type PlaytestRunIndexEntry = {
-  buildLabel: string;
-  buildVersion: string;
-  completedAt: string;
-  findingCount: number;
-  id: string;
-  personaName: string;
-  personaSummary: string;
-  reportPath: string;
-  scenario: string;
-  status: string;
-  topFinding: string;
-};
 
 export default async function AdminPlaytestsPage() {
   await requireLocalAdminAccess();
@@ -45,8 +29,8 @@ export default async function AdminPlaytestsPage() {
               Persona Playtests
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              Read-only view of generated persona playthrough reports stored in
-              the project wiki.
+              Generated persona playthrough reports stored in the project wiki.
+              Delete individual test runs or clear the full local report list.
             </p>
           </div>
         </header>
@@ -66,10 +50,11 @@ export default async function AdminPlaytestsPage() {
         </section>
 
         <section className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-          <div className="border-b border-zinc-800 px-4 py-3">
+          <div className="flex flex-col gap-3 border-b border-zinc-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-sm font-semibold text-zinc-100">
               Generated Runs
             </h2>
+            <DeleteAllPlaytestRunsButton disabled={index.runs.length === 0} />
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-zinc-800 text-left text-sm">
@@ -82,6 +67,7 @@ export default async function AdminPlaytestsPage() {
                   <HeaderCell>Status</HeaderCell>
                   <HeaderCell align="right">Findings</HeaderCell>
                   <HeaderCell>Top Finding</HeaderCell>
+                  <HeaderCell align="right">Actions</HeaderCell>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-900">
@@ -123,13 +109,16 @@ export default async function AdminPlaytestsPage() {
                         {run.findingCount.toString()}
                       </BodyCell>
                       <BodyCell>{run.topFinding || "-"}</BodyCell>
+                      <BodyCell align="right">
+                        <DeletePlaytestRunButton runId={run.id} />
+                      </BodyCell>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
                       className="px-4 py-8 text-center text-zinc-500"
-                      colSpan={7}
+                      colSpan={8}
                     >
                       No persona playtests have been generated yet.
                     </td>
@@ -142,29 +131,6 @@ export default async function AdminPlaytestsPage() {
       </div>
     </main>
   );
-}
-
-async function readPlaytestIndex(): Promise<PlaytestIndex> {
-  try {
-    const raw = await readFile(
-      path.join(process.cwd(), "wiki", "playtests", "index.json"),
-      "utf8",
-    );
-    const parsed = JSON.parse(raw) as Partial<PlaytestIndex>;
-
-    return {
-      generatedAt:
-        typeof parsed.generatedAt === "string"
-          ? parsed.generatedAt
-          : new Date().toISOString(),
-      runs: Array.isArray(parsed.runs) ? parsed.runs : [],
-    };
-  } catch {
-    return {
-      generatedAt: new Date().toISOString(),
-      runs: [],
-    };
-  }
 }
 
 function MetricTile({ label, value }: { label: string; value: string }) {
