@@ -64,6 +64,7 @@ export default async function TodaysGamePage() {
       {player.firstDecision ? (
         <FirstChoiceConsequence
           dailyGameStats={dailyGameStats}
+          characterImage={player.characterImage}
           characterInfo={player.characterInfo}
           decision={player.firstDecision}
           firstConnectedPath={player.firstConnectedPath}

@@ -1,6 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { ImageIcon, LoaderCircleIcon } from "lucide-react";
+import type { ChangeEvent, ReactNode } from "react";
+import { useState } from "react";
+import type { CharacterImage } from "@/lib/character-image";
+import { resizeCharacterImageFile } from "@/lib/client-character-image";
 
 export const primaryActionClass =
   "relative isolate h-12 w-full max-w-[31rem] overflow-hidden rounded-lg border border-amber-600/40 bg-gradient-to-b from-amber-300 to-amber-700 px-8 font-accent text-[0.8rem] font-normal tracking-[0.06em] text-primary-foreground uppercase shadow-2xl shadow-black/20 backdrop-blur-md transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:brightness-[1.12] hover:saturate-[1.15] hover:shadow-amber-600/30 active:translate-y-px disabled:opacity-90 dark:border-amber-200/70 dark:from-amber-500 dark:to-amber-950 dark:text-amber-50 dark:shadow-black/60 dark:hover:brightness-[1.18] dark:hover:saturate-[1.2] dark:hover:shadow-amber-400/40 sm:h-[4.5rem] sm:text-[1.12rem] sm:tracking-[0.08em]";
@@ -14,9 +18,16 @@ export type CharacterDraft = {
   location: string;
   occupation: string;
   bio: string;
+  characterImage?: CharacterImage;
+  characterImageDataUrl?: string;
 };
 
-export type CharacterDraftField = keyof CharacterDraft;
+export type CharacterDraftField =
+  | "name"
+  | "age"
+  | "location"
+  | "occupation"
+  | "bio";
 
 export const emptyDraft: CharacterDraft = {
   name: "",
@@ -44,7 +55,8 @@ export function isCompleteDraft(draft: CharacterDraft) {
     age <= 120 &&
     draft.location.trim().length > 0 &&
     draft.occupation.trim().length > 0 &&
-    draft.bio.trim().length > 0
+    draft.bio.trim().length > 0 &&
+    Boolean(draft.characterImage || draft.characterImageDataUrl)
   );
 }
 
@@ -55,12 +67,38 @@ function fieldClass() {
 export function CharacterSetupForm({
   draft,
   onChange,
+  onImageChange,
   onSubmit,
+  isPreparingImage = false,
 }: {
   draft: CharacterDraft;
   onChange: (field: CharacterDraftField, value: string) => void;
+  onImageChange?: (imageDataUrl: string) => void;
   onSubmit?: () => void;
+  isPreparingImage?: boolean;
 }) {
+  const [imageError, setImageError] = useState("");
+
+  async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || !onImageChange) {
+      return;
+    }
+
+    try {
+      setImageError("");
+      const resized = await resizeCharacterImageFile(file);
+      const dataUrl = await blobToDataUrl(resized);
+
+      onImageChange(dataUrl);
+    } catch (error) {
+      setImageError(
+        error instanceof Error ? error.message : "Unable to prepare image.",
+      );
+    }
+  }
+
   return (
     <form
       autoComplete="off"
@@ -119,6 +157,51 @@ export function CharacterSetupForm({
         />
       </label>
       <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+        Portrait
+        <span className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35 sm:grid-cols-[7rem_minmax(0,1fr)]">
+          <span className="relative grid aspect-square place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
+            {draft.characterImageDataUrl || draft.characterImage?.url ? (
+              <img
+                alt=""
+                className="h-full w-full object-cover"
+                src={draft.characterImageDataUrl ?? draft.characterImage?.url}
+              />
+            ) : (
+              <ImageIcon
+                aria-hidden="true"
+                className="size-7 text-muted-foreground dark:text-amber-100/45"
+              />
+            )}
+          </span>
+          <span className="flex min-w-0 flex-col justify-center gap-2">
+            <span className="text-xs leading-5 font-medium tracking-normal text-muted-foreground normal-case">
+              Upload a public character portrait. It will be resized to 1024px and stored as WebP.
+            </span>
+            <span className="inline-flex w-fit items-center gap-2 rounded-md border border-border bg-card/80 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-muted dark:border-amber-200/25 dark:bg-black/30 dark:text-amber-100">
+              {isPreparingImage ? (
+                <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+              ) : (
+                <ImageIcon aria-hidden="true" className="size-3.5" />
+              )}
+              Choose Image
+            </span>
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              name="character-image"
+              onChange={handleImageChange}
+              required={!draft.characterImage && !draft.characterImageDataUrl}
+              type="file"
+            />
+            {imageError ? (
+              <span className="text-xs leading-5 font-semibold tracking-normal text-destructive normal-case dark:text-red-200">
+                {imageError}
+              </span>
+            ) : null}
+          </span>
+        </span>
+      </label>
+      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Bio
         <textarea
           autoComplete="off"
@@ -132,6 +215,16 @@ export function CharacterSetupForm({
       </label>
     </form>
   );
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error("Unable to read image."));
+    reader.onload = () => resolve(String(reader.result));
+    reader.readAsDataURL(blob);
+  });
 }
 
 export function PlayerCreationView({

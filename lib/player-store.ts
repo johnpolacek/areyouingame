@@ -6,6 +6,11 @@ import type {
   CharacterInfoCorrectionInput,
   CharacterInfoUpdate,
 } from "./character-info";
+import {
+  validateCharacterImageInput,
+  type CharacterImage,
+  type CharacterImageInput,
+} from "./character-image";
 
 export type PlayerDraftInput = {
   name: string;
@@ -14,6 +19,7 @@ export type PlayerDraftInput = {
   occupation: string;
   bio: string;
   timeZone: string;
+  characterImage?: CharacterImageInput;
 };
 
 export type DailyPlayer = PlayerDraftInput & {
@@ -395,6 +401,14 @@ const correctCharacterInfoForUserGameRef = makeFunctionReference<
   DailyPlayer
 >("playerStore:correctCharacterInfoForUserGame");
 
+const updateCharacterImageForUserGameRef = makeFunctionReference<
+  "mutation",
+  AuthenticatedPlayerArgs & {
+    characterImage: CharacterImageInput;
+  },
+  DailyPlayer
+>("playerStore:updateCharacterImageForUserGame");
+
 export function validatePlayerDraft(input: unknown): PlayerDraftInput {
   if (!input || typeof input !== "object") {
     throw new Error("Character draft is required.");
@@ -408,6 +422,7 @@ export function validatePlayerDraft(input: unknown): PlayerDraftInput {
     occupation: readRequiredString(source.occupation, "Occupation", 120),
     bio: readRequiredString(source.bio, "Bio", 800),
     timeZone: "",
+    characterImage: validateCharacterImageInput(source.characterImage),
   };
   draft.timeZone = readOptionalString(source.timeZone, 80) || "UTC";
 
@@ -874,6 +889,23 @@ export async function correctCharacterInfoForUserGame({
     clerkUserId,
     dailyGameId,
     correction,
+  });
+}
+
+export async function updateCharacterImageForUserGame({
+  clerkUserId,
+  dailyGameId,
+  characterImage,
+}: {
+  clerkUserId: string;
+  dailyGameId: string;
+  characterImage: CharacterImage;
+}): Promise<DailyPlayer> {
+  return await fetchMutation(updateCharacterImageForUserGameRef, {
+    backendSecret: getBackendSecret(),
+    clerkUserId,
+    dailyGameId,
+    characterImage,
   });
 }
 

@@ -61,6 +61,15 @@ const characterInfo = v.object({
   updatedAt: v.string(),
 });
 
+const characterImage = v.object({
+  url: v.string(),
+  bucket: v.string(),
+  objectKey: v.string(),
+  contentType: v.literal("image/webp"),
+  sizeBytes: v.number(),
+  uploadedAt: v.string(),
+});
+
 const characterInfoUpdate = v.object({
   section: characterInfoSectionKey,
   operation: v.union(
@@ -375,6 +384,7 @@ export default defineSchema({
     occupation: v.string(),
     bio: v.string(),
     timeZone: v.string(),
+    characterImage: v.optional(characterImage),
     characterInfo: v.optional(characterInfo),
     firstDecision: v.optional(firstDecision),
     firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),

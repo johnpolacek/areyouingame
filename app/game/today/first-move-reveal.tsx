@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CharacterInfoPanel } from "@/components/character-info-panel";
+import { CharacterImagePanel } from "@/components/character-image-panel";
 import { cn } from "@/lib/utils";
 import type { CharacterInfo } from "@/lib/character-info";
+import type { CharacterImage } from "@/lib/character-image";
 import type {
   FirstDecision,
   FirstConnectedPath,
@@ -39,6 +41,7 @@ type FirstMoveRevealProps = {
 type FirstChoiceConsequenceProps = {
   dailyGameStats: DailyGameStats;
   characterInfo?: CharacterInfo;
+  characterImage?: CharacterImage;
   decision: FirstDecision;
   firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
@@ -354,6 +357,7 @@ export function FirstMoveReveal({
 export function FirstChoiceConsequence({
   dailyGameStats,
   characterInfo,
+  characterImage,
   decision,
   firstConnectedPath,
   firstPostChoiceAction,
@@ -521,11 +525,18 @@ export function FirstChoiceConsequence({
               </div>
             </dl>
             <div className="mt-5">
-              <CharacterInfoPanel
-                characterInfo={characterInfo}
-                editable
-                title="Character"
-              />
+              <div className="grid gap-4">
+                <CharacterImagePanel
+                  characterImage={characterImage}
+                  editable
+                  name="Character"
+                />
+                <CharacterInfoPanel
+                  characterInfo={characterInfo}
+                  editable
+                  title="Character"
+                />
+              </div>
             </div>
           </aside>
 
@@ -679,7 +690,14 @@ export function FirstChoiceConsequence({
         </div>
       ) : null}
 
-      <CharacterInfoPanel characterInfo={characterInfo} editable title="Character" />
+      <div className="grid w-full gap-4">
+        <CharacterImagePanel
+          characterImage={characterImage}
+          editable
+          name="Character"
+        />
+        <CharacterInfoPanel characterInfo={characterInfo} editable title="Character" />
+      </div>
 
       {isActionReady ? (
         <ActionPromptForm

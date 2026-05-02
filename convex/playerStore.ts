@@ -1,6 +1,15 @@
 import { mutationGeneric, queryGeneric } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
+const characterImage = v.object({
+  url: v.string(),
+  bucket: v.string(),
+  objectKey: v.string(),
+  contentType: v.literal("image/webp"),
+  sizeBytes: v.number(),
+  uploadedAt: v.string(),
+});
+
 const playerDraft = {
   name: v.string(),
   age: v.string(),
@@ -8,6 +17,7 @@ const playerDraft = {
   occupation: v.string(),
   bio: v.string(),
   timeZone: v.string(),
+  characterImage: v.optional(characterImage),
 };
 
 const characterInfoSource = v.union(
@@ -330,6 +340,7 @@ const publicCharacterSnapshot = v.object({
   location: v.string(),
   occupation: v.string(),
   bio: v.string(),
+  characterImage: v.optional(characterImage),
 });
 
 const publicActivityPlaytestMetadata = v.object({
@@ -389,6 +400,7 @@ const publicLivePlayerSummary = v.object({
   location: v.string(),
   occupation: v.string(),
   bio: v.string(),
+  characterImage: v.optional(characterImage),
   choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
   turnCount: v.number(),
   lastActivityAt: v.optional(v.string()),
@@ -1951,6 +1963,35 @@ export const correctCharacterInfoForUserGame = mutationGeneric({
   },
 });
 
+export const updateCharacterImageForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    characterImage,
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+    const now = new Date().toISOString();
+
+    await ctx.db.patch(existingPlayer._id, {
+      characterImage: args.characterImage,
+      updatedAt: now,
+    });
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      characterImage: args.characterImage,
+      updatedAt: now,
+    });
+  },
+});
+
 const CHARACTER_INFO_SECTIONS = [
   "currentSituation",
   "relationships",
@@ -2583,6 +2624,7 @@ function toDailyPlayer(source: any) {
     occupation: source.occupation,
     bio: source.bio,
     timeZone: source.timeZone,
+    ...(source.characterImage ? { characterImage: source.characterImage } : {}),
     ...(source.characterInfo
       ? { characterInfo: normalizeCharacterInfo(source.characterInfo) }
       : {}),
@@ -2750,6 +2792,7 @@ function toPublicLivePlayerSummary(source: any) {
     location: source.location,
     occupation: source.occupation,
     bio: source.bio,
+    ...(source.characterImage ? { characterImage: source.characterImage } : {}),
     ...(source.firstDecision?.choice
       ? { choice: source.firstDecision.choice }
       : {}),
@@ -2776,6 +2819,7 @@ function toPublicLivePlayer(source: any) {
     occupation: source.occupation,
     bio: source.bio,
     timeZone: source.timeZone,
+    ...(source.characterImage ? { characterImage: source.characterImage } : {}),
     ...(source.characterInfo
       ? { characterInfo: normalizeCharacterInfo(source.characterInfo) }
       : {}),
@@ -2819,6 +2863,7 @@ function toPublicCharacterSnapshot(source: {
   location: string;
   occupation: string;
   bio: string;
+  characterImage?: any;
 }) {
   return {
     name: source.name,
@@ -2826,6 +2871,7 @@ function toPublicCharacterSnapshot(source: {
     location: source.location,
     occupation: source.occupation,
     bio: source.bio,
+    ...(source.characterImage ? { characterImage: source.characterImage } : {}),
   };
 }
 

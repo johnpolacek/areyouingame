@@ -1,6 +1,7 @@
 import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
 import type { DailyPlayer, YesNoChoice } from "./player-store";
+import type { CharacterImage } from "./character-image";
 
 export type PublicLiveGameSummary = {
   dailyGameId: string;
@@ -21,6 +22,7 @@ export type PublicLivePlayerSummary = {
   location: string;
   occupation: string;
   bio: string;
+  characterImage?: CharacterImage;
   choice?: YesNoChoice;
   turnCount: number;
   lastActivityAt?: string;
