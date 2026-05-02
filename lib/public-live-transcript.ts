@@ -1,0 +1,208 @@
+export type PublicLiveTranscriptEntry = {
+  id: string;
+  at: string;
+  label: string;
+  title: string;
+  playerText?: string;
+  gameText?: string;
+  narratorText?: string;
+};
+
+export type PublicLivePlayerProjection = {
+  id: string;
+  dailyGameId: string;
+  name: string;
+  age: string;
+  location: string;
+  occupation: string;
+  bio: string;
+  timeZone: string;
+  choice?: "YES" | "NO";
+  transcript: PublicLiveTranscriptEntry[];
+  turnCount: number;
+  lastActivityAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PublicLivePlayerSummaryProjection = {
+  id: string;
+  dailyGameId: string;
+  name: string;
+  age: string;
+  location: string;
+  occupation: string;
+  bio: string;
+  choice?: "YES" | "NO";
+  turnCount: number;
+  lastActivityAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function toPublicLivePlayerProjection(
+  source: any,
+): PublicLivePlayerProjection {
+  const transcript = buildPublicLiveTranscript(source);
+  const lastActivityAt = getLastActivityAt(transcript);
+
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    name: source.name,
+    age: source.age,
+    location: source.location,
+    occupation: source.occupation,
+    bio: source.bio,
+    timeZone: source.timeZone,
+    ...(source.firstDecision?.choice
+      ? { choice: source.firstDecision.choice }
+      : {}),
+    transcript,
+    turnCount: transcript.length,
+    ...(lastActivityAt ? { lastActivityAt } : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+  };
+}
+
+export function toPublicLivePlayerSummaryProjection(
+  source: any,
+): PublicLivePlayerSummaryProjection {
+  const transcript = buildPublicLiveTranscript(source);
+  const lastActivityAt = getLastActivityAt(transcript);
+
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    name: source.name,
+    age: source.age,
+    location: source.location,
+    occupation: source.occupation,
+    bio: source.bio,
+    ...(source.firstDecision?.choice
+      ? { choice: source.firstDecision.choice }
+      : {}),
+    turnCount: transcript.length,
+    ...(lastActivityAt ? { lastActivityAt } : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+  };
+}
+
+export function buildPublicLiveTranscript(
+  source: any,
+): PublicLiveTranscriptEntry[] {
+  const entries: PublicLiveTranscriptEntry[] = [];
+
+  if (source.openingResponse && source.openingResponseSubmittedAt) {
+    entries.push({
+      id: `${source.id}:opening-response`,
+      at: source.openingResponseSubmittedAt,
+      label: "Opening",
+      title: "Before we begin",
+      playerText: source.openingResponse,
+    });
+  }
+
+  if (
+    source.openingSceneContext?.answerText &&
+    source.openingSceneContext.answeredAt
+  ) {
+    entries.push({
+      id: `${source.id}:opening-context`,
+      at: source.openingSceneContext.answeredAt,
+      label: "Opening context",
+      title: source.openingSceneContext.promptText,
+      playerText: source.openingSceneContext.answerText,
+    });
+  }
+
+  if (source.firstMoveReveal) {
+    entries.push({
+      id: source.firstMoveReveal.id,
+      at: source.firstMoveReveal.generatedAt,
+      label: "Reveal",
+      title: source.firstMoveReveal.revealCopy.question,
+      gameText: [
+        ...source.firstMoveReveal.sceneIntro,
+        source.firstMoveReveal.revealCopy.availability,
+        source.firstMoveReveal.revealCopy.promise,
+      ].join("\n\n"),
+    });
+  }
+
+  if (source.firstDecision) {
+    entries.push({
+      id: source.firstDecision.id,
+      at: source.firstDecision.submittedAt,
+      label: "Decision",
+      title:
+        source.firstDecision.consequenceTitle ||
+        `${source.firstDecision.choice} recorded`,
+      playerText: source.firstDecision.choice,
+      narratorText: source.firstDecision.consequenceBody,
+    });
+  }
+
+  for (const response of source.firstRevealTextResponses ?? []) {
+    entries.push({
+      id: response.id,
+      at: response.submittedAt,
+      label: "Voice response",
+      title: response.classification,
+      playerText: response.inputText,
+      narratorText: response.interruptionText ?? response.dayEndText,
+    });
+  }
+
+  for (const turn of source.firstPostChoiceTurns ?? []) {
+    entries.push({
+      id: `${source.id}:post-choice:${turn.id}`,
+      at: turn.resolvedAt,
+      label: `Turn ${turn.turnNumber}`,
+      title: turn.sceneTitle,
+      playerText: turn.actionText,
+      narratorText: turn.responseText,
+    });
+  }
+
+  for (const turn of source.firstConnectedPath?.turns ?? []) {
+    entries.push({
+      id: `${source.id}:connected:${turn.id}`,
+      at: turn.resolvedAt,
+      label: `Connected path ${turn.turnNumber}`,
+      title: turn.sceneTitle ?? "Connected path",
+      playerText: turn.actionText,
+      narratorText: turn.responseText,
+    });
+  }
+
+  for (const turn of source.firstConnectedPath?.orbDecisionTurns ?? []) {
+    entries.push({
+      id: `${source.id}:orb:${turn.id}`,
+      at: turn.resolvedAt,
+      label: `Orb ${turn.turnNumber}`,
+      title: turn.sceneTitle ?? "Orb decision",
+      playerText: turn.actionText,
+      narratorText: turn.responseText,
+    });
+  }
+
+  for (const turn of source.firstConnectedPath?.connectedAsiTurns ?? []) {
+    entries.push({
+      id: `${source.id}:asi:${turn.id}`,
+      at: turn.resolvedAt,
+      label: `ASI ${turn.turnNumber}`,
+      title: turn.sceneTitle ?? "Connected ASI",
+      playerText: turn.actionText,
+      narratorText: turn.responseText,
+    });
+  }
+
+  return entries.sort((a, b) => a.at.localeCompare(b.at));
+}
+
+function getLastActivityAt(entries: PublicLiveTranscriptEntry[]) {
+  return entries.map((entry) => entry.at).sort().at(-1);
+}

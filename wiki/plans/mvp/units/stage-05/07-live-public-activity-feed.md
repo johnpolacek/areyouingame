@@ -43,6 +43,8 @@ This belongs to Stage 05 because it validates the core social loop of Day 1: a p
 - Added Convex public query helpers for live game summaries, live player summaries, and a public live player view with `clerkUserId` omitted.
 - Public player transcript pages assemble opening response, opening context, reveal, decision, reveal text responses, NO post-choice turns, YES connected-path turns, orb decision turns, and connected ASI turns from stored player state.
 - Gameplay mutations insert public activity records as player-visible events are created.
+- Public player transcript queries now return a dedicated player-visible transcript DTO instead of the broader internal player state shape.
+- Public room cards only list players with at least one public transcript entry, so created-but-not-started players stay out of the live feed.
 - Recent UI polish removed the always-visible current-status panel and action textarea placeholder copy from the active game surface; structured state still exists but is not rendered as a separate status block.
 
 ## Verification
@@ -51,5 +53,6 @@ This belongs to Stage 05 because it validates the core social loop of Day 1: a p
 - Test public live route access without authentication.
 - Test public player transcript assembly for all current Day 1 turn types.
 - Test public payload allowlists so internal-only fields cannot leak.
+- Test that account ids, model metadata, source versions, agreement timestamps, and hidden state fields are omitted from the public player payload.
 - Test authenticated join/play remains the only mutation path.
 - Follow-up hardening may add realtime appearance checks for new public transcript events.

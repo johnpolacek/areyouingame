@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-02] implementation | harden live public activity feed
+
+- Tightened the Stage 05 Unit 07 public player query to return a dedicated player-visible transcript DTO instead of the broader internal player state shape.
+- Kept model metadata, source versions, agreement timestamps, Clerk identifiers, and hidden state fields out of the public live player payload.
+- Updated the public room query so players appear in `/live/[gameId]` only after they have public transcript activity.
+
 ## [2026-05-02] planning | separate live feed from daily lifecycle
 
 - Added Stage 05 Unit 07 for the live public activity feed so public Day 1 visibility is part of the completed product-spine stage.

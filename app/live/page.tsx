@@ -1,18 +1,26 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
+  ActivityIcon,
   ArrowUpRightIcon,
   CalendarDaysIcon,
   RadioIcon,
   UsersIcon,
 } from "lucide-react";
 import { HeroBackgroundVideo } from "../hero-background-video";
-import { getPublicLiveGameSummaries } from "@/lib/live-browser";
+import {
+  getPublicActivityEvents,
+  getPublicLiveGameSummaries,
+  type PublicActivityEvent,
+} from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
 
 export default async function LiveGamesPage() {
-  const games = await getPublicLiveGameSummaries({ limit: 100 });
+  const [games, recentActivity] = await Promise.all([
+    getPublicLiveGameSummaries({ limit: 100 }),
+    getPublicActivityEvents({ limit: 12 }),
+  ]);
 
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-background px-5 py-8 text-foreground sm:px-8">
@@ -42,51 +50,57 @@ export default async function LiveGamesPage() {
         </header>
 
         {games.length > 0 ? (
-          <section className="grid gap-4 md:grid-cols-2">
-            {games.map((game) => (
-              <Link
-                className="group grid gap-5 rounded-lg border border-border bg-card/80 p-5 shadow-2xl shadow-black/10 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-card dark:bg-black/35 dark:shadow-black/35"
-                href={`/live/${encodeURIComponent(game.dailyGameId)}`}
-                key={game.dailyGameId}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      <CalendarDaysIcon aria-hidden="true" className="size-4 text-accent" />
-                      {game.eventStartsAtLabel}
-                    </p>
-                    <h2 className="mt-3 break-words font-mono text-xl font-semibold text-foreground">
-                      {game.dailyGameId}
-                    </h2>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+              {games.map((game) => (
+                <Link
+                  className="group grid gap-5 rounded-lg border border-border bg-card/80 p-5 shadow-2xl shadow-black/10 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-card dark:bg-black/35 dark:shadow-black/35"
+                  href={`/live/${encodeURIComponent(game.dailyGameId)}`}
+                  key={game.dailyGameId}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        <CalendarDaysIcon
+                          aria-hidden="true"
+                          className="size-4 text-accent"
+                        />
+                        {game.eventStartsAtLabel}
+                      </p>
+                      <h2 className="mt-3 break-words font-mono text-xl font-semibold text-foreground">
+                        {game.dailyGameId}
+                      </h2>
+                    </div>
+                    <ArrowUpRightIcon
+                      aria-hidden="true"
+                      className="size-5 shrink-0 text-muted-foreground transition group-hover:text-foreground"
+                    />
                   </div>
-                  <ArrowUpRightIcon
-                    aria-hidden="true"
-                    className="size-5 shrink-0 text-muted-foreground transition group-hover:text-foreground"
-                  />
-                </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <Metric
-                    icon={<UsersIcon aria-hidden="true" className="size-4" />}
-                    label="Players"
-                    value={game.playerCount.toString()}
-                  />
-                  <Metric
-                    icon={<RadioIcon aria-hidden="true" className="size-4" />}
-                    label="Events"
-                    value={game.activityCount.toString()}
-                  />
-                </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <Metric
+                      icon={<UsersIcon aria-hidden="true" className="size-4" />}
+                      label="Players"
+                      value={game.playerCount.toString()}
+                    />
+                    <Metric
+                      icon={<RadioIcon aria-hidden="true" className="size-4" />}
+                      label="Events"
+                      value={game.activityCount.toString()}
+                    />
+                  </div>
 
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Last activity{" "}
-                  <span className="normal-case tracking-normal text-foreground/80">
-                    {formatDateTime(game.lastActivityAt ?? game.updatedAt)}
-                  </span>
-                </p>
-              </Link>
-            ))}
-          </section>
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    Last activity{" "}
+                    <span className="normal-case tracking-normal text-foreground/80">
+                      {formatDateTime(game.lastActivityAt ?? game.updatedAt)}
+                    </span>
+                  </p>
+                </Link>
+              ))}
+            </section>
+            <RecentActivity events={recentActivity} />
+          </div>
         ) : (
           <EmptyState
             title="No public games yet"
@@ -96,6 +110,82 @@ export default async function LiveGamesPage() {
       </div>
     </main>
   );
+}
+
+function RecentActivity({ events }: { events: PublicActivityEvent[] }) {
+  return (
+    <aside className="grid h-fit gap-3 rounded-lg border border-border bg-card/80 p-4 shadow-2xl shadow-black/10 backdrop-blur-xl dark:bg-black/35 dark:shadow-black/35">
+      <div className="flex items-center justify-between gap-3 border-b border-border/80 pb-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+            Feed
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">
+            Recent activity
+          </h2>
+        </div>
+        <ActivityIcon aria-hidden="true" className="size-5 text-muted-foreground" />
+      </div>
+      {events.length > 0 ? (
+        <div className="grid gap-2">
+          {events.map((event) => {
+            const href = event.playerId
+              ? `/live/${encodeURIComponent(event.dailyGameId)}/${encodeURIComponent(event.playerId)}`
+              : `/live/${encodeURIComponent(event.dailyGameId)}`;
+
+            return (
+              <Link
+                className="group grid gap-1 rounded-md border border-border/80 bg-background/55 p-3 transition hover:bg-background/80"
+                href={href}
+                key={event.id}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 text-sm font-semibold text-foreground">
+                    {event.sceneTitle || eventTitle(event)}
+                  </p>
+                  <ArrowUpRightIcon
+                    aria-hidden="true"
+                    className="mt-0.5 size-4 shrink-0 text-muted-foreground transition group-hover:text-foreground"
+                  />
+                </div>
+                <p className="truncate text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                  {event.character.name} / {event.dailyGameId}
+                </p>
+                <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
+                  {event.playerInput ||
+                    event.narratorResponse ||
+                    event.gameText ||
+                    event.choice ||
+                    eventTitle(event)}
+                </p>
+                <time
+                  className="text-xs font-medium text-muted-foreground"
+                  dateTime={event.createdAt}
+                >
+                  {formatDateTime(event.createdAt)}
+                </time>
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm leading-6 text-muted-foreground">
+          Public events will appear here as playthroughs advance.
+        </p>
+      )}
+    </aside>
+  );
+}
+
+function eventTitle(event: PublicActivityEvent) {
+  if (event.choice) {
+    return `${event.choice} submitted`;
+  }
+
+  return event.eventKind
+    .split("_")
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function Metric({

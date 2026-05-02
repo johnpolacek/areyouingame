@@ -3,30 +3,12 @@ import {
   ArrowLeftIcon,
   CalendarClockIcon,
   MapPinIcon,
-  RadioIcon,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { HeroBackgroundVideo } from "../../../hero-background-video";
-import { getPublicLivePlayer, type PublicLivePlayer } from "@/lib/live-browser";
-import type {
-  FirstConnectedAsiTurn,
-  FirstConnectedPathTurn,
-  FirstOrbDecisionTurn,
-  FirstPostChoiceTurn,
-} from "@/lib/player-store";
+import { getPublicLivePlayer } from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
-
-type GameplayEntry = {
-  id: string;
-  at: string;
-  label: string;
-  title: string;
-  playerText?: string;
-  gameText?: string;
-  narratorText?: string;
-  meta?: string;
-};
 
 export default async function LivePlayerPage({
   params,
@@ -44,8 +26,6 @@ export default async function LivePlayerPage({
   if (!player) {
     notFound();
   }
-
-  const entries = buildGameplayEntries(player);
 
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-background px-5 py-8 text-foreground sm:px-8">
@@ -77,15 +57,15 @@ export default async function LivePlayerPage({
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Metric label="Choice" value={player.firstDecision?.choice ?? "-"} />
-              <Metric label="Turns" value={entries.length.toString()} />
+              <Metric label="Choice" value={player.choice ?? "-"} />
+              <Metric label="Turns" value={player.turnCount.toString()} />
             </div>
           </div>
         </header>
 
-        {entries.length > 0 ? (
+        {player.transcript.length > 0 ? (
           <section className="grid gap-4">
-            {entries.map((entry, index) => (
+            {player.transcript.map((entry, index) => (
               <article
                 className="overflow-hidden rounded-lg border border-border bg-card/80 shadow-2xl shadow-black/10 backdrop-blur-xl dark:bg-black/35 dark:shadow-black/35"
                 key={entry.id}
@@ -115,12 +95,6 @@ export default async function LivePlayerPage({
                   {entry.narratorText ? (
                     <TranscriptBlock label="Narrator" text={entry.narratorText} />
                   ) : null}
-                  {entry.meta ? (
-                    <div className="flex items-center gap-2 border-t border-border/70 pt-4 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                      <RadioIcon aria-hidden="true" className="size-4 text-accent" />
-                      {entry.meta}
-                    </div>
-                  ) : null}
                 </div>
               </article>
             ))}
@@ -138,145 +112,6 @@ export default async function LivePlayerPage({
       </div>
     </main>
   );
-}
-
-function buildGameplayEntries(player: PublicLivePlayer): GameplayEntry[] {
-  const entries: GameplayEntry[] = [];
-
-  if (player.openingResponse && player.openingResponseSubmittedAt) {
-    entries.push({
-      id: `${player.id}:opening-response`,
-      at: player.openingResponseSubmittedAt,
-      label: "Opening",
-      title: "Before we begin",
-      playerText: player.openingResponse,
-    });
-  }
-
-  if (player.openingSceneContext?.answerText && player.openingSceneContext.answeredAt) {
-    entries.push({
-      id: `${player.id}:opening-context`,
-      at: player.openingSceneContext.answeredAt,
-      label: "Opening context",
-      title: player.openingSceneContext.promptText,
-      playerText: player.openingSceneContext.answerText,
-      meta: player.openingSceneContext.reason,
-    });
-  }
-
-  if (player.firstMoveReveal) {
-    entries.push({
-      id: player.firstMoveReveal.id,
-      at: player.firstMoveReveal.generatedAt,
-      label: "Reveal",
-      title: player.firstMoveReveal.revealCopy.question,
-      gameText: [
-        ...player.firstMoveReveal.sceneIntro,
-        player.firstMoveReveal.revealCopy.availability,
-        player.firstMoveReveal.revealCopy.promise,
-      ].join("\n\n"),
-      meta: player.firstMoveReveal.model,
-    });
-  }
-
-  if (player.firstDecision) {
-    entries.push({
-      id: player.firstDecision.id,
-      at: player.firstDecision.submittedAt,
-      label: "Decision",
-      title: player.firstDecision.consequenceTitle,
-      playerText: player.firstDecision.choice,
-      narratorText: player.firstDecision.consequenceBody,
-      meta: player.firstDecision.consequenceModel,
-    });
-  }
-
-  for (const response of player.firstRevealTextResponses ?? []) {
-    entries.push({
-      id: response.id,
-      at: response.submittedAt,
-      label: "Voice response",
-      title: response.classification,
-      playerText: response.inputText,
-      narratorText: response.interruptionText ?? response.dayEndText,
-      meta: response.model,
-    });
-  }
-
-  for (const turn of player.firstPostChoiceTurns ?? []) {
-    entries.push(postChoiceEntry(player.id, turn));
-  }
-
-  for (const turn of player.firstConnectedPath?.turns ?? []) {
-    entries.push(connectedPathEntry(player.id, turn));
-  }
-
-  for (const turn of player.firstConnectedPath?.orbDecisionTurns ?? []) {
-    entries.push(orbDecisionEntry(player.id, turn));
-  }
-
-  for (const turn of player.firstConnectedPath?.connectedAsiTurns ?? []) {
-    entries.push(connectedAsiEntry(player.id, turn));
-  }
-
-  return entries.sort((a, b) => a.at.localeCompare(b.at));
-}
-
-function postChoiceEntry(playerId: string, turn: FirstPostChoiceTurn): GameplayEntry {
-  return {
-    id: `${playerId}:post-choice:${turn.id}`,
-    at: turn.resolvedAt,
-    label: `Turn ${turn.turnNumber}`,
-    title: turn.sceneTitle,
-    playerText: turn.actionText,
-    narratorText: turn.responseText,
-    meta: turn.actionKind,
-  };
-}
-
-function connectedPathEntry(
-  playerId: string,
-  turn: FirstConnectedPathTurn,
-): GameplayEntry {
-  return {
-    id: `${playerId}:connected:${turn.id}`,
-    at: turn.resolvedAt,
-    label: `Connected path ${turn.turnNumber}`,
-    title: turn.sceneTitle ?? "Connected path",
-    playerText: turn.actionText,
-    narratorText: turn.responseText,
-    meta: `${turn.deliveryStatus} / ${turn.packageStatus} / ${turn.orbStatus}`,
-  };
-}
-
-function orbDecisionEntry(
-  playerId: string,
-  turn: FirstOrbDecisionTurn,
-): GameplayEntry {
-  return {
-    id: `${playerId}:orb:${turn.id}`,
-    at: turn.resolvedAt,
-    label: `Orb ${turn.turnNumber}`,
-    title: turn.sceneTitle ?? "Orb decision",
-    playerText: turn.actionText,
-    narratorText: turn.responseText,
-    meta: turn.orbLifecycle,
-  };
-}
-
-function connectedAsiEntry(
-  playerId: string,
-  turn: FirstConnectedAsiTurn,
-): GameplayEntry {
-  return {
-    id: `${playerId}:asi:${turn.id}`,
-    at: turn.resolvedAt,
-    label: `ASI ${turn.turnNumber}`,
-    title: turn.sceneTitle ?? "Connected ASI",
-    playerText: turn.actionText,
-    narratorText: turn.responseText,
-    meta: turn.actionKind,
-  };
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

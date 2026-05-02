@@ -1,5 +1,9 @@
 import { mutationGeneric, queryGeneric } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import {
+  toPublicLivePlayerProjection,
+  toPublicLivePlayerSummaryProjection,
+} from "../lib/public-live-transcript";
 
 const playerDraft = {
   name: v.string(),
@@ -291,6 +295,7 @@ const publicActivityEventKind = v.union(
 const publicActivityEvent = v.object({
   id: v.string(),
   dailyGameId: v.string(),
+  playerId: v.optional(v.string()),
   createdAt: v.string(),
   character: publicCharacterSnapshot,
   eventKind: publicActivityEventKind,
@@ -328,20 +333,24 @@ const publicLivePlayerSummary = v.object({
   updatedAt: v.string(),
 });
 
+const publicLiveTranscriptEntry = v.object({
+  id: v.string(),
+  at: v.string(),
+  label: v.string(),
+  title: v.string(),
+  playerText: v.optional(v.string()),
+  gameText: v.optional(v.string()),
+  narratorText: v.optional(v.string()),
+});
+
 const publicLivePlayer = v.object({
   id: v.string(),
   dailyGameId: v.string(),
   ...playerDraft,
-  firstDecision: v.optional(firstDecision),
-  firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
-  firstPostChoiceAction: v.optional(firstPostChoiceAction),
-  firstPostChoiceTurns: v.optional(v.array(firstPostChoiceTurn)),
-  firstConnectedPath: v.optional(firstConnectedPath),
-  firstMoveReveal: v.optional(firstMoveReveal),
-  openingSceneContext: v.optional(openingSceneContext),
-  openingResponse: v.optional(v.string()),
-  openingResponseSubmittedAt: v.optional(v.string()),
-  publicGameplayAgreementAcceptedAt: v.optional(v.string()),
+  choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
+  transcript: v.array(publicLiveTranscriptEntry),
+  turnCount: v.number(),
+  lastActivityAt: v.optional(v.string()),
   createdAt: v.string(),
   updatedAt: v.string(),
 });
@@ -465,6 +474,9 @@ export const getPublicLiveGameSummaries = queryGeneric({
             q.eq("dailyGameId", game.dailyGameId),
           )
           .collect();
+        const publicPlayerSummaries = players
+          .map((source) => toPublicLivePlayerSummaryProjection(source))
+          .filter((player) => player.turnCount > 0);
         const activity = await ctx.db
           .query("publicActivityEvents")
           .withIndex("by_dailyGameId_and_createdAt", (q) =>
@@ -477,7 +489,7 @@ export const getPublicLiveGameSummaries = queryGeneric({
           dailyGameId: game.dailyGameId,
           eventStartsAtIso: game.eventStartsAtIso,
           eventStartsAtLabel: game.eventStartsAtLabel,
-          playerCount: players.length,
+          playerCount: publicPlayerSummaries.length,
           activityCount: activity.length,
           ...(activity[0]?.createdAt
             ? { lastActivityAt: activity[0].createdAt }
@@ -489,6 +501,7 @@ export const getPublicLiveGameSummaries = queryGeneric({
     );
 
     return summaries
+      .filter((summary) => summary.playerCount > 0 || summary.activityCount > 0)
       .sort((a, b) =>
         (b.lastActivityAt ?? b.eventStartsAtIso).localeCompare(
           a.lastActivityAt ?? a.eventStartsAtIso,
@@ -510,7 +523,8 @@ export const getPublicLivePlayersForGame = queryGeneric({
       .collect();
 
     return players
-      .map((source) => toPublicLivePlayerSummary(source))
+      .map((source) => toPublicLivePlayerSummaryProjection(source))
+      .filter((player) => player.turnCount > 0)
       .sort((a, b) =>
         (b.lastActivityAt ?? b.updatedAt).localeCompare(
           a.lastActivityAt ?? a.updatedAt,
@@ -534,7 +548,7 @@ export const getPublicLivePlayer = queryGeneric({
       (candidate) => candidate.id === args.playerId,
     );
 
-    return selectedPlayer ? toPublicLivePlayer(selectedPlayer) : null;
+    return selectedPlayer ? toPublicLivePlayerProjection(selectedPlayer) : null;
   },
 });
 
@@ -2001,6 +2015,7 @@ async function insertPublicActivityEvent(
     createdAt: string;
     clerkUserId: string;
     player: {
+      id?: string;
       name: string;
       age: string;
       location: string;
@@ -2033,6 +2048,7 @@ async function insertPublicActivityEvent(
   await ctx.db.insert("publicActivityEvents", {
     id: event.id,
     dailyGameId: event.dailyGameId,
+    ...(event.player.id ? { playerId: event.player.id } : {}),
     createdAt: event.createdAt,
     character: toPublicCharacterSnapshot(event.player),
     eventKind: event.eventKind,
@@ -2051,6 +2067,7 @@ function toPublicActivityEvent(source: any) {
   return {
     id: source.id,
     dailyGameId: source.dailyGameId,
+    ...(source.playerId ? { playerId: source.playerId } : {}),
     createdAt: source.createdAt,
     character: toPublicCharacterSnapshot(source.character),
     eventKind: source.eventKind,
@@ -2062,93 +2079,6 @@ function toPublicActivityEvent(source: any) {
       : {}),
     ...(source.sceneTitle ? { sceneTitle: source.sceneTitle } : {}),
     ...(source.playtest ? { playtest: source.playtest } : {}),
-  };
-}
-
-function toPublicLivePlayerSummary(source: any) {
-  const gameplayTurns = [
-    ...(source.firstPostChoiceTurns ?? []),
-    ...(source.firstConnectedPath?.turns ?? []),
-    ...(source.firstConnectedPath?.orbDecisionTurns ?? []),
-    ...(source.firstConnectedPath?.connectedAsiTurns ?? []),
-  ];
-  const timedMilestones = [
-    source.openingResponseSubmittedAt,
-    source.openingSceneContext?.answeredAt,
-    source.firstMoveReveal?.generatedAt,
-    source.firstDecision?.submittedAt,
-    ...(source.firstRevealTextResponses ?? []).map(
-      (response: any) => response.submittedAt,
-    ),
-    ...gameplayTurns.map((turn: any) => turn.resolvedAt ?? turn.submittedAt),
-  ].filter(Boolean);
-  const lastActivityAt = timedMilestones.sort().at(-1);
-
-  return {
-    id: source.id,
-    dailyGameId: source.dailyGameId,
-    name: source.name,
-    age: source.age,
-    location: source.location,
-    occupation: source.occupation,
-    bio: source.bio,
-    ...(source.firstDecision?.choice
-      ? { choice: source.firstDecision.choice }
-      : {}),
-    turnCount:
-      (source.openingResponse ? 1 : 0) +
-      (source.openingSceneContext?.answerText ? 1 : 0) +
-      (source.firstMoveReveal ? 1 : 0) +
-      (source.firstDecision ? 1 : 0) +
-      (source.firstRevealTextResponses?.length ?? 0) +
-      gameplayTurns.length,
-    ...(lastActivityAt ? { lastActivityAt } : {}),
-    createdAt: source.createdAt,
-    updatedAt: source.updatedAt,
-  };
-}
-
-function toPublicLivePlayer(source: any) {
-  return {
-    id: source.id,
-    dailyGameId: source.dailyGameId,
-    name: source.name,
-    age: source.age,
-    location: source.location,
-    occupation: source.occupation,
-    bio: source.bio,
-    timeZone: source.timeZone,
-    ...(source.firstDecision ? { firstDecision: source.firstDecision } : {}),
-    ...(source.firstRevealTextResponses
-      ? { firstRevealTextResponses: source.firstRevealTextResponses }
-      : {}),
-    ...(source.firstPostChoiceAction
-      ? { firstPostChoiceAction: source.firstPostChoiceAction }
-      : {}),
-    ...(source.firstPostChoiceTurns
-      ? { firstPostChoiceTurns: source.firstPostChoiceTurns }
-      : {}),
-    ...(source.firstConnectedPath
-      ? { firstConnectedPath: source.firstConnectedPath }
-      : {}),
-    ...(source.firstMoveReveal ? { firstMoveReveal: source.firstMoveReveal } : {}),
-    ...(source.openingSceneContext
-      ? { openingSceneContext: source.openingSceneContext }
-      : {}),
-    ...(source.openingResponse
-      ? { openingResponse: source.openingResponse }
-      : {}),
-    ...(source.openingResponseSubmittedAt
-      ? { openingResponseSubmittedAt: source.openingResponseSubmittedAt }
-      : {}),
-    ...(source.publicGameplayAgreementAcceptedAt
-      ? {
-          publicGameplayAgreementAcceptedAt:
-            source.publicGameplayAgreementAcceptedAt,
-        }
-      : {}),
-    createdAt: source.createdAt,
-    updatedAt: source.updatedAt,
   };
 }
 
