@@ -16,17 +16,16 @@ Use this skill to set up or explain the repo's worktree workflow for parallel fe
 - Start from `/Users/johnpolacek/Workspace/AreYouIn` unless the current checkout is clearly the intended integration checkout.
 - Before creating or merging worktrees, run `pnpm wt:doctor` when practical.
 - Before merging or assigning overlapping work, run `pnpm wt:overlap`.
-- Assign a custom Portless app port per worktree branch. Do not let multiple active worktrees share the same app port.
+- Let Portless derive the readable route from the worktree branch slug. Do not use fixed localhost ports for runner targets.
 - Persona playtests use worktree-local `agent-browser` isolation and may run in parallel across worktrees.
 - Respect dirty worktrees. Never delete, reset, or overwrite user changes.
 
-## Portless Ports
+## Portless Routes
 
 - Main checkout may use Portless auto-assignment or port `3000`.
-- Each linked worktree branch must use its own fixed Portless app port with `portless run --app-port <port>`.
-- Prefer the `31xx` range for worktrees. Check active assignments in existing `.env.worktree.local` files and `portless list` when available before choosing a port.
-- Record the chosen port in that worktree's `.env.worktree.local` as `AREYOUIN_PORTLESS_APP_PORT=<port>` if it is not already present.
-- For handoffs, include the port in the run command so the next agent uses the same route consistently.
+- Each linked worktree branch should use a readable Portless route derived from the branch slug, for example `https://demo.are-you-in.localhost` for `feature/demo`.
+- `pnpm wt:create` records the route metadata in `.env.worktree.local` as `AREYOUIN_PORTLESS_ROUTE_NAME`, `AREYOUIN_PORTLESS_BASE_NAME`, and `AREYOUIN_PORTLESS_URL`.
+- For handoffs, target the named Portless URL, not `http://localhost:<port>`.
 
 ## Create A Worktree
 
@@ -55,13 +54,7 @@ Use this skill to set up or explain the repo's worktree workflow for parallel fe
    ```
 
    Then tell the user the script does not automatically provision the isolated Convex deployment yet. They should create/select the branch-specific Convex deployment, update `.env.local`, and run `pnpm convex:sync-secret`.
-5. Choose and record a branch-specific Portless app port:
-
-   ```bash
-   printf '\nAREYOUIN_PORTLESS_APP_PORT=<port>\n' >> .env.worktree.local
-   ```
-
-   Use an unused port, for example `3101`, `3102`, or `3103`.
+5. Use the named Portless URL printed by `pnpm wt:create`; do not assign a fixed numeric localhost port for the runner target.
 
 ## Hand Off To CLI Codex
 
@@ -78,22 +71,22 @@ To run the app inside that worktree:
 pnpm convex:dev
 ```
 
-In a second terminal in the same worktree, run Next through Portless with the same fixed app port:
+In a second terminal in the same worktree, run Next through Portless:
 
 ```bash
-portless run --name are-you-in --app-port <port> pnpm next:dev:app
+pnpm next:dev
 ```
 
 If running both processes in one terminal is more important than separate logs, use:
 
 ```bash
-pnpm exec concurrently -n convex,next -c magenta,cyan "pnpm convex:dev" "portless run --name are-you-in --app-port <port> pnpm next:dev:app"
+pnpm dev
 ```
 
-Portless gives branch-specific URLs while the fixed app port keeps each branch stable:
+Portless gives branch-specific URLs from the worktree branch slug:
 
 ```text
-https://<branch-slug>.are-you-in.localhost
+https://<readable-branch-name>.are-you-in.localhost
 ```
 
 The main checkout URL is:

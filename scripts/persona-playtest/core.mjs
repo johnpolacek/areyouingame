@@ -9,7 +9,7 @@ export const playtestIndexMarkdownPath = "wiki/playtests/index.md";
 
 export function parsePlaytestArgs(argv) {
   const options = {
-    baseUrl: "http://localhost:3000",
+    baseUrl: getDefaultBaseUrl(),
     build: null,
     maxTurns: 10,
     persona: "",
@@ -62,6 +62,10 @@ export function parsePlaytestArgs(argv) {
   return options;
 }
 
+export function getDefaultBaseUrl() {
+  return process.env.AREYOUIN_PORTLESS_URL || "http://localhost:3000";
+}
+
 export function slugify(value) {
   return String(value)
     .trim()
@@ -108,7 +112,7 @@ export async function loadBuildVersion(repoRoot) {
 }
 
 export async function loadPlaytestEnv(repoRoot) {
-  for (const fileName of [".env.local", ".env"]) {
+  for (const fileName of [".env.worktree.local", ".env.local", ".env"]) {
     try {
       const raw = await readFile(path.join(repoRoot, fileName), "utf8");
       const values = parseEnvFile(raw);

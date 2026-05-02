@@ -26,6 +26,23 @@ describe("persona playtest core", () => {
     });
   });
 
+  it("defaults playtests to the worktree Portless URL when available", () => {
+    const previousUrl = process.env.AREYOUIN_PORTLESS_URL;
+    process.env.AREYOUIN_PORTLESS_URL = "https://feature-demo.are-you-in.localhost";
+
+    try {
+      expect(parsePlaytestArgs(["--random"])).toMatchObject({
+        baseUrl: "https://feature-demo.are-you-in.localhost",
+      });
+    } finally {
+      if (previousUrl === undefined) {
+        delete process.env.AREYOUIN_PORTLESS_URL;
+      } else {
+        process.env.AREYOUIN_PORTLESS_URL = previousUrl;
+      }
+    }
+  });
+
   it("creates safe synthetic user ids", () => {
     expect(
       buildSyntheticUserId({

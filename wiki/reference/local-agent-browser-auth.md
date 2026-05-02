@@ -31,7 +31,8 @@ If the local app is already running without `AREYOUIN_PLAYTEST_AUTH=1`, stop it 
 Manual interactive dogfooding should use the real Clerk path and a persistent `agent-browser` session/profile that is never used for automated runs:
 
 ```bash
-agent-browser --session areyouin-john open http://localhost:3000
+set -a; source .env.worktree.local; set +a
+agent-browser --session areyouin-john open "$AREYOUIN_PORTLESS_URL"
 ```
 
 Sign in as `johnpolacek@gmail.com` through Clerk in that session. Keep that session separate from disposable `ayi-*` persona sessions so synthetic test data cannot contaminate the daily player account and cleanup cannot remove the manual session.

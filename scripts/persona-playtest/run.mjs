@@ -22,14 +22,13 @@ const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
 
 export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
+  await loadPlaytestEnv(repoRoot);
   const options = parsePlaytestArgs(argv);
 
   if (options.help) {
     console.log(createHelpText());
     return null;
   }
-
-  await loadPlaytestEnv(repoRoot);
 
   const llmModel = getPlaytestModel();
   const build = await loadBuildVersion(repoRoot);
@@ -307,7 +306,7 @@ function createHelpText() {
     "  --random            Invent a grounded random persona",
     "  --scenario <name>   Scenario label for the run, default yes-connected-path",
     "  --build <version>   Override build version label",
-    "  --base-url <url>    Local app URL, default http://localhost:3000",
+    "  --base-url <url>    Local app URL, default AREYOUIN_PORTLESS_URL or http://localhost:3000",
     "  --max-turns <n>     Stop after this many player response turns, default 10",
     "  --seed <text>       Random persona seed/inspiration",
   ].join("\n");

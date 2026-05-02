@@ -20,7 +20,7 @@ Make it routine to run one agent per feature branch in an isolated worktree with
 1. A developer runs a project script to create a feature worktree from the main checkout.
 2. The script creates a linked worktree under a predictable sibling directory, creates or checks out a branch, copies a safe local env file, installs dependencies, and prints the branch-specific dev URL.
 3. The developer starts `pnpm dev` inside that worktree.
-4. Portless assigns an ephemeral app port and exposes the app at a stable branch-prefixed hostname, for example `https://stage-05-copy.are-you-in.localhost`.
+4. Portless assigns an ephemeral app port and exposes the app at a stable readable branch-prefixed hostname, for example `https://stage-05-copy.are-you-in.localhost`.
 5. Each worktree uses isolated local build/cache directories and, where needed, an isolated Convex deployment or explicitly shared read-only dev deployment.
 6. Cleanup is a first-class command that prunes stale worktrees, dev servers, caches, and orphaned Portless routes.
 
@@ -37,14 +37,14 @@ Add Portless as the standard development entrypoint.
 - Use the globally installed `portless` CLI. The local `wt:doctor` command verifies it is present on `PATH`.
 - Keep the real Next command behind a direct script:
   - `next:dev:app`: `next dev`
-  - `next:dev`: `portless run --name are-you-in pnpm next:dev:app`
+  - `next:dev`: `node scripts/next-dev-portless.mjs`
 - Keep `dev` as the combined app command:
   - `dev`: `concurrently -n convex,next -c magenta,cyan "pnpm convex:dev" "pnpm next:dev"`
 - Keep `PORTLESS=0 pnpm next:dev:app` as the escape hatch for debugging without the proxy.
 - Run `portless trust` once per machine and document the HTTPS certificate prompt.
 - Use `.localhost` by default. If Safari routing is needed, run `portless hosts sync`.
 
-Portless already detects linked git worktrees and prepends the branch name as a subdomain. That means the main checkout keeps `https://are-you-in.localhost`, while a branch named `stage-05-copy` gets `https://stage-05-copy.are-you-in.localhost`.
+Portless already detects linked git worktrees and prepends the readable branch name as a subdomain. That means the main checkout keeps `https://are-you-in.localhost`, while a branch named `feature/stage-05-copy` gets `https://stage-05-copy.are-you-in.localhost`.
 
 ## Phase 2: Worktree Helper Scripts
 
@@ -164,7 +164,7 @@ Start small: add Portless and a basic worktree create/list/doctor script set bef
 
 ## Implemented Baseline
 
-- `pnpm next:dev` now runs Next through Portless.
+- `pnpm next:dev` now runs Next through Portless using the worktree-derived route name from `.env.worktree.local`.
 - `pnpm next:dev:app` remains the direct `next dev` escape hatch.
 - `pnpm wt:create <branch>` creates a worktree under `../AreYouIn.worktrees/<branch-slug>`, copies env files, installs dependencies, and prints the expected Portless URL.
 - `pnpm wt:create polish --polish` creates the recommended light-fix/UI-tweak lane.
