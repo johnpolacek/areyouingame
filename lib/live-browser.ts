@@ -2,7 +2,7 @@ import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
 import type { CharacterImage } from "./character-image";
 import type { CharacterInfo } from "./character-info";
-import type { PlayerDraftInput, YesNoChoice } from "./player-store";
+import type { PlayerDraftInput, PlayerTurnImage, YesNoChoice } from "./player-store";
 
 export type PublicLiveGameSummary = {
   dailyGameId: string;
@@ -80,6 +80,7 @@ export type PublicLiveTranscriptEntry = {
   playerText?: string;
   gameText?: string;
   narratorText?: string;
+  turnImage?: PlayerTurnImage;
 };
 
 export type PublicLivePlayer = PlayerDraftInput & {
@@ -130,6 +131,14 @@ const getPublicLivePlayerRef = makeFunctionReference<
   PublicLivePlayer | null
 >("playerStore:getPublicLivePlayer");
 
+const getPublicPlayerTurnImageRef = makeFunctionReference<
+  "query",
+  {
+    sourceTurnId: string;
+  },
+  PlayerTurnImage | null
+>("playerStore:getPublicPlayerTurnImage");
+
 export async function getPublicLiveGameSummaries({
   limit,
 }: {
@@ -167,4 +176,10 @@ export async function getPublicLivePlayer({
   playerId: string;
 }): Promise<PublicLivePlayer | null> {
   return await fetchQuery(getPublicLivePlayerRef, { dailyGameId, playerId });
+}
+
+export async function getPublicPlayerTurnImage(
+  sourceTurnId: string,
+): Promise<PlayerTurnImage | null> {
+  return await fetchQuery(getPublicPlayerTurnImageRef, { sourceTurnId });
 }

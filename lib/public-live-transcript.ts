@@ -6,6 +6,28 @@ export type PublicLiveTranscriptEntry = {
   playerText?: string;
   gameText?: string;
   narratorText?: string;
+  turnImage?: PublicPlayerTurnImage;
+};
+
+export type PublicPlayerTurnImage = {
+  id: string;
+  dailyGameId: string;
+  playerId: string;
+  sourceTurnId: string;
+  sourceTurnKind:
+    | "post_choice_turn"
+    | "connected_path_turn"
+    | "orb_decision_turn"
+    | "connected_asi_turn";
+  status: "pending" | "generating" | "ready" | "error";
+  imageModel?: string;
+  quality?: "low";
+  size?: "1024x1024";
+  contentType?: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+  generatedAt?: string;
 };
 
 export type PublicLivePlayerProjection = {
@@ -241,6 +263,15 @@ export function buildPublicLiveTranscript(
   source: any,
 ): PublicLiveTranscriptEntry[] {
   const entries: PublicLiveTranscriptEntry[] = [];
+  const publicTurnImages: PublicPlayerTurnImage[] = (source.turnImages ?? [])
+    .map((image: any) => toPublicPlayerTurnImage(image))
+    .filter(
+      (image: PublicPlayerTurnImage | undefined): image is PublicPlayerTurnImage =>
+        Boolean(image),
+    );
+  const imagesByTurnId = new Map<string, PublicPlayerTurnImage>(
+    publicTurnImages.map((image) => [image.sourceTurnId, image]),
+  );
 
   if (source.openingResponse && source.openingResponseSubmittedAt) {
     entries.push({
@@ -311,6 +342,9 @@ export function buildPublicLiveTranscript(
       title: turn.sceneTitle,
       playerText: turn.actionText,
       narratorText: turn.responseText,
+      ...(imagesByTurnId.get(turn.id)
+        ? { turnImage: imagesByTurnId.get(turn.id) }
+        : {}),
     });
   }
 
@@ -322,6 +356,9 @@ export function buildPublicLiveTranscript(
       title: turn.sceneTitle ?? "Connected path",
       playerText: turn.actionText,
       narratorText: turn.responseText,
+      ...(imagesByTurnId.get(turn.id)
+        ? { turnImage: imagesByTurnId.get(turn.id) }
+        : {}),
     });
   }
 
@@ -333,6 +370,9 @@ export function buildPublicLiveTranscript(
       title: turn.sceneTitle ?? "Orb decision",
       playerText: turn.actionText,
       narratorText: turn.responseText,
+      ...(imagesByTurnId.get(turn.id)
+        ? { turnImage: imagesByTurnId.get(turn.id) }
+        : {}),
     });
   }
 
@@ -344,6 +384,9 @@ export function buildPublicLiveTranscript(
       title: turn.sceneTitle ?? "Connected ASI",
       playerText: turn.actionText,
       narratorText: turn.responseText,
+      ...(imagesByTurnId.get(turn.id)
+        ? { turnImage: imagesByTurnId.get(turn.id) }
+        : {}),
     });
   }
 
@@ -352,4 +395,70 @@ export function buildPublicLiveTranscript(
 
 function getLastActivityAt(entries: PublicLiveTranscriptEntry[]) {
   return entries.map((entry) => entry.at).sort().at(-1);
+}
+
+function toPublicPlayerTurnImage(source: any): PublicPlayerTurnImage | undefined {
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    return undefined;
+  }
+
+  if (
+    typeof source.id !== "string" ||
+    typeof source.dailyGameId !== "string" ||
+    typeof source.playerId !== "string" ||
+    typeof source.sourceTurnId !== "string" ||
+    !isPlayerTurnImageKind(source.sourceTurnKind) ||
+    !isPlayerTurnImageStatus(source.status) ||
+    typeof source.createdAt !== "string" ||
+    typeof source.updatedAt !== "string"
+  ) {
+    return undefined;
+  }
+
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    playerId: source.playerId,
+    sourceTurnId: source.sourceTurnId,
+    sourceTurnKind: source.sourceTurnKind,
+    status: source.status,
+    ...(typeof source.imageModel === "string"
+      ? { imageModel: source.imageModel }
+      : {}),
+    ...(source.quality === "low" ? { quality: source.quality } : {}),
+    ...(source.size === "1024x1024" ? { size: source.size } : {}),
+    ...(typeof source.contentType === "string"
+      ? { contentType: source.contentType }
+      : {}),
+    ...(typeof source.errorMessage === "string"
+      ? { errorMessage: source.errorMessage }
+      : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+    ...(typeof source.generatedAt === "string"
+      ? { generatedAt: source.generatedAt }
+      : {}),
+  };
+}
+
+function isPlayerTurnImageKind(
+  value: unknown,
+): value is PublicPlayerTurnImage["sourceTurnKind"] {
+  return (
+    value === "post_choice_turn" ||
+    value === "connected_path_turn" ||
+    value === "orb_decision_turn" ||
+    value === "connected_asi_turn"
+  );
+}
+
+function isPlayerTurnImageStatus(
+  value: unknown,
+): value is PublicPlayerTurnImage["status"] {
+  return (
+    value === "pending" ||
+    value === "generating" ||
+    value === "ready" ||
+    value === "error"
+  );
 }

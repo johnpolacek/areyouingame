@@ -7,6 +7,7 @@ import {
 import { notFound } from "next/navigation";
 import { HeroBackgroundVideo } from "../../../hero-background-video";
 import { CharacterInfoPanel } from "@/components/character-info-panel";
+import { PlayerTurnImage } from "@/components/player-turn-image";
 import { getPublicLivePlayer } from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
@@ -108,6 +109,14 @@ export default async function LivePlayerPage({
                   ) : null}
                   {entry.playerText ? (
                     <TranscriptBlock label="Player" text={entry.playerText} />
+                  ) : null}
+                  {entry.turnImage ? (
+                    <div className="max-w-md">
+                      <PlayerTurnImage
+                        image={entry.turnImage}
+                        sourceTurnId={entry.turnImage.sourceTurnId}
+                      />
+                    </div>
                   ) : null}
                   {entry.narratorText ? (
                     <TranscriptBlock label="Narrator" text={entry.narratorText} />

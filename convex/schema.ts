@@ -319,6 +319,42 @@ const aiUsageEvent = v.object({
   createdAt: v.string(),
 });
 
+const playerTurnImageStatus = v.union(
+  v.literal("pending"),
+  v.literal("generating"),
+  v.literal("ready"),
+  v.literal("error"),
+);
+
+const playerTurnImageKind = v.union(
+  v.literal("post_choice_turn"),
+  v.literal("connected_path_turn"),
+  v.literal("orb_decision_turn"),
+  v.literal("connected_asi_turn"),
+);
+
+const playerTurnImage = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  playerId: v.string(),
+  clerkUserId: v.string(),
+  sourceTurnId: v.string(),
+  sourceTurnKind: playerTurnImageKind,
+  status: playerTurnImageStatus,
+  prompt: v.optional(v.string()),
+  promptModel: v.optional(v.string()),
+  imageModel: v.optional(v.string()),
+  quality: v.optional(v.literal("low")),
+  size: v.optional(v.literal("1024x1024")),
+  bucket: v.optional(v.string()),
+  objectKey: v.optional(v.string()),
+  contentType: v.optional(v.string()),
+  errorMessage: v.optional(v.string()),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+  generatedAt: v.optional(v.string()),
+});
+
 const publicCharacterSnapshot = v.object({
   name: v.string(),
   age: v.string(),
@@ -484,4 +520,10 @@ export default defineSchema({
     .index("by_operation", ["operation"])
     .index("by_dailyGameId", ["dailyGameId"])
     .index("by_clerkUserId", ["clerkUserId"]),
+
+  playerTurnImages: defineTable(playerTurnImage)
+    .index("by_sourceTurnId", ["sourceTurnId"])
+    .index("by_playerId", ["playerId"])
+    .index("by_dailyGameId", ["dailyGameId"])
+    .index("by_status", ["status"]),
 });

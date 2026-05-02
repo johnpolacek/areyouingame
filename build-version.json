@@ -1,6 +1,6 @@
 {
-  "version": "0.1.23",
-  "label": "Build 0.1.23",
+  "version": "0.1.24",
+  "label": "Build 0.1.24",
   "updatedAt": "2026-05-02",
-  "summary": "Harden live public activity feed"
+  "summary": "Add player turn image generation"
 }

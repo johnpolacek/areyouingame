@@ -61,7 +61,11 @@ describe("playtest reports", () => {
   });
 });
 
-async function createPlaytestRepo(index: PlaytestIndex) {
+async function createPlaytestRepo(indexInput: Omit<PlaytestIndex, "generatedAt">) {
+  const index: PlaytestIndex = {
+    generatedAt: "2026-05-02T00:00:00.000Z",
+    ...indexInput,
+  };
   const repoRoot = await mkdtemp(path.join(tmpdir(), "areyouin-playtests-"));
   const playtestDir = path.join(repoRoot, "wiki", "playtests");
 
