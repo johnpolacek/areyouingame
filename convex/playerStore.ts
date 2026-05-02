@@ -2301,6 +2301,57 @@ function sameText(left: string, right: string): boolean {
   return left.trim().toLowerCase() === right.trim().toLowerCase();
 }
 
+export const deleteDailyGameForAdmin = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    dailyGameId: v.string(),
+  },
+  returns: v.object({
+    deletedGames: v.number(),
+    deletedPlayers: v.number(),
+    deletedGameplayEvents: v.number(),
+    deletedPublicActivityEvents: v.number(),
+    deletedAiUsageEvents: v.number(),
+    deletedStorylineContexts: v.number(),
+    deletedArtifactObjects: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    return await deleteDailyGameRecords(ctx, args.dailyGameId);
+  },
+});
+
+export const deleteAllDailyGamesForAdmin = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+  },
+  returns: v.object({
+    deletedGames: v.number(),
+    deletedPlayers: v.number(),
+    deletedGameplayEvents: v.number(),
+    deletedPublicActivityEvents: v.number(),
+    deletedAiUsageEvents: v.number(),
+    deletedStorylineContexts: v.number(),
+    deletedArtifactObjects: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const games = await ctx.db.query("dailyGames").collect();
+    const totals = createDeleteDailyGameTotals();
+
+    for (const game of games) {
+      addDeleteDailyGameTotals(
+        totals,
+        await deleteDailyGameRecords(ctx, game.dailyGameId),
+      );
+    }
+
+    return totals;
+  },
+});
+
 async function ensureDailyGame(
   ctx: any,
   game: {
@@ -2332,6 +2383,95 @@ async function ensureDailyGame(
     createdAt: now,
     updatedAt: now,
   });
+}
+
+async function deleteDailyGameRecords(ctx: any, dailyGameId: string) {
+  const totals = createDeleteDailyGameTotals();
+  const games = await ctx.db
+    .query("dailyGames")
+    .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+    .collect();
+
+  totals.deletedGames += await deleteDocuments(ctx, games);
+  totals.deletedPlayers += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("players")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedGameplayEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("gameplayEvents")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedPublicActivityEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("publicActivityEvents")
+      .withIndex("by_dailyGameId_and_createdAt", (q: any) =>
+        q.eq("dailyGameId", dailyGameId),
+      )
+      .collect(),
+  );
+  totals.deletedAiUsageEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("aiUsageEvents")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedStorylineContexts += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("day1StorylineContexts")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedArtifactObjects += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("artifactObjects")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+
+  return totals;
+}
+
+async function deleteDocuments(ctx: any, documents: { _id: string }[]) {
+  for (const document of documents) {
+    await ctx.db.delete(document._id);
+  }
+
+  return documents.length;
+}
+
+function createDeleteDailyGameTotals() {
+  return {
+    deletedGames: 0,
+    deletedPlayers: 0,
+    deletedGameplayEvents: 0,
+    deletedPublicActivityEvents: 0,
+    deletedAiUsageEvents: 0,
+    deletedStorylineContexts: 0,
+    deletedArtifactObjects: 0,
+  };
+}
+
+function addDeleteDailyGameTotals(
+  totals: ReturnType<typeof createDeleteDailyGameTotals>,
+  next: ReturnType<typeof createDeleteDailyGameTotals>,
+) {
+  totals.deletedGames += next.deletedGames;
+  totals.deletedPlayers += next.deletedPlayers;
+  totals.deletedGameplayEvents += next.deletedGameplayEvents;
+  totals.deletedPublicActivityEvents += next.deletedPublicActivityEvents;
+  totals.deletedAiUsageEvents += next.deletedAiUsageEvents;
+  totals.deletedStorylineContexts += next.deletedStorylineContexts;
+  totals.deletedArtifactObjects += next.deletedArtifactObjects;
 }
 
 async function findPlayer(

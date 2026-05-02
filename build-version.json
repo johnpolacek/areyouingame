@@ -1,6 +1,6 @@
 {
-  "version": "0.1.21",
-  "label": "Build 0.1.21",
+  "version": "0.1.22",
+  "label": "Build 0.1.22",
   "updatedAt": "2026-05-02",
-  "summary": "Add living character info sheets"
+  "summary": "Add admin cleanup controls"
 }
