@@ -302,6 +302,50 @@ const publicActivityEvent = v.object({
   playtest: v.optional(publicActivityPlaytestMetadata),
 });
 
+const publicLiveGameSummary = v.object({
+  dailyGameId: v.string(),
+  eventStartsAtIso: v.string(),
+  eventStartsAtLabel: v.string(),
+  playerCount: v.number(),
+  activityCount: v.number(),
+  lastActivityAt: v.optional(v.string()),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+});
+
+const publicLivePlayerSummary = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  name: v.string(),
+  age: v.string(),
+  location: v.string(),
+  occupation: v.string(),
+  bio: v.string(),
+  choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
+  turnCount: v.number(),
+  lastActivityAt: v.optional(v.string()),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+});
+
+const publicLivePlayer = v.object({
+  id: v.string(),
+  dailyGameId: v.string(),
+  ...playerDraft,
+  firstDecision: v.optional(firstDecision),
+  firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
+  firstPostChoiceAction: v.optional(firstPostChoiceAction),
+  firstPostChoiceTurns: v.optional(v.array(firstPostChoiceTurn)),
+  firstConnectedPath: v.optional(firstConnectedPath),
+  firstMoveReveal: v.optional(firstMoveReveal),
+  openingSceneContext: v.optional(openingSceneContext),
+  openingResponse: v.optional(v.string()),
+  openingResponseSubmittedAt: v.optional(v.string()),
+  publicGameplayAgreementAcceptedAt: v.optional(v.string()),
+  createdAt: v.string(),
+  updatedAt: v.string(),
+});
+
 const player = v.object({
   id: v.string(),
   clerkUserId: v.string(),
@@ -402,6 +446,95 @@ export const getPublicActivityEvents = queryGeneric({
           .take(limit);
 
     return events.map(toPublicActivityEvent);
+  },
+});
+
+export const getPublicLiveGameSummaries = queryGeneric({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(publicLiveGameSummary),
+  handler: async (ctx, args) => {
+    const limit = Math.min(Math.max(args.limit ?? 50, 1), 200);
+    const games = await ctx.db.query("dailyGames").collect();
+    const summaries = await Promise.all(
+      games.map(async (game) => {
+        const players = await ctx.db
+          .query("players")
+          .withIndex("by_dailyGameId", (q) =>
+            q.eq("dailyGameId", game.dailyGameId),
+          )
+          .collect();
+        const activity = await ctx.db
+          .query("publicActivityEvents")
+          .withIndex("by_dailyGameId_and_createdAt", (q) =>
+            q.eq("dailyGameId", game.dailyGameId),
+          )
+          .order("desc")
+          .collect();
+
+        return {
+          dailyGameId: game.dailyGameId,
+          eventStartsAtIso: game.eventStartsAtIso,
+          eventStartsAtLabel: game.eventStartsAtLabel,
+          playerCount: players.length,
+          activityCount: activity.length,
+          ...(activity[0]?.createdAt
+            ? { lastActivityAt: activity[0].createdAt }
+            : {}),
+          createdAt: game.createdAt,
+          updatedAt: game.updatedAt,
+        };
+      }),
+    );
+
+    return summaries
+      .sort((a, b) =>
+        (b.lastActivityAt ?? b.eventStartsAtIso).localeCompare(
+          a.lastActivityAt ?? a.eventStartsAtIso,
+        ),
+      )
+      .slice(0, limit);
+  },
+});
+
+export const getPublicLivePlayersForGame = queryGeneric({
+  args: {
+    dailyGameId: v.string(),
+  },
+  returns: v.array(publicLivePlayerSummary),
+  handler: async (ctx, args) => {
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
+      .collect();
+
+    return players
+      .map((source) => toPublicLivePlayerSummary(source))
+      .sort((a, b) =>
+        (b.lastActivityAt ?? b.updatedAt).localeCompare(
+          a.lastActivityAt ?? a.updatedAt,
+        ),
+      );
+  },
+});
+
+export const getPublicLivePlayer = queryGeneric({
+  args: {
+    dailyGameId: v.string(),
+    playerId: v.string(),
+  },
+  returns: v.union(publicLivePlayer, v.null()),
+  handler: async (ctx, args) => {
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
+      .collect();
+    const selectedPlayer = players.find(
+      (candidate) => candidate.id === args.playerId,
+    );
+
+    return selectedPlayer ? toPublicLivePlayer(selectedPlayer) : null;
   },
 });
 
@@ -1929,6 +2062,93 @@ function toPublicActivityEvent(source: any) {
       : {}),
     ...(source.sceneTitle ? { sceneTitle: source.sceneTitle } : {}),
     ...(source.playtest ? { playtest: source.playtest } : {}),
+  };
+}
+
+function toPublicLivePlayerSummary(source: any) {
+  const gameplayTurns = [
+    ...(source.firstPostChoiceTurns ?? []),
+    ...(source.firstConnectedPath?.turns ?? []),
+    ...(source.firstConnectedPath?.orbDecisionTurns ?? []),
+    ...(source.firstConnectedPath?.connectedAsiTurns ?? []),
+  ];
+  const timedMilestones = [
+    source.openingResponseSubmittedAt,
+    source.openingSceneContext?.answeredAt,
+    source.firstMoveReveal?.generatedAt,
+    source.firstDecision?.submittedAt,
+    ...(source.firstRevealTextResponses ?? []).map(
+      (response: any) => response.submittedAt,
+    ),
+    ...gameplayTurns.map((turn: any) => turn.resolvedAt ?? turn.submittedAt),
+  ].filter(Boolean);
+  const lastActivityAt = timedMilestones.sort().at(-1);
+
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    name: source.name,
+    age: source.age,
+    location: source.location,
+    occupation: source.occupation,
+    bio: source.bio,
+    ...(source.firstDecision?.choice
+      ? { choice: source.firstDecision.choice }
+      : {}),
+    turnCount:
+      (source.openingResponse ? 1 : 0) +
+      (source.openingSceneContext?.answerText ? 1 : 0) +
+      (source.firstMoveReveal ? 1 : 0) +
+      (source.firstDecision ? 1 : 0) +
+      (source.firstRevealTextResponses?.length ?? 0) +
+      gameplayTurns.length,
+    ...(lastActivityAt ? { lastActivityAt } : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+  };
+}
+
+function toPublicLivePlayer(source: any) {
+  return {
+    id: source.id,
+    dailyGameId: source.dailyGameId,
+    name: source.name,
+    age: source.age,
+    location: source.location,
+    occupation: source.occupation,
+    bio: source.bio,
+    timeZone: source.timeZone,
+    ...(source.firstDecision ? { firstDecision: source.firstDecision } : {}),
+    ...(source.firstRevealTextResponses
+      ? { firstRevealTextResponses: source.firstRevealTextResponses }
+      : {}),
+    ...(source.firstPostChoiceAction
+      ? { firstPostChoiceAction: source.firstPostChoiceAction }
+      : {}),
+    ...(source.firstPostChoiceTurns
+      ? { firstPostChoiceTurns: source.firstPostChoiceTurns }
+      : {}),
+    ...(source.firstConnectedPath
+      ? { firstConnectedPath: source.firstConnectedPath }
+      : {}),
+    ...(source.firstMoveReveal ? { firstMoveReveal: source.firstMoveReveal } : {}),
+    ...(source.openingSceneContext
+      ? { openingSceneContext: source.openingSceneContext }
+      : {}),
+    ...(source.openingResponse
+      ? { openingResponse: source.openingResponse }
+      : {}),
+    ...(source.openingResponseSubmittedAt
+      ? { openingResponseSubmittedAt: source.openingResponseSubmittedAt }
+      : {}),
+    ...(source.publicGameplayAgreementAcceptedAt
+      ? {
+          publicGameplayAgreementAcceptedAt:
+            source.publicGameplayAgreementAcceptedAt,
+        }
+      : {}),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
   };
 }
 

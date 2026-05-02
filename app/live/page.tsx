@@ -1,52 +1,141 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import {
+  ArrowUpRightIcon,
+  CalendarDaysIcon,
+  RadioIcon,
+  UsersIcon,
+} from "lucide-react";
 import { HeroBackgroundVideo } from "../hero-background-video";
-import { PublicActivityTimeline } from "@/components/public-activity-timeline";
-import { getPublicActivityEvents } from "@/lib/public-activity";
+import { getPublicLiveGameSummaries } from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
 
-export default async function LiveActivityPage() {
-  const initialEvents = await getPublicActivityEvents({ limit: 100 });
-  const realtime = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
+export default async function LiveGamesPage() {
+  const games = await getPublicLiveGameSummaries({ limit: 100 });
 
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-background px-5 py-8 text-foreground sm:px-8">
       <HeroBackgroundVideo />
       <div className="cinematic-vignette absolute inset-0 z-[1]" />
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="flex flex-col gap-4 border-b border-border/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">
-              Live Activity
+              Live
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-foreground sm:text-5xl">
-              Today&apos;s public transcript
+              Public game rooms
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-              Player-visible turns from the shared activity stream. Synthetic
-              persona runs are shown in the same feed and labeled on each card.
+              Browse the active public games, then open a room to inspect each
+              player&apos;s visible gameplay path.
             </p>
           </div>
           <Link
-            className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-card/70 px-4 text-sm font-semibold text-foreground shadow-lg shadow-black/10 backdrop-blur-md transition hover:bg-card dark:bg-black/30"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-card/70 px-4 text-sm font-semibold text-foreground shadow-lg shadow-black/10 backdrop-blur-md transition hover:bg-card dark:bg-black/30"
             href="/game/today"
           >
             Open game
+            <ArrowUpRightIcon aria-hidden="true" className="size-4" />
           </Link>
         </header>
 
-        {!realtime ? (
-          <div className="rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-100">
-            Realtime Convex updates need NEXT_PUBLIC_CONVEX_URL. Showing the
-            latest server snapshot.
-          </div>
-        ) : null}
+        {games.length > 0 ? (
+          <section className="grid gap-4 md:grid-cols-2">
+            {games.map((game) => (
+              <Link
+                className="group grid gap-5 rounded-lg border border-border bg-card/80 p-5 shadow-2xl shadow-black/10 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-card dark:bg-black/35 dark:shadow-black/35"
+                href={`/live/${encodeURIComponent(game.dailyGameId)}`}
+                key={game.dailyGameId}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      <CalendarDaysIcon aria-hidden="true" className="size-4 text-accent" />
+                      {game.eventStartsAtLabel}
+                    </p>
+                    <h2 className="mt-3 break-words font-mono text-xl font-semibold text-foreground">
+                      {game.dailyGameId}
+                    </h2>
+                  </div>
+                  <ArrowUpRightIcon
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-muted-foreground transition group-hover:text-foreground"
+                  />
+                </div>
 
-        <PublicActivityTimeline
-          initialEvents={initialEvents}
-          realtime={realtime}
-        />
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <Metric
+                    icon={<UsersIcon aria-hidden="true" className="size-4" />}
+                    label="Players"
+                    value={game.playerCount.toString()}
+                  />
+                  <Metric
+                    icon={<RadioIcon aria-hidden="true" className="size-4" />}
+                    label="Events"
+                    value={game.activityCount.toString()}
+                  />
+                </div>
+
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Last activity{" "}
+                  <span className="normal-case tracking-normal text-foreground/80">
+                    {formatDateTime(game.lastActivityAt ?? game.updatedAt)}
+                  </span>
+                </p>
+              </Link>
+            ))}
+          </section>
+        ) : (
+          <EmptyState
+            title="No public games yet"
+            body="Create a player or run a persona playtest to populate the live browser."
+          />
+        )}
       </div>
     </main>
   );
+}
+
+function Metric({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-md border border-border/80 bg-background/55 px-3 py-3">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        {icon}
+        <span className="text-xs font-semibold uppercase tracking-[0.14em]">
+          {label}
+        </span>
+      </div>
+      <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function EmptyState({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card/70 p-8 text-center shadow-2xl shadow-black/10 backdrop-blur-md dark:bg-black/25 dark:shadow-black/35">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        {title}
+      </p>
+      <p className="mt-3 text-lg font-medium text-foreground">{body}</p>
+    </div>
+  );
+}
+
+function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
