@@ -6,12 +6,12 @@ Expand the production backend into deeper authoritative world and player state, 
 
 ## Current Status
 
-Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is completed: shared Day 1 global storyline context is available to constrain later player turns. Stage 05 Unit 03 is completed: the first NO/unconnected post-choice action resolves into a persisted narrative response with append-only event history. Stage 05 Unit 04 is completed: the first YES/connected path persists deterministic waiting, package delivery eligibility, optional unboxing, orb reveal, and connected-path event history. Stage 05 Unit 05 is completed: revealed-orb play now has a canonical `orbLifecycle` with delivered, accepted, and lost outcomes. Stage 05 Unit 06 is completed: an orb-accepted player can take the first connected ASI interaction through a guarded, persisted, append-only turn.
+Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is now the first text-capable action loop, including deferred interruptions, end-day deferrals, and first post-choice action persistence. Stage 05 Unit 02 is completed: shared Day 1 global storyline context is available to constrain later player turns. Stage 05 Unit 03 is completed: the first NO/unconnected post-choice action resolves into a persisted narrative response with append-only event history. Stage 05 Unit 04 is completed: the first YES/connected path persists deterministic waiting, package delivery eligibility, optional unboxing, orb reveal, and connected-path event history. Stage 05 Unit 05 is completed: revealed-orb play now has a canonical `orbLifecycle` with delivered, accepted, and lost outcomes. Stage 05 Unit 06 is completed: an orb-accepted player can take the first connected ASI interaction through a guarded, persisted, append-only turn. Stage 05 Unit 07 is completed: the first public live activity feed exposes player-visible Day 1 activity without requiring sign-in.
 
 ## Scope
 
-- Include: text-based YES/NO response classification, deferred interruption attempts, first post-choice open action, branch-specific YES/NO continuations, expanded canonical state, append-only event history, narrative memory update boundaries, S3 artifact conventions for stable/generated narrative material, and the rule that durable summaries explain the world but do not own numeric or enforceable truth.
-- Exclude: full global MUD simulation breadth until the first post-choice action loop proves the interaction pattern.
+- Include: text-based YES/NO response classification, deferred interruption attempts, first post-choice open action, branch-specific YES/NO continuations, expanded canonical state, append-only event history, narrative memory update boundaries, S3 artifact conventions for stable/generated narrative material, public player-visible activity records, and the rule that durable summaries explain the world but do not own numeric or enforceable truth.
+- Exclude: full global MUD simulation breadth until the first post-choice action loop proves the interaction pattern, and recurring daily lifecycle/archive behavior that belongs to Stage 06.
 
 ## Units
 
@@ -21,10 +21,12 @@ Completed MVP product-spine stage. Stage 05 Unit 01 is completed: the reveal is 
 - [Stage 05, Unit 04: First YES Connected Path, Drone, And Orb](units/stage-05/04-first-yes-connected-path-drone-and-orb.md) - completed.
 - [Stage 05, Unit 05: First Orb Decision](units/stage-05/05-first-orb-decision.md) - completed.
 - [Stage 05, Unit 06: First Connected ASI Interaction](units/stage-05/06-first-connected-asi-interaction.md) - completed.
+- [Stage 05, Unit 07: Live Public Activity Feed](units/stage-05/07-live-public-activity-feed.md) - completed.
 
 ## Acceptance Criteria
 
 - This stage begins with the text-based reveal response loop before broader structured-state and memory work.
+- Public observers can view player-visible Day 1 activity without signing in.
 - Later unit plans can be added incrementally without rewriting the roadmap structure.
 
 ## Verification

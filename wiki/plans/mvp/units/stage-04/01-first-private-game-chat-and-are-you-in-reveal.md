@@ -22,7 +22,7 @@ The player should feel they have entered today's world before the core choice ap
 - Full deterministic adjudication.
 - Full LLM action-classification pipeline.
 - Public recap generation.
-- Live public activity implementation, which belongs to Stage 06.
+- Live public activity implementation, which belongs to Stage 05 Unit 07.
 - Asking YES or NO during player creation.
 - Revealing the YES or NO choice in the first location/activity prompt.
 

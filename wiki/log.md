@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-02] planning | separate live feed from daily lifecycle
+
+- Added Stage 05 Unit 07 for the live public activity feed so public Day 1 visibility is part of the completed product-spine stage.
+- Narrowed Stage 06 to daily game lifecycle, date-id game creation, event timing, accumulated games, and public recap/archive continuity.
+- Updated roadmap references so the existing `/live` routes and public activity records are treated as Stage 05 work that Stage 06 builds on.
+
 ## [2026-05-02] documentation | reconcile live browser and narration drift
 
 - Reviewed wiki and planning pages against recent runtime changes through build `0.1.20`.

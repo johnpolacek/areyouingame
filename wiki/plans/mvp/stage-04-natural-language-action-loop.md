@@ -50,5 +50,5 @@ Completed product-spine stage. Current player/gameplay state now uses the produc
 
 ## Assumptions
 
-- Earlier private-during-the-day assumptions are superseded by the Stage 06 live public activity direction.
+- Earlier private-during-the-day assumptions are superseded by the Stage 05 Unit 07 live public activity direction.
 - Full public transcript means player-visible transcript only, not internal prompts or operational metadata.
