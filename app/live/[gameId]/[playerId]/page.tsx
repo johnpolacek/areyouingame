@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { HeroBackgroundVideo } from "../../../hero-background-video";
+import { CharacterInfoPanel } from "@/components/character-info-panel";
 import { getPublicLivePlayer, type PublicLivePlayer } from "@/lib/live-browser";
 import type {
   FirstConnectedAsiTurn,
@@ -82,6 +83,11 @@ export default async function LivePlayerPage({
             </div>
           </div>
         </header>
+
+        <CharacterInfoPanel
+          characterInfo={player.characterInfo}
+          title="Living Character Sheet"
+        />
 
         {entries.length > 0 ? (
           <section className="grid gap-4">

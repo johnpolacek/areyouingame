@@ -1,4 +1,10 @@
 import { trackedGenerateText, type AiUsageOperation } from "./ai-usage";
+import {
+  buildCharacterInfoCorrectionPromptContext,
+  buildPlayerCharacterInfoPromptContext,
+  normalizeCharacterInfoUpdates,
+  type CharacterInfoUpdate,
+} from "./character-info";
 import type {
   Day1GameplayContextPayload,
   Day1StorylineContext,
@@ -20,6 +26,7 @@ export type EarlyPostChoiceTurnResponse = {
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
 };
 
@@ -28,6 +35,7 @@ type GeneratedEarlyTurnResponse = {
   sceneTitle?: unknown;
   actionKind?: unknown;
   playerVisibleFacts?: unknown;
+  characterInfoUpdates?: unknown;
 };
 
 type NormalizedEarlyTurnResponse = {
@@ -35,6 +43,7 @@ type NormalizedEarlyTurnResponse = {
   sceneTitle: string;
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
 };
 
 type ResponseValidation = (
@@ -123,6 +132,17 @@ export async function createEarlyPostChoiceTurnResponse({
   let generatedResponse: NormalizedEarlyTurnResponse | null = null;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    const transitionKind =
+      promptExtras &&
+      typeof promptExtras.transition === "object" &&
+      promptExtras.transition &&
+      "transitionKind" in promptExtras.transition
+        ? (promptExtras.transition as { transitionKind?: unknown }).transitionKind
+        : undefined;
+    const characterInfo = buildPlayerCharacterInfoPromptContext({
+      player,
+      hideConnectedRevealTerms: branch === "YES" && transitionKind === "waiting",
+    });
     const { text } = await trackedGenerateText({
       model,
       operation:
@@ -149,12 +169,13 @@ export async function createEarlyPostChoiceTurnResponse({
         "Fictional quoted fragments should sound like ordinary people reacting in the moment. Do not include handles, real names, real outlets, or real quotes.",
         "Do not call, scrape, quote, or imply access to real Twitter, X, Bluesky, Facebook, news sites, broadcasts, or external services.",
         "Do not introduce deleted, disappearing, or vanishing posts unless future canonical state explicitly establishes that behavior.",
-        "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
+        "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, playerVisibleFacts, and optional characterInfoUpdates.",
         "responseText should be 2 to 4 short paragraphs of second-person present-tense narration. Blockquote paragraphs count toward this limit.",
         "Keep responseText concise. Aim for no more than 130 words unless the player action truly needs more.",
         "sceneTitle should be a short evocative title, 2 to 6 words, title case, made from the current scene rather than the player's literal input.",
         "actionKind should be a short snake_case phrase describing the attempted action in broad terms.",
         "playerVisibleFacts should contain 2 to 5 short durable facts the player learned or established, not literary prose.",
+        "characterInfoUpdates is optional and should contain at most 3 public-safe continuity updates. Use objects with section, operation, text, and optional targetText. Allowed sections: currentSituation, relationships, resources, constraints, goals, knowledge, openThreads, recentChanges. Use only facts visible to the player in this exact stage. Do not include internal status labels.",
       ]),
       prompt: JSON.stringify(
         {
@@ -173,6 +194,10 @@ export async function createEarlyPostChoiceTurnResponse({
           },
           firstDecision: player.firstDecision,
           firstMoveReveal: player.firstMoveReveal,
+          characterInfo,
+          characterInfoCorrections: buildCharacterInfoCorrectionPromptContext({
+            characterInfo: player.characterInfo,
+          }),
           actionText,
           day1GameplayContext,
           day1MediaContext,
@@ -189,6 +214,9 @@ export async function createEarlyPostChoiceTurnResponse({
       actionKind: normalizeActionKind(generated.actionKind, defaultActionKind),
       playerVisibleFacts: normalizePlayerVisibleFacts(
         generated.playerVisibleFacts,
+      ),
+      characterInfoUpdates: normalizeCharacterInfoUpdates(
+        generated.characterInfoUpdates,
       ),
     };
     validationError = responseValidation?.(normalized) ?? null;
@@ -210,6 +238,9 @@ export async function createEarlyPostChoiceTurnResponse({
     responseSource: "ai",
     actionKind: generatedResponse.actionKind,
     playerVisibleFacts: generatedResponse.playerVisibleFacts,
+    ...(generatedResponse.characterInfoUpdates?.length
+      ? { characterInfoUpdates: generatedResponse.characterInfoUpdates }
+      : {}),
     storylineContextSourceVersion: storylineContext.sourceVersion,
   };
 }

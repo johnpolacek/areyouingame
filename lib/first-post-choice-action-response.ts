@@ -2,6 +2,7 @@ import type {
   Day1GameplayContextPayload,
   Day1StorylineContext,
 } from "./day-1-storyline-context";
+import type { CharacterInfoUpdate } from "./character-info";
 import type { DailyGame } from "./daily-game";
 import { createEarlyPostChoiceTurnResponse } from "./early-post-choice-turn-response";
 import type { DailyPlayer } from "./player-store";
@@ -13,6 +14,7 @@ export type FirstPostChoiceActionResponse = {
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
 };
 

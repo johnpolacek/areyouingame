@@ -10,6 +10,69 @@ const revealCopy = v.object({
   audioPrompt: v.literal("Please respond yes or no"),
 });
 
+const characterInfoSource = v.union(
+  v.literal("draft"),
+  v.literal("ai"),
+  v.literal("player_correction"),
+);
+
+const characterInfoSectionKey = v.union(
+  v.literal("currentSituation"),
+  v.literal("relationships"),
+  v.literal("resources"),
+  v.literal("constraints"),
+  v.literal("goals"),
+  v.literal("knowledge"),
+  v.literal("openThreads"),
+  v.literal("recentChanges"),
+);
+
+const characterInfoItem = v.object({
+  id: v.string(),
+  text: v.string(),
+  updatedAt: v.string(),
+  source: characterInfoSource,
+  sourceTurnId: v.optional(v.string()),
+});
+
+const characterInfoCorrection = v.object({
+  id: v.string(),
+  section: characterInfoSectionKey,
+  itemId: v.string(),
+  previousText: v.optional(v.string()),
+  text: v.string(),
+  updatedAt: v.string(),
+});
+
+const characterInfoSections = v.object({
+  currentSituation: v.optional(v.array(characterInfoItem)),
+  relationships: v.optional(v.array(characterInfoItem)),
+  resources: v.optional(v.array(characterInfoItem)),
+  constraints: v.optional(v.array(characterInfoItem)),
+  goals: v.optional(v.array(characterInfoItem)),
+  knowledge: v.optional(v.array(characterInfoItem)),
+  openThreads: v.optional(v.array(characterInfoItem)),
+  recentChanges: v.optional(v.array(characterInfoItem)),
+});
+
+const characterInfo = v.object({
+  sections: characterInfoSections,
+  corrections: v.optional(v.array(characterInfoCorrection)),
+  updatedAt: v.string(),
+});
+
+const characterInfoUpdate = v.object({
+  section: characterInfoSectionKey,
+  operation: v.union(
+    v.literal("add"),
+    v.literal("replace"),
+    v.literal("remove"),
+  ),
+  itemId: v.optional(v.string()),
+  targetText: v.optional(v.string()),
+  text: v.optional(v.string()),
+});
+
 const firstMoveReveal = v.object({
   id: v.string(),
   sceneIntro: v.array(v.string()),
@@ -61,6 +124,7 @@ const firstPostChoiceAction = v.object({
   responseSource: v.optional(v.literal("ai")),
   actionKind: v.optional(v.string()),
   playerVisibleFacts: v.optional(v.array(v.string())),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.optional(v.string()),
   resolvedAt: v.optional(v.string()),
 });
@@ -76,6 +140,7 @@ const firstPostChoiceTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   resolvedAt: v.string(),
 });
@@ -112,6 +177,7 @@ const firstConnectedPathTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   deliveryStatus: connectedDeliveryStatus,
   packageStatus: connectedPackageStatus,
@@ -129,6 +195,7 @@ const firstOrbDecisionTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   orbLifecycle: connectedOrbLifecycle,
   resolvedAt: v.string(),
@@ -144,6 +211,7 @@ const firstConnectedAsiTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   resolvedAt: v.string(),
 });
@@ -307,6 +375,7 @@ export default defineSchema({
     occupation: v.string(),
     bio: v.string(),
     timeZone: v.string(),
+    characterInfo: v.optional(characterInfo),
     firstDecision: v.optional(firstDecision),
     firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
     firstPostChoiceAction: v.optional(firstPostChoiceAction),
