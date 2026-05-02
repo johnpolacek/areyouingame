@@ -56,6 +56,7 @@ export type PublicActivityEvent = {
 
 export type PublicLivePlayerSummary = {
   id: string;
+  publicId: string;
   dailyGameId: string;
   name: string;
   age: string;
@@ -81,6 +82,7 @@ export type PublicLiveTranscriptEntry = {
 
 export type PublicLivePlayer = PlayerDraftInput & {
   id: string;
+  publicId: string;
   dailyGameId: string;
   characterInfo?: CharacterInfo;
   choice?: YesNoChoice;

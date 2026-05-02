@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPublicLiveTranscript,
+  fromPublicLivePlayerId,
   toPublicLivePlayerProjection,
+  toPublicLivePlayerId,
   toPublicLivePlayerSummaryProjection,
 } from "./public-live-transcript";
 
@@ -117,6 +119,7 @@ describe("public live transcript projection", () => {
 
     expect(publicPlayer).toMatchObject({
       id: "game-1:user-1",
+      publicId: toPublicLivePlayerId("game-1:user-1"),
       choice: "NO",
       turnCount: 5,
       lastActivityAt: "2026-05-02T09:06:00.000Z",
@@ -133,6 +136,7 @@ describe("public live transcript projection", () => {
   it("keeps summaries compact for public room cards", () => {
     expect(toPublicLivePlayerSummaryProjection(player)).toEqual({
       id: "game-1:user-1",
+      publicId: toPublicLivePlayerId("game-1:user-1"),
       dailyGameId: "game-1",
       name: "Mara Ilyin",
       age: "36",
@@ -145,5 +149,14 @@ describe("public live transcript projection", () => {
       createdAt: "2026-05-02T09:00:00.000Z",
       updatedAt: "2026-05-02T09:06:00.000Z",
     });
+  });
+
+  it("uses a URL-safe public player id that round-trips to the stored id", () => {
+    const publicId = toPublicLivePlayerId("2026-05-02:user_123");
+
+    expect(publicId).not.toContain(":");
+    expect(publicId).not.toContain("%");
+    expect(fromPublicLivePlayerId(publicId)).toBe("2026-05-02:user_123");
+    expect(fromPublicLivePlayerId("2026-05-02%3Auser_123")).toBeNull();
   });
 });

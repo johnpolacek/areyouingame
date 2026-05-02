@@ -10,6 +10,7 @@ export type PublicLiveTranscriptEntry = {
 
 export type PublicLivePlayerProjection = {
   id: string;
+  publicId: string;
   dailyGameId: string;
   name: string;
   age: string;
@@ -40,6 +41,7 @@ type PublicCharacterInfoItem = {
 
 export type PublicLivePlayerSummaryProjection = {
   id: string;
+  publicId: string;
   dailyGameId: string;
   name: string;
   age: string;
@@ -61,6 +63,7 @@ export function toPublicLivePlayerProjection(
 
   return {
     id: source.id,
+    publicId: toPublicLivePlayerId(source.id),
     dailyGameId: source.dailyGameId,
     name: source.name,
     age: source.age,
@@ -154,6 +157,7 @@ export function toPublicLivePlayerSummaryProjection(
 
   return {
     id: source.id,
+    publicId: toPublicLivePlayerId(source.id),
     dailyGameId: source.dailyGameId,
     name: source.name,
     age: source.age,
@@ -168,6 +172,26 @@ export function toPublicLivePlayerSummaryProjection(
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
   };
+}
+
+export function toPublicLivePlayerId(playerId: string): string {
+  return encodeUrlSafeBase64(playerId);
+}
+
+export function fromPublicLivePlayerId(publicId: string): string | null {
+  return decodeUrlSafeBase64(publicId);
+}
+
+function encodeUrlSafeBase64(value: string): string {
+  return value.replaceAll("~", "~~").replaceAll(":", "~c");
+}
+
+function decodeUrlSafeBase64(value: string): string | null {
+  if (value.includes("%") || value.includes(":")) {
+    return null;
+  }
+
+  return value.replaceAll("~c", ":").replaceAll("~~", "~");
 }
 
 export function buildPublicLiveTranscript(

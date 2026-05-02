@@ -1,7 +1,9 @@
 import { mutationGeneric, queryGeneric } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import {
+  fromPublicLivePlayerId,
   toPublicLivePlayerProjection,
+  toPublicLivePlayerId,
   toPublicLivePlayerSummaryProjection,
 } from "../lib/public-live-transcript";
 
@@ -388,6 +390,7 @@ const publicLiveGameSummary = v.object({
 
 const publicLivePlayerSummary = v.object({
   id: v.string(),
+  publicId: v.string(),
   dailyGameId: v.string(),
   name: v.string(),
   age: v.string(),
@@ -413,6 +416,7 @@ const publicLiveTranscriptEntry = v.object({
 
 const publicLivePlayer = v.object({
   id: v.string(),
+  publicId: v.string(),
   dailyGameId: v.string(),
   ...playerDraft,
   characterInfo: v.optional(characterInfo),
@@ -614,9 +618,13 @@ export const getPublicLivePlayer = queryGeneric({
       .query("players")
       .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
       .collect();
-    const selectedPlayer = players.find(
-      (candidate) => candidate.id === args.playerId,
-    );
+    const decodedPublicPlayerId = fromPublicLivePlayerId(args.playerId);
+    const selectedPlayer = players.find((candidate) => {
+      return (
+        candidate.id === args.playerId ||
+        (decodedPublicPlayerId !== null && candidate.id === decodedPublicPlayerId)
+      );
+    });
 
     return selectedPlayer ? toPublicLivePlayerProjection(selectedPlayer) : null;
   },
@@ -2706,7 +2714,7 @@ async function insertPublicActivityEvent(
   await ctx.db.insert("publicActivityEvents", {
     id: event.id,
     dailyGameId: event.dailyGameId,
-    ...(event.player.id ? { playerId: event.player.id } : {}),
+    ...(event.player.id ? { playerId: toPublicLivePlayerId(event.player.id) } : {}),
     createdAt: event.createdAt,
     character: toPublicCharacterSnapshot(event.player),
     eventKind: event.eventKind,
@@ -2725,7 +2733,14 @@ function toPublicActivityEvent(source: any) {
   return {
     id: source.id,
     dailyGameId: source.dailyGameId,
-    ...(source.playerId ? { playerId: source.playerId } : {}),
+    ...(source.playerId
+      ? {
+          playerId:
+            fromPublicLivePlayerId(source.playerId) === null
+              ? toPublicLivePlayerId(source.playerId)
+              : source.playerId,
+        }
+      : {}),
     createdAt: source.createdAt,
     character: toPublicCharacterSnapshot(source.character),
     eventKind: source.eventKind,
