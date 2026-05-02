@@ -74,7 +74,7 @@ export default async function LiveGamePage({
             {players.map((player) => (
               <Link
                 className="group grid min-h-80 gap-5 rounded-lg border border-border bg-card/80 p-5 shadow-2xl shadow-black/10 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-card dark:bg-black/35 dark:shadow-black/35"
-                href={`/live/${encodeURIComponent(dailyGameId)}/${encodeURIComponent(player.id)}`}
+                href={`/live/${encodeURIComponent(dailyGameId)}/${encodeURIComponent(player.publicId)}`}
                 key={player.id}
               >
                 {player.characterImage ? (

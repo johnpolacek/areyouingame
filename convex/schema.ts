@@ -354,6 +354,7 @@ const publicActivityEventKind = v.union(
 const publicActivityEvent = v.object({
   id: v.string(),
   dailyGameId: v.string(),
+  playerId: v.optional(v.string()),
   createdAt: v.string(),
   character: publicCharacterSnapshot,
   eventKind: publicActivityEventKind,
