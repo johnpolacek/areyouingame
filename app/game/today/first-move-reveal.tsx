@@ -4,7 +4,9 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CharacterInfoPanel } from "@/components/character-info-panel";
 import { cn } from "@/lib/utils";
+import type { CharacterInfo } from "@/lib/character-info";
 import type {
   FirstDecision,
   FirstConnectedPath,
@@ -36,6 +38,7 @@ type FirstMoveRevealProps = {
 
 type FirstChoiceConsequenceProps = {
   dailyGameStats: DailyGameStats;
+  characterInfo?: CharacterInfo;
   decision: FirstDecision;
   firstConnectedPath?: FirstConnectedPath;
   firstPostChoiceAction?: FirstPostChoiceAction;
@@ -350,6 +353,7 @@ export function FirstMoveReveal({
 
 export function FirstChoiceConsequence({
   dailyGameStats,
+  characterInfo,
   decision,
   firstConnectedPath,
   firstPostChoiceAction,
@@ -516,6 +520,13 @@ export function FirstChoiceConsequence({
                 </p>
               </div>
             </dl>
+            <div className="mt-5">
+              <CharacterInfoPanel
+                characterInfo={characterInfo}
+                editable
+                title="Character"
+              />
+            </div>
           </aside>
 
           <div className="grid min-h-0 min-w-0 content-start gap-7 overflow-y-auto overscroll-contain pr-1 lg:pr-3">
@@ -667,6 +678,8 @@ export function FirstChoiceConsequence({
           ))}
         </div>
       ) : null}
+
+      <CharacterInfoPanel characterInfo={characterInfo} editable title="Character" />
 
       {isActionReady ? (
         <ActionPromptForm

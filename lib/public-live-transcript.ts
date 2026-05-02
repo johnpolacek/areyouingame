@@ -17,12 +17,25 @@ export type PublicLivePlayerProjection = {
   occupation: string;
   bio: string;
   timeZone: string;
+  characterInfo?: PublicCharacterInfo;
   choice?: "YES" | "NO";
   transcript: PublicLiveTranscriptEntry[];
   turnCount: number;
   lastActivityAt?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+type PublicCharacterInfo = {
+  sections: Record<string, PublicCharacterInfoItem[]>;
+  updatedAt: string;
+};
+
+type PublicCharacterInfoItem = {
+  id: string;
+  text: string;
+  updatedAt: string;
+  source: "draft" | "ai" | "player_correction";
 };
 
 export type PublicLivePlayerSummaryProjection = {
@@ -55,6 +68,9 @@ export function toPublicLivePlayerProjection(
     occupation: source.occupation,
     bio: source.bio,
     timeZone: source.timeZone,
+    ...(source.characterInfo
+      ? { characterInfo: toPublicCharacterInfo(source.characterInfo) }
+      : {}),
     ...(source.firstDecision?.choice
       ? { choice: source.firstDecision.choice }
       : {}),
@@ -64,6 +80,70 @@ export function toPublicLivePlayerProjection(
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
   };
+}
+
+function toPublicCharacterInfo(source: any): PublicCharacterInfo | undefined {
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    return undefined;
+  }
+
+  const sectionsSource =
+    source.sections && typeof source.sections === "object"
+      ? source.sections
+      : {};
+  const sections: Record<string, PublicCharacterInfoItem[]> = {};
+
+  for (const [section, items] of Object.entries(sectionsSource)) {
+    if (!Array.isArray(items)) {
+      continue;
+    }
+
+    const publicItems = items
+      .map((item) => toPublicCharacterInfoItem(item))
+      .filter((item): item is PublicCharacterInfoItem => Boolean(item));
+
+    if (publicItems.length > 0) {
+      sections[section] = publicItems;
+    }
+  }
+
+  return {
+    sections,
+    updatedAt:
+      typeof source.updatedAt === "string"
+        ? source.updatedAt
+        : new Date().toISOString(),
+  };
+}
+
+function toPublicCharacterInfoItem(
+  source: any,
+): PublicCharacterInfoItem | undefined {
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    return undefined;
+  }
+
+  if (
+    typeof source.id !== "string" ||
+    typeof source.text !== "string" ||
+    typeof source.updatedAt !== "string" ||
+    !isPublicCharacterInfoSource(source.source)
+  ) {
+    return undefined;
+  }
+
+  return {
+    id: source.id,
+    text: source.text,
+    updatedAt: source.updatedAt,
+    source: source.source,
+  };
+}
+
+function isPublicCharacterInfoSource(
+  value: unknown,
+): value is PublicCharacterInfoItem["source"] {
+  return value === "draft" || value === "ai" || value === "player_correction";
 }
 
 export function toPublicLivePlayerSummaryProjection(

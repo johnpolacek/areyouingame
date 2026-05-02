@@ -86,6 +86,7 @@ export async function POST(request: Request) {
       responseSource: generatedResponse.responseSource,
       actionKind: generatedResponse.actionKind,
       playerVisibleFacts: generatedResponse.playerVisibleFacts,
+      characterInfoUpdates: generatedResponse.characterInfoUpdates,
       storylineContextSourceVersion:
         generatedResponse.storylineContextSourceVersion,
       expectedTurnNumber: generatedResponse.expectedTurnNumber,

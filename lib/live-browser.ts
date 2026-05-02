@@ -1,5 +1,6 @@
 import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
+import type { CharacterInfo } from "./character-info";
 import type { PlayerDraftInput, YesNoChoice } from "./player-store";
 
 export type PublicLiveGameSummary = {
@@ -81,6 +82,7 @@ export type PublicLiveTranscriptEntry = {
 export type PublicLivePlayer = PlayerDraftInput & {
   id: string;
   dailyGameId: string;
+  characterInfo?: CharacterInfo;
   choice?: YesNoChoice;
   transcript: PublicLiveTranscriptEntry[];
   turnCount: number;

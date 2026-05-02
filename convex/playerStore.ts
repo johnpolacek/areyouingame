@@ -14,6 +14,69 @@ const playerDraft = {
   timeZone: v.string(),
 };
 
+const characterInfoSource = v.union(
+  v.literal("draft"),
+  v.literal("ai"),
+  v.literal("player_correction"),
+);
+
+const characterInfoSectionKey = v.union(
+  v.literal("currentSituation"),
+  v.literal("relationships"),
+  v.literal("resources"),
+  v.literal("constraints"),
+  v.literal("goals"),
+  v.literal("knowledge"),
+  v.literal("openThreads"),
+  v.literal("recentChanges"),
+);
+
+const characterInfoItem = v.object({
+  id: v.string(),
+  text: v.string(),
+  updatedAt: v.string(),
+  source: characterInfoSource,
+  sourceTurnId: v.optional(v.string()),
+});
+
+const characterInfoCorrection = v.object({
+  id: v.string(),
+  section: characterInfoSectionKey,
+  itemId: v.string(),
+  previousText: v.optional(v.string()),
+  text: v.string(),
+  updatedAt: v.string(),
+});
+
+const characterInfoSections = v.object({
+  currentSituation: v.optional(v.array(characterInfoItem)),
+  relationships: v.optional(v.array(characterInfoItem)),
+  resources: v.optional(v.array(characterInfoItem)),
+  constraints: v.optional(v.array(characterInfoItem)),
+  goals: v.optional(v.array(characterInfoItem)),
+  knowledge: v.optional(v.array(characterInfoItem)),
+  openThreads: v.optional(v.array(characterInfoItem)),
+  recentChanges: v.optional(v.array(characterInfoItem)),
+});
+
+const characterInfo = v.object({
+  sections: characterInfoSections,
+  corrections: v.optional(v.array(characterInfoCorrection)),
+  updatedAt: v.string(),
+});
+
+const characterInfoUpdate = v.object({
+  section: characterInfoSectionKey,
+  operation: v.union(
+    v.literal("add"),
+    v.literal("replace"),
+    v.literal("remove"),
+  ),
+  itemId: v.optional(v.string()),
+  targetText: v.optional(v.string()),
+  text: v.optional(v.string()),
+});
+
 const firstMoveReveal = v.object({
   id: v.string(),
   sceneIntro: v.array(v.string()),
@@ -79,6 +142,7 @@ const firstPostChoiceAction = v.object({
   responseSource: v.optional(v.literal("ai")),
   actionKind: v.optional(v.string()),
   playerVisibleFacts: v.optional(v.array(v.string())),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.optional(v.string()),
   resolvedAt: v.optional(v.string()),
 });
@@ -94,6 +158,7 @@ const firstPostChoiceTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   resolvedAt: v.string(),
 });
@@ -130,6 +195,7 @@ const firstConnectedPathTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   deliveryStatus: connectedDeliveryStatus,
   packageStatus: connectedPackageStatus,
@@ -147,6 +213,7 @@ const firstOrbDecisionTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   orbLifecycle: connectedOrbLifecycle,
   resolvedAt: v.string(),
@@ -162,6 +229,7 @@ const firstConnectedAsiTurn = v.object({
   responseSource: v.literal("ai"),
   actionKind: v.string(),
   playerVisibleFacts: v.array(v.string()),
+  characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
   storylineContextSourceVersion: v.string(),
   resolvedAt: v.string(),
 });
@@ -347,6 +415,7 @@ const publicLivePlayer = v.object({
   id: v.string(),
   dailyGameId: v.string(),
   ...playerDraft,
+  characterInfo: v.optional(characterInfo),
   choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
   transcript: v.array(publicLiveTranscriptEntry),
   turnCount: v.number(),
@@ -360,6 +429,7 @@ const player = v.object({
   clerkUserId: v.string(),
   dailyGameId: v.string(),
   ...playerDraft,
+  characterInfo: v.optional(characterInfo),
   firstDecision: v.optional(firstDecision),
   firstRevealTextResponses: v.optional(v.array(firstRevealTextResponse)),
   firstPostChoiceAction: v.optional(firstPostChoiceAction),
@@ -674,11 +744,13 @@ export const createPlayerForUserGame = mutationGeneric({
     }
 
     const now = new Date().toISOString();
+    const characterInfoRecord = createInitialCharacterInfo(args.draft, now);
     const newPlayer = {
       ...args.draft,
       id: `${args.dailyGameId}:${args.clerkUserId}`,
       clerkUserId: args.clerkUserId,
       dailyGameId: args.dailyGameId,
+      characterInfo: characterInfoRecord,
       createdAt: now,
       updatedAt: now,
     };
@@ -1085,6 +1157,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
     responseSource: v.literal("ai"),
     actionKind: v.string(),
     playerVisibleFacts: v.array(v.string()),
+    characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
     storylineContextSourceVersion: v.string(),
   },
   returns: player,
@@ -1154,6 +1227,9 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       responseSource: args.responseSource,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
+      ...(args.characterInfoUpdates
+        ? { characterInfoUpdates: args.characterInfoUpdates }
+        : {}),
       storylineContextSourceVersion: args.storylineContextSourceVersion,
       resolvedAt: now,
     };
@@ -1171,12 +1247,24 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       responseSource: firstPostChoiceActionRecord.responseSource,
       actionKind: firstPostChoiceActionRecord.actionKind,
       playerVisibleFacts: firstPostChoiceActionRecord.playerVisibleFacts,
+      ...(firstPostChoiceActionRecord.characterInfoUpdates
+        ? {
+            characterInfoUpdates:
+              firstPostChoiceActionRecord.characterInfoUpdates,
+          }
+        : {}),
       storylineContextSourceVersion:
         firstPostChoiceActionRecord.storylineContextSourceVersion,
       resolvedAt: firstPostChoiceActionRecord.resolvedAt,
     };
     const firstPostChoiceAction =
       existingPlayer.firstPostChoiceAction ?? firstPostChoiceActionSnapshot;
+    const characterInfoRecord = mergeCharacterInfoUpdates({
+      characterInfo: existingPlayer.characterInfo,
+      updates: args.characterInfoUpdates,
+      now,
+      sourceTurnId: firstPostChoiceActionRecord.id,
+    });
     const eventRecord = {
       id: `${args.dailyGameId}:${existingPlayer.id}:post-choice-turn-resolved:${turnNumber}`,
       dailyGameId: args.dailyGameId,
@@ -1199,6 +1287,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
     await ctx.db.patch(existingPlayer._id, {
       firstPostChoiceAction,
       firstPostChoiceTurns,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
     await ctx.db.insert("gameplayEvents", eventRecord);
@@ -1220,6 +1309,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       ...existingPlayer,
       firstPostChoiceAction,
       firstPostChoiceTurns,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
   },
@@ -1235,6 +1325,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
     responseSource: v.literal("ai"),
     actionKind: v.string(),
     playerVisibleFacts: v.array(v.string()),
+    characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
     storylineContextSourceVersion: v.string(),
     expectedTurnNumber: v.number(),
     status: v.union(
@@ -1290,6 +1381,9 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       responseSource: args.responseSource,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
+      ...(args.characterInfoUpdates
+        ? { characterInfoUpdates: args.characterInfoUpdates }
+        : {}),
       storylineContextSourceVersion: args.storylineContextSourceVersion,
       deliveryStatus: args.deliveryStatus,
       packageStatus: args.packageStatus,
@@ -1333,6 +1427,12 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       ...(existingPath?.orbLostAt ? { orbLostAt: existingPath.orbLostAt } : {}),
       updatedAt: now,
     };
+    const characterInfoRecord = mergeCharacterInfoUpdates({
+      characterInfo: existingPlayer.characterInfo,
+      updates: args.characterInfoUpdates,
+      now,
+      sourceTurnId: turnRecord.id,
+    });
     const baseEvent = {
       dailyGameId: args.dailyGameId,
       playerId: existingPlayer.id,
@@ -1356,6 +1456,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
 
     await ctx.db.patch(existingPlayer._id, {
       firstConnectedPath: firstConnectedPathRecord,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
     await ctx.db.insert("gameplayEvents", {
@@ -1423,6 +1524,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
     return toDailyPlayer({
       ...existingPlayer,
       firstConnectedPath: firstConnectedPathRecord,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
   },
@@ -1438,6 +1540,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
     responseSource: v.literal("ai"),
     actionKind: v.string(),
     playerVisibleFacts: v.array(v.string()),
+    characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
     storylineContextSourceVersion: v.string(),
     expectedTurnNumber: v.number(),
     orbLifecycle: connectedOrbLifecycle,
@@ -1505,6 +1608,9 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       responseSource: args.responseSource,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
+      ...(args.characterInfoUpdates
+        ? { characterInfoUpdates: args.characterInfoUpdates }
+        : {}),
       storylineContextSourceVersion: args.storylineContextSourceVersion,
       orbLifecycle: args.orbLifecycle,
       resolvedAt: now,
@@ -1517,6 +1623,12 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       ...(args.orbLifecycle === "orb_lost" ? { orbLostAt: now } : {}),
       updatedAt: now,
     };
+    const characterInfoRecord = mergeCharacterInfoUpdates({
+      characterInfo: existingPlayer.characterInfo,
+      updates: args.characterInfoUpdates,
+      now,
+      sourceTurnId: turnRecord.id,
+    });
     const baseEvent = {
       dailyGameId: args.dailyGameId,
       playerId: existingPlayer.id,
@@ -1540,6 +1652,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
 
     await ctx.db.patch(existingPlayer._id, {
       firstConnectedPath: firstConnectedPathRecord,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
     await ctx.db.insert("gameplayEvents", {
@@ -1604,6 +1717,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
     return toDailyPlayer({
       ...existingPlayer,
       firstConnectedPath: firstConnectedPathRecord,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
   },
@@ -1619,6 +1733,7 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
     responseSource: v.literal("ai"),
     actionKind: v.string(),
     playerVisibleFacts: v.array(v.string()),
+    characterInfoUpdates: v.optional(v.array(characterInfoUpdate)),
     storylineContextSourceVersion: v.string(),
     expectedTurnNumber: v.number(),
   },
@@ -1675,6 +1790,9 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
       responseSource: args.responseSource,
       actionKind: args.actionKind,
       playerVisibleFacts: args.playerVisibleFacts,
+      ...(args.characterInfoUpdates
+        ? { characterInfoUpdates: args.characterInfoUpdates }
+        : {}),
       storylineContextSourceVersion: args.storylineContextSourceVersion,
       resolvedAt: now,
     };
@@ -1684,6 +1802,12 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
       connectedAsiStartedAt: existingPath.connectedAsiStartedAt ?? now,
       updatedAt: now,
     };
+    const characterInfoRecord = mergeCharacterInfoUpdates({
+      characterInfo: existingPlayer.characterInfo,
+      updates: args.characterInfoUpdates,
+      now,
+      sourceTurnId: turnRecord.id,
+    });
     const baseEvent = {
       dailyGameId: args.dailyGameId,
       playerId: existingPlayer.id,
@@ -1707,6 +1831,7 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
 
     await ctx.db.patch(existingPlayer._id, {
       firstConnectedPath: firstConnectedPathRecord,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
     await ctx.db.insert("gameplayEvents", {
@@ -1739,6 +1864,7 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
     return toDailyPlayer({
       ...existingPlayer,
       firstConnectedPath: firstConnectedPathRecord,
+      ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
     });
   },
@@ -1793,10 +1919,450 @@ export const resetPlayerDayForUserGame = mutationGeneric({
       openingSceneContext: undefined,
       openingResponse: undefined,
       openingResponseSubmittedAt: undefined,
+      characterInfo: createInitialCharacterInfo(existingPlayer, now),
       updatedAt: now,
     });
 
     return true;
+  },
+});
+
+export const correctCharacterInfoForUserGame = mutationGeneric({
+  args: {
+    ...authenticatedArgs,
+    correction: v.object({
+      section: characterInfoSectionKey,
+      itemId: v.optional(v.string()),
+      text: v.string(),
+    }),
+  },
+  returns: player,
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const existingPlayer = await findPlayerOrThrow(
+      ctx,
+      args.clerkUserId,
+      args.dailyGameId,
+    );
+    const now = new Date().toISOString();
+    const characterInfoRecord = applyCharacterInfoCorrection({
+      characterInfo: existingPlayer.characterInfo,
+      correction: args.correction,
+      now,
+    });
+
+    await ctx.db.patch(existingPlayer._id, {
+      characterInfo: characterInfoRecord,
+      updatedAt: now,
+    });
+
+    return toDailyPlayer({
+      ...existingPlayer,
+      characterInfo: characterInfoRecord,
+      updatedAt: now,
+    });
+  },
+});
+
+const CHARACTER_INFO_SECTIONS = [
+  "currentSituation",
+  "relationships",
+  "resources",
+  "constraints",
+  "goals",
+  "knowledge",
+  "openThreads",
+  "recentChanges",
+] as const;
+const MAX_CHARACTER_INFO_ITEMS = 8;
+const MAX_CHARACTER_INFO_CORRECTIONS = 20;
+const MAX_CHARACTER_INFO_TEXT = 180;
+const HIDDEN_CHARACTER_INFO_LABELS =
+  /\b(pre_delivery|package_available|orb_revealed|not_arrived|orb_delivered|orb_accepted|orb_lost|connected_asi_started|connectedDeliveryStatus|connectedPackageStatus|connectedOrbStatus|orbLifecycle)\b/i;
+
+function createInitialCharacterInfo(
+  draft: {
+    bio: string;
+  },
+  now: string,
+) {
+  const bio = sanitizeCharacterInfoText(draft.bio);
+
+  return normalizeCharacterInfo({
+    sections: {
+      ...(bio
+        ? {
+            currentSituation: [
+              {
+                id: "draft-bio",
+                text: bio,
+                updatedAt: now,
+                source: "draft",
+              },
+            ],
+          }
+        : {}),
+    },
+    updatedAt: now,
+  });
+}
+
+function mergeCharacterInfoUpdates({
+  characterInfo,
+  updates,
+  now,
+  sourceTurnId,
+}: {
+  characterInfo: any;
+  updates: any;
+  now: string;
+  sourceTurnId: string;
+}) {
+  const normalizedUpdates = normalizeCharacterInfoUpdates(updates);
+
+  if (normalizedUpdates.length === 0) {
+    return characterInfo ? normalizeCharacterInfo(characterInfo) : undefined;
+  }
+
+  const next = normalizeCharacterInfo(characterInfo ?? { sections: {}, updatedAt: now });
+
+  for (const update of normalizedUpdates) {
+    const items = [...(next.sections[update.section] ?? [])];
+
+    if (update.operation === "add") {
+      const updateText = update.text;
+
+      if (!updateText || items.some((item: any) => sameText(item.text, updateText))) {
+        next.sections[update.section] = items;
+        continue;
+      }
+      items.push({
+        id: createCharacterInfoItemId(update.section, sourceTurnId, items.length),
+        text: updateText,
+        updatedAt: now,
+        source: "ai",
+        sourceTurnId,
+      });
+      next.sections[update.section] = items.slice(-MAX_CHARACTER_INFO_ITEMS);
+      continue;
+    }
+
+    const targetIndex = findCharacterInfoTargetIndex(items, update);
+
+    if (targetIndex === -1) {
+      next.sections[update.section] = items;
+      continue;
+    }
+
+    if (update.operation === "remove") {
+      items.splice(targetIndex, 1);
+    } else if (update.text) {
+      items[targetIndex] = {
+        ...items[targetIndex],
+        text: update.text,
+        updatedAt: now,
+        source: "ai",
+        sourceTurnId,
+      };
+    }
+
+    next.sections[update.section] = items;
+  }
+
+  next.updatedAt = now;
+  return next;
+}
+
+function applyCharacterInfoCorrection({
+  characterInfo,
+  correction,
+  now,
+}: {
+  characterInfo: any;
+  correction: { section: string; itemId?: string; text: string };
+  now: string;
+}) {
+  const section = isCharacterInfoSection(correction.section)
+    ? correction.section
+    : null;
+  const text = sanitizeCharacterInfoText(correction.text);
+
+  if (!section || !text) {
+    throw new ConvexError("Character correction is invalid.");
+  }
+
+  const next = normalizeCharacterInfo(characterInfo ?? { sections: {}, updatedAt: now });
+  const items = [...(next.sections[section] ?? [])];
+  const existingIndex = correction.itemId
+    ? items.findIndex((item: any) => item.id === correction.itemId)
+    : -1;
+  const previousItem = existingIndex >= 0 ? items[existingIndex] : undefined;
+  const itemId =
+    previousItem?.id ??
+    createCharacterInfoItemId(section, `correction-${now}`, items.length);
+
+  if (previousItem) {
+    items[existingIndex] = {
+      ...previousItem,
+      text,
+      updatedAt: now,
+      source: "player_correction",
+    };
+  } else {
+    items.push({
+      id: itemId,
+      text,
+      updatedAt: now,
+      source: "player_correction",
+    });
+  }
+
+  next.sections[section] = items.slice(-MAX_CHARACTER_INFO_ITEMS);
+  next.corrections = [
+    ...(next.corrections ?? []),
+    {
+      id: `correction:${now}:${itemId}`,
+      section,
+      itemId,
+      ...(previousItem ? { previousText: previousItem.text } : {}),
+      text,
+      updatedAt: now,
+    },
+  ].slice(-MAX_CHARACTER_INFO_CORRECTIONS);
+  next.updatedAt = now;
+
+  return next;
+}
+
+function normalizeCharacterInfo(value: any) {
+  const sectionsSource =
+    value?.sections && typeof value.sections === "object" ? value.sections : {};
+  const sections: Record<string, any[]> = {};
+
+  for (const section of CHARACTER_INFO_SECTIONS) {
+    const items = Array.isArray(sectionsSource[section])
+      ? sectionsSource[section]
+      : [];
+    const normalizedItems = items
+      .map((item: any, index: number) =>
+        normalizeCharacterInfoItem(item, section, index),
+      )
+      .filter(Boolean)
+      .slice(0, MAX_CHARACTER_INFO_ITEMS);
+
+    if (normalizedItems.length > 0) {
+      sections[section] = normalizedItems;
+    }
+  }
+
+  const corrections = Array.isArray(value?.corrections)
+    ? value.corrections
+        .map(normalizeCharacterInfoCorrection)
+        .filter(Boolean)
+        .slice(-MAX_CHARACTER_INFO_CORRECTIONS)
+    : undefined;
+
+  return {
+    sections,
+    ...(corrections?.length ? { corrections } : {}),
+    updatedAt:
+      typeof value?.updatedAt === "string" ? value.updatedAt : new Date().toISOString(),
+  };
+}
+
+function normalizeCharacterInfoItem(item: any, section: string, index: number) {
+  const text = sanitizeCharacterInfoText(item?.text);
+
+  if (!text) {
+    return null;
+  }
+
+  return {
+    id: typeof item?.id === "string" ? item.id.slice(0, 120) : `${section}-${index}`,
+    text,
+    updatedAt:
+      typeof item?.updatedAt === "string"
+        ? item.updatedAt
+        : new Date().toISOString(),
+    source:
+      item?.source === "draft" || item?.source === "player_correction"
+        ? item.source
+        : "ai",
+    ...(typeof item?.sourceTurnId === "string"
+      ? { sourceTurnId: item.sourceTurnId.slice(0, 160) }
+      : {}),
+  };
+}
+
+function normalizeCharacterInfoCorrection(correction: any) {
+  const section = isCharacterInfoSection(correction?.section)
+    ? correction.section
+    : null;
+  const itemId =
+    typeof correction?.itemId === "string" ? correction.itemId.slice(0, 120) : "";
+  const text = sanitizeCharacterInfoText(correction?.text);
+
+  if (!section || !itemId || !text) {
+    return null;
+  }
+
+  const previousText = sanitizeCharacterInfoText(correction?.previousText);
+
+  return {
+    id:
+      typeof correction?.id === "string"
+        ? correction.id.slice(0, 160)
+        : `correction:${itemId}`,
+    section,
+    itemId,
+    ...(previousText ? { previousText } : {}),
+    text,
+    updatedAt:
+      typeof correction?.updatedAt === "string"
+        ? correction.updatedAt
+        : new Date().toISOString(),
+  };
+}
+
+function normalizeCharacterInfoUpdates(updates: any) {
+  if (!Array.isArray(updates)) {
+    return [];
+  }
+
+  return updates
+    .map((update) => {
+      const section = isCharacterInfoSection(update?.section)
+        ? update.section
+        : null;
+      const operation =
+        update?.operation === "add" ||
+        update?.operation === "replace" ||
+        update?.operation === "remove"
+          ? update.operation
+          : null;
+      const text = sanitizeCharacterInfoText(update?.text);
+      const targetText = sanitizeCharacterInfoText(update?.targetText);
+      const itemId =
+        typeof update?.itemId === "string" ? update.itemId.slice(0, 120) : "";
+
+      if (!section || !operation) {
+        return null;
+      }
+
+      if ((operation === "add" || operation === "replace") && !text) {
+        return null;
+      }
+
+      return {
+        section,
+        operation,
+        ...(itemId ? { itemId } : {}),
+        ...(targetText ? { targetText } : {}),
+        ...(text ? { text } : {}),
+      };
+    })
+    .filter((update): update is NonNullable<typeof update> => Boolean(update))
+    .slice(0, 12);
+}
+
+function sanitizeCharacterInfoText(value: any): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const text = value.replace(/\s+/g, " ").trim().slice(0, MAX_CHARACTER_INFO_TEXT);
+
+  if (!text || HIDDEN_CHARACTER_INFO_LABELS.test(text)) {
+    return "";
+  }
+
+  return text;
+}
+
+function findCharacterInfoTargetIndex(items: any[], update: any): number {
+  if (update.itemId) {
+    const byId = items.findIndex((item) => item.id === update.itemId);
+
+    if (byId >= 0) {
+      return byId;
+    }
+  }
+
+  if (update.targetText) {
+    return items.findIndex((item) => sameText(item.text, update.targetText));
+  }
+
+  return items.length - 1;
+}
+
+function createCharacterInfoItemId(
+  section: string,
+  sourceTurnId: string,
+  index: number,
+): string {
+  return `${section}:${sourceTurnId}:${index}`
+    .toLowerCase()
+    .replace(/[^a-z0-9:_-]+/g, "-")
+    .slice(0, 140);
+}
+
+function isCharacterInfoSection(value: any): value is (typeof CHARACTER_INFO_SECTIONS)[number] {
+  return CHARACTER_INFO_SECTIONS.includes(value);
+}
+
+function sameText(left: string, right: string): boolean {
+  return left.trim().toLowerCase() === right.trim().toLowerCase();
+}
+
+export const deleteDailyGameForAdmin = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    dailyGameId: v.string(),
+  },
+  returns: v.object({
+    deletedGames: v.number(),
+    deletedPlayers: v.number(),
+    deletedGameplayEvents: v.number(),
+    deletedPublicActivityEvents: v.number(),
+    deletedAiUsageEvents: v.number(),
+    deletedStorylineContexts: v.number(),
+    deletedArtifactObjects: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    return await deleteDailyGameRecords(ctx, args.dailyGameId);
+  },
+});
+
+export const deleteAllDailyGamesForAdmin = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+  },
+  returns: v.object({
+    deletedGames: v.number(),
+    deletedPlayers: v.number(),
+    deletedGameplayEvents: v.number(),
+    deletedPublicActivityEvents: v.number(),
+    deletedAiUsageEvents: v.number(),
+    deletedStorylineContexts: v.number(),
+    deletedArtifactObjects: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    const games = await ctx.db.query("dailyGames").collect();
+    const totals = createDeleteDailyGameTotals();
+
+    for (const game of games) {
+      addDeleteDailyGameTotals(
+        totals,
+        await deleteDailyGameRecords(ctx, game.dailyGameId),
+      );
+    }
+
+    return totals;
   },
 });
 
@@ -1831,6 +2397,95 @@ async function ensureDailyGame(
     createdAt: now,
     updatedAt: now,
   });
+}
+
+async function deleteDailyGameRecords(ctx: any, dailyGameId: string) {
+  const totals = createDeleteDailyGameTotals();
+  const games = await ctx.db
+    .query("dailyGames")
+    .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+    .collect();
+
+  totals.deletedGames += await deleteDocuments(ctx, games);
+  totals.deletedPlayers += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("players")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedGameplayEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("gameplayEvents")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedPublicActivityEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("publicActivityEvents")
+      .withIndex("by_dailyGameId_and_createdAt", (q: any) =>
+        q.eq("dailyGameId", dailyGameId),
+      )
+      .collect(),
+  );
+  totals.deletedAiUsageEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("aiUsageEvents")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedStorylineContexts += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("day1StorylineContexts")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+  totals.deletedArtifactObjects += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("artifactObjects")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
+
+  return totals;
+}
+
+async function deleteDocuments(ctx: any, documents: { _id: string }[]) {
+  for (const document of documents) {
+    await ctx.db.delete(document._id);
+  }
+
+  return documents.length;
+}
+
+function createDeleteDailyGameTotals() {
+  return {
+    deletedGames: 0,
+    deletedPlayers: 0,
+    deletedGameplayEvents: 0,
+    deletedPublicActivityEvents: 0,
+    deletedAiUsageEvents: 0,
+    deletedStorylineContexts: 0,
+    deletedArtifactObjects: 0,
+  };
+}
+
+function addDeleteDailyGameTotals(
+  totals: ReturnType<typeof createDeleteDailyGameTotals>,
+  next: ReturnType<typeof createDeleteDailyGameTotals>,
+) {
+  totals.deletedGames += next.deletedGames;
+  totals.deletedPlayers += next.deletedPlayers;
+  totals.deletedGameplayEvents += next.deletedGameplayEvents;
+  totals.deletedPublicActivityEvents += next.deletedPublicActivityEvents;
+  totals.deletedAiUsageEvents += next.deletedAiUsageEvents;
+  totals.deletedStorylineContexts += next.deletedStorylineContexts;
+  totals.deletedArtifactObjects += next.deletedArtifactObjects;
 }
 
 async function findPlayer(
@@ -1942,6 +2597,9 @@ function toDailyPlayer(source: any) {
     occupation: source.occupation,
     bio: source.bio,
     timeZone: source.timeZone,
+    ...(source.characterInfo
+      ? { characterInfo: normalizeCharacterInfo(source.characterInfo) }
+      : {}),
     ...(source.firstDecision
       ? { firstDecision: source.firstDecision }
       : {}),

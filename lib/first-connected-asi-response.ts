@@ -1,4 +1,10 @@
 import { trackedGenerateText } from "./ai-usage";
+import {
+  buildCharacterInfoCorrectionPromptContext,
+  buildPlayerCharacterInfoPromptContext,
+  normalizeCharacterInfoUpdates,
+  type CharacterInfoUpdate,
+} from "./character-info";
 import type {
   Day1GameplayContextPayload,
   Day1StorylineContext,
@@ -19,6 +25,7 @@ export type FirstConnectedAsiTurnResponse = {
   responseSource: "ai";
   actionKind: string;
   playerVisibleFacts: string[];
+  characterInfoUpdates?: CharacterInfoUpdate[];
   storylineContextSourceVersion: string;
 };
 
@@ -27,6 +34,7 @@ type GeneratedConnectedAsiResponse = {
   sceneTitle?: unknown;
   actionKind?: unknown;
   playerVisibleFacts?: unknown;
+  characterInfoUpdates?: unknown;
 };
 
 const connectedAsiGuide = {
@@ -97,12 +105,13 @@ export async function createFirstConnectedAsiTurnResponse({
       "If the player requests action, clarify the capability tier, needed consent, and likely consequence before acting.",
       "Do not casually perform Tier 3 or Tier 4 actions in this first interaction.",
       "Preserve uncertainty. Use verified, estimated, inferred, partial, or gated framing where appropriate.",
-      "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, and playerVisibleFacts.",
+      "Return valid compact JSON only, with keys responseText, sceneTitle, actionKind, playerVisibleFacts, and optional characterInfoUpdates.",
       "responseText should be 2 to 4 short paragraphs of second-person present-tense narration. ASI speech may be rendered as concise quoted sentences inside the narration.",
       "Keep responseText concise. Aim for no more than 130 words unless the player action truly needs more.",
       "sceneTitle should be a short evocative title, 2 to 6 words, title case.",
       "actionKind should be a short snake_case phrase describing the attempted connected interaction.",
       "playerVisibleFacts should contain 2 to 5 short durable facts learned or established, not literary prose.",
+      "characterInfoUpdates is optional and should contain at most 3 public-safe continuity updates. Use objects with section, operation, text, and optional targetText. Allowed sections: currentSituation, relationships, resources, constraints, goals, knowledge, openThreads, recentChanges. Use only player-visible facts and correction-aware continuity. Do not include internal status labels.",
     ]),
     prompt: JSON.stringify(
       {
@@ -122,6 +131,10 @@ export async function createFirstConnectedAsiTurnResponse({
         firstDecision: player.firstDecision,
         firstMoveReveal: player.firstMoveReveal,
         firstConnectedPath: player.firstConnectedPath,
+        characterInfo: buildPlayerCharacterInfoPromptContext({ player }),
+        characterInfoCorrections: buildCharacterInfoCorrectionPromptContext({
+          characterInfo: player.characterInfo,
+        }),
         actionText,
         day1GameplayContext,
         connectedAsiGuide,
@@ -146,6 +159,13 @@ export async function createFirstConnectedAsiTurnResponse({
       "connected_asi_interaction",
     ),
     playerVisibleFacts: normalizePlayerVisibleFacts(generated.playerVisibleFacts),
+    ...(normalizeCharacterInfoUpdates(generated.characterInfoUpdates).length
+      ? {
+          characterInfoUpdates: normalizeCharacterInfoUpdates(
+            generated.characterInfoUpdates,
+          ),
+        }
+      : {}),
     storylineContextSourceVersion: storylineContext.sourceVersion,
   };
 }

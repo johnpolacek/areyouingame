@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { HeroBackgroundVideo } from "../../../hero-background-video";
+import { CharacterInfoPanel } from "@/components/character-info-panel";
 import { getPublicLivePlayer } from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +63,11 @@ export default async function LivePlayerPage({
             </div>
           </div>
         </header>
+
+        <CharacterInfoPanel
+          characterInfo={player.characterInfo}
+          title="Living Character Sheet"
+        />
 
         {player.transcript.length > 0 ? (
           <section className="grid gap-4">
