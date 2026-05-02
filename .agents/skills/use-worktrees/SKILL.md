@@ -1,9 +1,9 @@
 ---
-name: are-you-in-worktrees
+name: use-worktrees
 description: Create and manage AreYouIn git worktrees for parallel CLI Codex feature development. Use when the user asks to use the project worktree workflow, create a new feature branch/worktree, create the polish lane, run multiple agents in parallel, start a branch for implementing recommendations, or prepare CLI Codex commands for a new AreYouIn task.
 ---
 
-# AreYouIn Worktrees
+# Use Worktrees
 
 Use this skill to set up or explain the repo's worktree workflow for parallel feature development with CLI Codex.
 

@@ -2,6 +2,10 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-02] operations | rename worktree skill
+
+- Renamed the repo-local worktree workflow skill from `are-you-in-worktrees` to `use-worktrees` for easier natural-language invocation.
+
 ## [2026-05-01] operations | isolate agent-browser playtests
 
 - Updated persona playtests to use worktree-local agent-browser config, profiles, downloads, screenshots, and branch-prefixed `ayi-*` sessions.
@@ -27,7 +31,7 @@ Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] 
 
 ## [2026-05-01] operations | add worktree workflow skill
 
-- Added the repo-local `are-you-in-worktrees` skill so future agents can create AreYouIn feature worktrees from natural-language requests.
+- Added the repo-local worktree workflow skill so future agents can create AreYouIn feature worktrees from natural-language requests.
 - Captured the CLI Codex handoff, Portless URL convention, `polish` lane guidance, Convex isolation trigger, overlap checks, and cleanup guardrails.
 
 ## [2026-05-01] operations | implement worktree baseline

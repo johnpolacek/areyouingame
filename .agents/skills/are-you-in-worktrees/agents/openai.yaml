@@ -1,4 +1,0 @@
-interface:
-  display_name: "AreYouIn Worktrees"
-  short_description: "Create parallel AreYouIn worktrees"
-  default_prompt: "Use $are-you-in-worktrees to create a new feature worktree for the next implementation task."
