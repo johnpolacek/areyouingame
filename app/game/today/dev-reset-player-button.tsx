@@ -93,6 +93,7 @@ export function DevResetPlayerButton() {
         <Button
           aria-label="Open admin dashboard"
           className="h-8 rounded-[3px] border-border bg-card/75 px-3 text-[0.68rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase backdrop-blur-md hover:bg-muted hover:text-foreground focus-visible:ring-ring/35 dark:border-amber-200/20 dark:bg-black/35 dark:text-amber-100/70 dark:hover:bg-amber-200/10 dark:hover:text-amber-50 dark:focus-visible:ring-amber-200/35"
+          nativeButton={false}
           render={<Link href="/admin" />}
           size="sm"
           variant="ghost"
