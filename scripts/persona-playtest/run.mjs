@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
 import { execFile } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -52,15 +53,17 @@ export async function runPersonaPlaytest(argv = process.argv.slice(2)) {
     runSlug: runId.split("__").at(-1),
     scenario: options.scenario,
   });
-  const session = `ayi-${Date.now().toString(36)}`;
+  const browserRuntime = await createAgentBrowserRuntime({ runId });
 
   await ensureLocalApp(options.baseUrl);
 
   const browser = createBrowserClient({
     baseUrl: options.baseUrl,
-    session,
+    runtime: browserRuntime,
     syntheticUserId,
   });
+  console.log(`Agent-browser session: ${browserRuntime.session}`);
+  console.log(`Agent-browser profile: ${path.relative(repoRoot, browserRuntime.profileDir)}`);
   const startedAt = new Date().toISOString();
   const turns = [];
 
@@ -310,7 +313,60 @@ function createHelpText() {
   ].join("\n");
 }
 
-function createBrowserClient({ baseUrl, session, syntheticUserId }) {
+async function createAgentBrowserRuntime({ runId }) {
+  const branch = await getCurrentBranch();
+  const branchSlug = slugify(branch || "worktree").slice(0, 32);
+  const runSlug = slugify(runId.split("__").at(-1) || Date.now().toString(36)).slice(0, 36);
+  const session = `ayi-${branchSlug}-${runSlug}`;
+  const runtimeDir = path.join(repoRoot, ".agent-browser-worktree");
+  const profileDir = path.join(runtimeDir, "profiles", runId);
+  const downloadDir = path.join(runtimeDir, "downloads", runId);
+  const screenshotDir = path.join(runtimeDir, "screenshots", runId);
+  const configPath = path.join(runtimeDir, "config.json");
+
+  await Promise.all([
+    mkdir(profileDir, { recursive: true }),
+    mkdir(downloadDir, { recursive: true }),
+    mkdir(screenshotDir, { recursive: true }),
+  ]);
+
+  await writeFile(
+    configPath,
+    `${JSON.stringify(
+      {
+        downloadPath: downloadDir,
+        profile: profileDir,
+        session,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  return {
+    configPath,
+    downloadDir,
+    profileDir,
+    runtimeDir,
+    screenshotDir,
+    session,
+  };
+}
+
+async function getCurrentBranch() {
+  try {
+    const { stdout } = await execFileAsync("git", ["branch", "--show-current"], {
+      cwd: repoRoot,
+      timeout: 5000,
+    });
+
+    return stdout.trim();
+  } catch {
+    return "worktree";
+  }
+}
+
+function createBrowserClient({ baseUrl, runtime, syntheticUserId }) {
   const headers = JSON.stringify({
     "x-areyouin-playtest": "1",
     "x-areyouin-playtest-user": syntheticUserId,
@@ -319,7 +375,11 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
   async function run(command, args = [], options = {}) {
     const browserArgs = [
       "--session",
-      session,
+      runtime.session,
+      "--config",
+      runtime.configPath,
+      "--profile",
+      runtime.profileDir,
       "--headers",
       headers,
       command,
@@ -329,6 +389,10 @@ function createBrowserClient({ baseUrl, session, syntheticUserId }) {
       cwd: repoRoot,
       env: {
         ...process.env,
+        AGENT_BROWSER_CONFIG: runtime.configPath,
+        AGENT_BROWSER_DOWNLOAD_PATH: runtime.downloadDir,
+        AGENT_BROWSER_PROFILE: runtime.profileDir,
+        AGENT_BROWSER_SESSION: runtime.session,
         AREYOUIN_PLAYTEST_AUTH: "1",
       },
       maxBuffer: 1024 * 1024 * 5,

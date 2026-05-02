@@ -69,6 +69,17 @@ Use pnpm's shared store and avoid inventing a custom `node_modules` sharing sche
 - Document `pnpm store prune` as occasional global maintenance, not as part of routine cleanup.
 - If disk use becomes painful, add a disk report to `pnpm wt:list` before changing package-manager behavior.
 
+## Phase 3a: Agent-Browser Runtime Isolation
+
+Persona playtests use `agent-browser`, which stores daemon/session state under the user's home directory by default. To keep parallel worktrees from colliding, `pnpm playtest:persona` creates an untracked per-worktree runtime directory and passes it to every browser command:
+
+- `.agent-browser-worktree/config.json`
+- `.agent-browser-worktree/profiles/<run-id>/`
+- `.agent-browser-worktree/downloads/<run-id>/`
+- `.agent-browser-worktree/screenshots/<run-id>/`
+
+Playtest browser sessions are named with the current branch and run id, for example `ayi-feature-foo-2026-05-01t...`. Multiple worktrees may run persona playtests in parallel. Use `pnpm agent-browser:doctor` to inspect active sessions and `pnpm agent-browser:cleanup-playtests -- --dry-run` before removing only AreYouIn `ayi-*` playtest artifacts.
+
 ## Phase 4: Convex And Runtime State Isolation
 
 The current silent-killer risk is not local Postgres or Docker volumes; it is multiple branches sharing one Convex dev deployment and one set of Clerk users.
@@ -158,3 +169,5 @@ Start small: add Portless and a basic worktree create/list/doctor script set bef
 - `pnpm wt:create <branch>` creates a worktree under `../AreYouIn.worktrees/<branch-slug>`, copies env files, installs dependencies, and prints the expected Portless URL.
 - `pnpm wt:create polish --polish` creates the recommended light-fix/UI-tweak lane.
 - `pnpm wt:list`, `pnpm wt:doctor`, `pnpm wt:overlap`, `pnpm wt:prune`, and `pnpm wt:clean` cover inspection, health checks, overlap detection, and cleanup. With Portless `0.10.3`, route cleanup is manual through `portless list`/proxy lifecycle because `portless prune` is not exposed.
+- `pnpm playtest:persona` isolates `agent-browser` config/profile/download state per worktree so persona playtests can run in parallel.
+- `pnpm agent-browser:doctor` and `pnpm agent-browser:cleanup-playtests` inspect and clean only AreYouIn `ayi-*` playtest browser artifacts.

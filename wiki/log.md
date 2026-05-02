@@ -2,6 +2,12 @@
 
 Append durable project-wiki changes here. Prefer headings like `## [YYYY-MM-DD] type | title`.
 
+## [2026-05-01] operations | isolate agent-browser playtests
+
+- Updated persona playtests to use worktree-local agent-browser config, profiles, downloads, screenshots, and branch-prefixed `ayi-*` sessions.
+- Added agent-browser doctor and cleanup commands that inspect active sessions and remove only AreYouIn playtest artifacts.
+- Updated worktree documentation and skill guidance so parallel browser playtests are treated as isolated per worktree.
+
 ## [2026-05-01] operations | stabilize local agent-browser auth
 
 - Documented the split between disposable `ayi-*` automated persona sessions and the persistent `areyouin-john` manual dogfood session.
