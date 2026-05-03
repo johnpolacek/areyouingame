@@ -51,8 +51,7 @@ export function BeforeWeBegin() {
           id="before-we-begin-title"
           className="mx-auto max-w-xl text-base leading-7 font-medium text-muted-foreground text-balance dark:text-amber-100/85 sm:text-lg sm:leading-8"
         >
-          Your gameplay helps shape the shared story and will be published at
-          the end of each day&apos;s session as part of the daily recap.
+          Your character and gameplay are public as part of the shared story.
         </p>
       </div>
 
@@ -64,8 +63,8 @@ export function BeforeWeBegin() {
           type="checkbox"
         />
         <span>
-          I understand and agree that my gameplay will be published at the end
-          of the day&apos;s session, and I agree to the Terms and Conditions.
+          I understand that my gameplay is public, and I agree to the Terms and
+          Conditions.
         </span>
       </label>
 
