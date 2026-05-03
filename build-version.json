@@ -1,6 +1,6 @@
 {
-  "version": "0.1.32",
-  "label": "Build 0.1.32",
+  "version": "0.1.33",
+  "label": "Build 0.1.33",
   "updatedAt": "2026-05-03",
-  "summary": "Place portrait beside fields on large screens"
+  "summary": "Align portrait with character fields"
 }

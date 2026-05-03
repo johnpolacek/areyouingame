@@ -216,7 +216,7 @@ export function CharacterSetupForm({
           value={draft.bio}
         />
       </label>
-      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em] lg:col-span-1 lg:col-start-3 lg:row-span-5 lg:row-start-1">
+      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em] lg:col-span-1 lg:col-start-3 lg:row-span-5 lg:row-start-2">
         Portrait
         <span className="grid gap-2 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35">
           <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
