@@ -1,6 +1,6 @@
 {
-  "version": "0.1.31",
-  "label": "Build 0.1.31",
+  "version": "0.1.32",
+  "label": "Build 0.1.32",
   "updatedAt": "2026-05-03",
-  "summary": "Move portrait below bio"
+  "summary": "Place portrait beside fields on large screens"
 }

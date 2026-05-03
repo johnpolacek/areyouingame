@@ -121,7 +121,7 @@ export function CharacterSetupForm({
   return (
     <form
       autoComplete="off"
-      className="hero-character-form grid w-full max-w-[31rem] grid-cols-2 gap-1.5 rounded-lg border border-border bg-card/80 p-2 text-left shadow-2xl shadow-black/10 backdrop-blur-md dark:border-amber-600/35 dark:bg-slate-950/45 dark:shadow-black/35 sm:gap-3 sm:p-4"
+      className="hero-character-form grid w-full max-w-[31rem] grid-cols-2 gap-1.5 rounded-lg border border-border bg-card/80 p-2 text-left shadow-2xl shadow-black/10 backdrop-blur-md dark:border-amber-600/35 dark:bg-slate-950/45 dark:shadow-black/35 sm:gap-3 sm:p-4 lg:max-w-5xl lg:grid-cols-[repeat(2,minmax(0,15.5rem))_minmax(16rem,24rem)] lg:items-start"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit?.();
@@ -216,7 +216,7 @@ export function CharacterSetupForm({
           value={draft.bio}
         />
       </label>
-      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em] lg:col-span-1 lg:col-start-3 lg:row-span-5 lg:row-start-1">
         Portrait
         <span className="grid gap-2 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35">
           <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
@@ -302,7 +302,7 @@ export function PlayerCreationView({
 }) {
   return (
     <section
-      className="player-creation-view relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center gap-6 self-center text-center sm:gap-8"
+      className="player-creation-view relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 self-center text-center sm:gap-8"
       aria-labelledby={titleId}
     >
       <div className="player-creation-copy flex w-full max-w-2xl flex-col items-center gap-3 text-center sm:gap-4">
