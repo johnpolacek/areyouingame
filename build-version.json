@@ -1,6 +1,6 @@
 {
-  "version": "0.1.33",
-  "label": "Build 0.1.33",
+  "version": "0.1.34",
+  "label": "Build 0.1.34",
   "updatedAt": "2026-05-03",
-  "summary": "Align portrait with character fields"
+  "summary": "Use two-thirds character form layout"
 }

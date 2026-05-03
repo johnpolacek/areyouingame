@@ -121,102 +121,104 @@ export function CharacterSetupForm({
   return (
     <form
       autoComplete="off"
-      className="hero-character-form grid w-full max-w-[31rem] grid-cols-2 gap-1.5 rounded-lg border border-border bg-card/80 p-2 text-left shadow-2xl shadow-black/10 backdrop-blur-md dark:border-amber-600/35 dark:bg-slate-950/45 dark:shadow-black/35 sm:gap-3 sm:p-4 lg:max-w-5xl lg:grid-cols-[repeat(2,minmax(0,15.5rem))_minmax(16rem,24rem)] lg:items-start"
+      className="hero-character-form grid w-full max-w-[31rem] grid-cols-2 gap-1.5 rounded-lg border border-border bg-card/80 p-2 text-left shadow-2xl shadow-black/10 backdrop-blur-md dark:border-amber-600/35 dark:bg-slate-950/45 dark:shadow-black/35 sm:gap-3 sm:p-4 lg:max-w-5xl lg:grid-cols-[repeat(2,minmax(0,1fr))_minmax(16rem,0.5fr)] lg:items-start"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit?.();
       }}
     >
-      {onGenerateDraft ? (
-        <div className="col-span-2 flex justify-end">
-          <button
-            className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold tracking-[0.12em] text-primary uppercase transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
-            disabled={isGeneratingDraft}
-            onClick={() => onGenerateDraft()}
-            type="button"
-          >
-            {isGeneratingDraft ? (
-              <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
-            ) : (
-              <SparklesIcon aria-hidden="true" className="size-3.5" />
-            )}
-            Generate Character
-          </button>
-        </div>
-      ) : null}
-      <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Name
-        <input
-          autoComplete="off"
-          className={fieldClass()}
-          name="character-name"
-          onChange={(event) => onChange("name", event.target.value)}
-          required
-          value={draft.name}
-        />
-      </label>
-      <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Age
-        <input
-          autoComplete="off"
-          className={fieldClass()}
-          inputMode="numeric"
-          max="120"
-          min="13"
-          name="character-age"
-          onChange={(event) => onChange("age", event.target.value)}
-          required
-          type="number"
-          value={draft.age}
-        />
-      </label>
-      <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Location
-        <input
-          autoComplete="off"
-          className={fieldClass()}
-          name="character-location"
-          onChange={(event) => onChange("location", event.target.value)}
-          required
-          value={draft.location}
-        />
-      </label>
-      <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Occupation
-        <input
-          autoComplete="off"
-          className={fieldClass()}
-          name="character-occupation"
-          onChange={(event) => onChange("occupation", event.target.value)}
-          required
-          value={draft.occupation}
-        />
-      </label>
-      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Appearance
-        <textarea
-          autoComplete="off"
-          className="min-h-14 resize-none rounded-md border border-border bg-input px-2 py-1.5 text-xs font-medium tracking-normal text-foreground shadow-inner shadow-black/5 outline-none transition placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 dark:border-amber-300/30 dark:bg-black/35 dark:text-amber-50 dark:placeholder:text-amber-700 dark:focus:border-amber-200/70 dark:focus:ring-amber-500/20 sm:min-h-16 sm:px-2.5 sm:py-2 sm:text-sm"
-          maxLength={600}
-          name="character-appearance"
-          onChange={(event) => onChange("appearance", event.target.value)}
-          required
-          value={draft.appearance}
-        />
-      </label>
-      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Bio
-        <textarea
-          autoComplete="off"
-          className="min-h-16 resize-none rounded-md border border-border bg-input px-2 py-1.5 text-xs font-medium tracking-normal text-foreground shadow-inner shadow-black/5 outline-none transition placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 dark:border-amber-300/30 dark:bg-black/35 dark:text-amber-50 dark:placeholder:text-amber-700 dark:focus:border-amber-200/70 dark:focus:ring-amber-500/20 sm:min-h-20 sm:px-2.5 sm:py-2 sm:text-sm"
-          maxLength={800}
-          name="character-bio"
-          onChange={(event) => onChange("bio", event.target.value)}
-          required
-          value={draft.bio}
-        />
-      </label>
-      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em] lg:col-span-1 lg:col-start-3 lg:row-span-5 lg:row-start-2">
+      <div className="col-span-2 grid grid-cols-2 gap-1.5 sm:gap-3 lg:col-start-1 lg:row-start-1">
+        <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+          Name
+          <input
+            autoComplete="off"
+            className={fieldClass()}
+            name="character-name"
+            onChange={(event) => onChange("name", event.target.value)}
+            required
+            value={draft.name}
+          />
+        </label>
+        <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+          Age
+          <input
+            autoComplete="off"
+            className={fieldClass()}
+            inputMode="numeric"
+            max="120"
+            min="13"
+            name="character-age"
+            onChange={(event) => onChange("age", event.target.value)}
+            required
+            type="number"
+            value={draft.age}
+          />
+        </label>
+        <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+          Location
+          <input
+            autoComplete="off"
+            className={fieldClass()}
+            name="character-location"
+            onChange={(event) => onChange("location", event.target.value)}
+            required
+            value={draft.location}
+          />
+        </label>
+        <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+          Occupation
+          <input
+            autoComplete="off"
+            className={fieldClass()}
+            name="character-occupation"
+            onChange={(event) => onChange("occupation", event.target.value)}
+            required
+            value={draft.occupation}
+          />
+        </label>
+        <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+          Appearance
+          <textarea
+            autoComplete="off"
+            className="min-h-14 resize-none rounded-md border border-border bg-input px-2 py-1.5 text-xs font-medium tracking-normal text-foreground shadow-inner shadow-black/5 outline-none transition placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 dark:border-amber-300/30 dark:bg-black/35 dark:text-amber-50 dark:placeholder:text-amber-700 dark:focus:border-amber-200/70 dark:focus:ring-amber-500/20 sm:min-h-16 sm:px-2.5 sm:py-2 sm:text-sm"
+            maxLength={600}
+            name="character-appearance"
+            onChange={(event) => onChange("appearance", event.target.value)}
+            required
+            value={draft.appearance}
+          />
+        </label>
+        <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+          Bio
+          <textarea
+            autoComplete="off"
+            className="min-h-16 resize-none rounded-md border border-border bg-input px-2 py-1.5 text-xs font-medium tracking-normal text-foreground shadow-inner shadow-black/5 outline-none transition placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 dark:border-amber-300/30 dark:bg-black/35 dark:text-amber-50 dark:placeholder:text-amber-700 dark:focus:border-amber-200/70 dark:focus:ring-amber-500/20 sm:min-h-20 sm:px-2.5 sm:py-2 sm:text-sm"
+            maxLength={800}
+            name="character-bio"
+            onChange={(event) => onChange("bio", event.target.value)}
+            required
+            value={draft.bio}
+          />
+        </label>
+        {onGenerateDraft ? (
+          <div className="col-span-2 flex justify-end">
+            <button
+              className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold tracking-[0.12em] text-primary uppercase transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
+              disabled={isGeneratingDraft}
+              onClick={() => onGenerateDraft()}
+              type="button"
+            >
+              {isGeneratingDraft ? (
+                <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+              ) : (
+                <SparklesIcon aria-hidden="true" className="size-3.5" />
+              )}
+              Generate Character
+            </button>
+          </div>
+        ) : null}
+      </div>
+      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em] lg:col-span-1 lg:col-start-3 lg:row-start-1">
         Portrait
         <span className="grid gap-2 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35">
           <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
