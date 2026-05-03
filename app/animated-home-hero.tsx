@@ -61,7 +61,16 @@ export function AnimatedHomeHero() {
       subtitleRef.current.textContent = subtitleText;
 
       gsap.set(titleRef.current, {
+        opacity: 1,
         transformOrigin: "50% 50%",
+      });
+      const titleWords = gsap.utils.toArray<HTMLElement>(
+        titleRef.current.querySelectorAll("[data-title-word]"),
+      );
+      gsap.set(titleWords, {
+        autoAlpha: 0,
+        y: 24,
+        willChange: "opacity, transform",
       });
       const subtitleSplit = SplitText.create(subtitleRef.current, {
         type: "words,chars",
@@ -94,16 +103,17 @@ export function AnimatedHomeHero() {
       });
 
       tl.fromTo(
-        titleRef.current,
+        titleWords,
         {
           autoAlpha: 0,
-          y: 18,
+          y: 24,
         },
         {
           autoAlpha: 1,
           y: 0,
-          clearProps: "transform,visibility",
-          duration: 1.4,
+          clearProps: "transform,visibility,willChange",
+          duration: 1,
+          stagger: 0.33,
         },
       )
         .to(
@@ -124,7 +134,7 @@ export function AnimatedHomeHero() {
               from: "random",
             },
           },
-          "-=0.32",
+          "-=0.45",
         )
         .fromTo(
           actionsRef.current,
@@ -295,9 +305,15 @@ export function AnimatedHomeHero() {
         className="hero-display-title w-full bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(5rem,24vw,7.25rem)] leading-[0.78] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200 sm:whitespace-nowrap sm:text-[clamp(4.25rem,14vw,10rem)] sm:leading-[0.82]"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
-        <span className="block sm:inline">Are</span>
-        <span className="block sm:ml-[0.18em] sm:inline">You</span>
-        <span className="block sm:ml-[0.18em] sm:inline">In?</span>
+        <span className="block sm:inline-block" data-title-word>
+          Are
+        </span>
+        <span className="block sm:ml-[0.18em] sm:inline-block" data-title-word>
+          You
+        </span>
+        <span className="block sm:ml-[0.18em] sm:inline-block" data-title-word>
+          In?
+        </span>
       </h1>
       <p
         ref={subtitleRef}
