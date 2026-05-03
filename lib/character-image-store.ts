@@ -26,6 +26,7 @@ export async function writeCharacterImageObject({
 
   const { bucket, region } = getCharacterImageS3Config();
   const objectKey = createCharacterImageObjectKey({
+    contentType,
     clerkUserId,
     uploadId: randomUUID(),
   });
@@ -51,15 +52,29 @@ export async function writeCharacterImageObject({
 }
 
 export function createCharacterImageObjectKey({
+  contentType = characterImageContentType,
   clerkUserId,
   uploadId,
 }: {
+  contentType?: CharacterImageContentType;
   clerkUserId: string;
   uploadId: string;
 }): string {
   const safeUserId = clerkUserId.replaceAll(/[^a-zA-Z0-9._:-]/g, "-").slice(0, 120);
 
-  return `areyouin/character-images/${safeUserId}/${uploadId}`;
+  return `areyouin/character-images/${safeUserId}/${uploadId}.${extensionFromContentType(contentType)}`;
+}
+
+function extensionFromContentType(contentType: CharacterImageContentType): string {
+  if (contentType === "image/png") {
+    return "png";
+  }
+
+  if (contentType === "image/jpeg") {
+    return "jpg";
+  }
+
+  return "webp";
 }
 
 function getCharacterImageS3Config() {

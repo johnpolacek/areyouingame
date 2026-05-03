@@ -1,6 +1,6 @@
 {
-  "version": "0.1.28",
-  "label": "Build 0.1.28",
+  "version": "0.1.29",
+  "label": "Build 0.1.29",
   "updatedAt": "2026-05-03",
-  "summary": "Allow generated portrait image formats"
+  "summary": "Fix generated portrait image URLs"
 }

@@ -5,8 +5,27 @@ import {
   validateCharacterImageInput,
   validateCharacterImageUpload,
 } from "./character-image";
+import { createCharacterImageObjectKey } from "./character-image-store";
 
 describe("character image", () => {
+  it("creates extensioned object keys for public S3 access", () => {
+    expect(
+      createCharacterImageObjectKey({
+        clerkUserId: "user_123",
+        contentType: "image/png",
+        uploadId: "upload-id",
+      }),
+    ).toBe("areyouin/character-images/user_123/upload-id.png");
+
+    expect(
+      createCharacterImageObjectKey({
+        clerkUserId: "user_123",
+        contentType: "image/jpeg",
+        uploadId: "upload-id",
+      }),
+    ).toBe("areyouin/character-images/user_123/upload-id.jpg");
+  });
+
   it("accepts supported public image metadata", () => {
     expect(
       validateCharacterImageInput({
