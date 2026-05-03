@@ -205,65 +205,6 @@ export function CharacterSetupForm({
         />
       </label>
       <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
-        Portrait
-        <span className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35 sm:grid-cols-[7rem_minmax(0,1fr)]">
-          <span className="relative grid aspect-square place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
-            {draft.characterImageDataUrl || draft.characterImage?.url ? (
-              <img
-                alt=""
-                className="h-full w-full object-cover"
-                src={draft.characterImageDataUrl ?? draft.characterImage?.url}
-              />
-            ) : (
-              <ImageIcon
-                aria-hidden="true"
-                className="size-7 text-muted-foreground dark:text-amber-100/45"
-              />
-            )}
-          </span>
-          <span className="flex min-w-0 flex-col justify-center gap-2">
-            <span className="flex flex-wrap gap-2">
-              {onGenerateImage ? (
-                <button
-                  className="inline-flex w-fit items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/15 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-amber-500/25 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
-                  disabled={!canGenerateImage || isGeneratingImage}
-                  onClick={() => onGenerateImage()}
-                  type="button"
-                >
-                  {isGeneratingImage ? (
-                    <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
-                  ) : (
-                    <SparklesIcon aria-hidden="true" className="size-3.5" />
-                  )}
-                  Generate
-                </button>
-              ) : null}
-              <span className="inline-flex w-fit items-center gap-2 rounded-md border border-border bg-card/80 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-muted dark:border-amber-200/25 dark:bg-black/30 dark:text-amber-100">
-                {isPreparingImage ? (
-                  <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
-                ) : (
-                  <ImageIcon aria-hidden="true" className="size-3.5" />
-                )}
-                Choose Image
-              </span>
-            </span>
-            <input
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              name="character-image"
-              onChange={handleImageChange}
-              required={!draft.characterImage && !draft.characterImageDataUrl}
-              type="file"
-            />
-            {imageError ? (
-              <span className="text-xs leading-5 font-semibold tracking-normal text-destructive normal-case dark:text-red-200">
-                {imageError}
-              </span>
-            ) : null}
-          </span>
-        </span>
-      </label>
-      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Bio
         <textarea
           autoComplete="off"
@@ -274,6 +215,63 @@ export function CharacterSetupForm({
           required
           value={draft.bio}
         />
+      </label>
+      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+        Portrait
+        <span className="grid gap-2 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35">
+          <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
+            {draft.characterImageDataUrl || draft.characterImage?.url ? (
+              <img
+                alt=""
+                className="h-full w-full object-cover"
+                src={draft.characterImageDataUrl ?? draft.characterImage?.url}
+              />
+            ) : (
+              <ImageIcon
+                aria-hidden="true"
+                className="size-8 text-muted-foreground dark:text-amber-100/45"
+              />
+            )}
+          </span>
+          <span className="flex min-w-0 flex-wrap gap-2">
+            {onGenerateImage ? (
+              <button
+                className="inline-flex w-fit items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/15 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-amber-500/25 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
+                disabled={!canGenerateImage || isGeneratingImage}
+                onClick={() => onGenerateImage()}
+                type="button"
+              >
+                {isGeneratingImage ? (
+                  <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+                ) : (
+                  <SparklesIcon aria-hidden="true" className="size-3.5" />
+                )}
+                Generate
+              </button>
+            ) : null}
+            <span className="inline-flex w-fit items-center gap-2 rounded-md border border-border bg-card/80 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-muted dark:border-amber-200/25 dark:bg-black/30 dark:text-amber-100">
+              {isPreparingImage ? (
+                <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+              ) : (
+                <ImageIcon aria-hidden="true" className="size-3.5" />
+              )}
+              Choose Image
+            </span>
+          </span>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            name="character-image"
+            onChange={handleImageChange}
+            required={!draft.characterImage && !draft.characterImageDataUrl}
+            type="file"
+          />
+          {imageError ? (
+            <span className="text-xs leading-5 font-semibold tracking-normal text-destructive normal-case dark:text-red-200">
+              {imageError}
+            </span>
+          ) : null}
+        </span>
       </label>
     </form>
   );
