@@ -7,7 +7,7 @@ import type { CharacterImage } from "@/lib/character-image";
 import { resizeCharacterImageFile } from "@/lib/client-character-image";
 
 export const primaryActionClass =
-  "relative isolate h-12 w-full max-w-[31rem] overflow-hidden rounded-lg border border-amber-600/40 bg-gradient-to-b from-amber-300 to-amber-700 px-8 font-accent text-[0.8rem] font-normal tracking-[0.06em] text-primary-foreground uppercase shadow-2xl shadow-black/20 backdrop-blur-md transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:brightness-[1.12] hover:saturate-[1.15] hover:shadow-amber-600/30 active:translate-y-px disabled:opacity-90 dark:border-amber-200/70 dark:from-amber-500 dark:to-amber-950 dark:text-amber-50 dark:shadow-black/60 dark:hover:brightness-[1.18] dark:hover:saturate-[1.2] dark:hover:shadow-amber-400/40 sm:h-[4.5rem] sm:text-[1.12rem] sm:tracking-[0.08em]";
+  "relative isolate h-12 w-full max-w-[min(31rem,calc(100vw-2.5rem))] overflow-hidden rounded-lg border border-amber-600/40 bg-gradient-to-b from-amber-300 to-amber-700 px-6 font-accent text-[0.78rem] font-normal tracking-[0.06em] text-primary-foreground uppercase shadow-2xl shadow-black/20 backdrop-blur-md transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:brightness-[1.12] hover:saturate-[1.15] hover:shadow-amber-600/30 active:translate-y-px disabled:opacity-90 dark:border-amber-200/70 dark:from-amber-500 dark:to-amber-950 dark:text-amber-50 dark:shadow-black/60 dark:hover:brightness-[1.18] dark:hover:saturate-[1.2] dark:hover:shadow-amber-400/40 sm:h-[4.5rem] sm:px-8 sm:text-[1.12rem] sm:tracking-[0.08em]";
 
 export const playerCreationHeading = "Are You In?";
 export const playerCreationSubhead = "Sign up to create your player character";
