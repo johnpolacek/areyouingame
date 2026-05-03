@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon, LoaderCircleIcon } from "lucide-react";
+import { ImageIcon, LoaderCircleIcon, SparklesIcon } from "lucide-react";
 import type { ChangeEvent, ReactNode } from "react";
 import { useState } from "react";
 import type { CharacterImage } from "@/lib/character-image";
@@ -17,6 +17,7 @@ export type CharacterDraft = {
   age: string;
   location: string;
   occupation: string;
+  appearance: string;
   bio: string;
   characterImage?: CharacterImage;
   characterImageDataUrl?: string;
@@ -27,6 +28,7 @@ export type CharacterDraftField =
   | "age"
   | "location"
   | "occupation"
+  | "appearance"
   | "bio";
 
 export const emptyDraft: CharacterDraft = {
@@ -34,6 +36,7 @@ export const emptyDraft: CharacterDraft = {
   age: "",
   location: "",
   occupation: "",
+  appearance: "",
   bio: "",
 };
 
@@ -55,6 +58,7 @@ export function isCompleteDraft(draft: CharacterDraft) {
     age <= 120 &&
     draft.location.trim().length > 0 &&
     draft.occupation.trim().length > 0 &&
+    draft.appearance.trim().length > 0 &&
     draft.bio.trim().length > 0 &&
     Boolean(draft.characterImage || draft.characterImageDataUrl)
   );
@@ -68,16 +72,27 @@ export function CharacterSetupForm({
   draft,
   onChange,
   onImageChange,
+  onGenerateImage,
   onSubmit,
+  isGeneratingImage = false,
   isPreparingImage = false,
 }: {
   draft: CharacterDraft;
   onChange: (field: CharacterDraftField, value: string) => void;
   onImageChange?: (imageDataUrl: string) => void;
+  onGenerateImage?: () => void;
   onSubmit?: () => void;
+  isGeneratingImage?: boolean;
   isPreparingImage?: boolean;
 }) {
   const [imageError, setImageError] = useState("");
+  const canGenerateImage =
+    Boolean(onGenerateImage) &&
+    draft.name.trim().length > 0 &&
+    draft.age.trim().length > 0 &&
+    draft.location.trim().length > 0 &&
+    draft.occupation.trim().length > 0 &&
+    draft.appearance.trim().length > 0;
 
   async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -157,6 +172,18 @@ export function CharacterSetupForm({
         />
       </label>
       <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
+        Appearance
+        <textarea
+          autoComplete="off"
+          className="min-h-14 resize-none rounded-md border border-border bg-input px-2 py-1.5 text-xs font-medium tracking-normal text-foreground shadow-inner shadow-black/5 outline-none transition placeholder:text-muted-foreground focus:border-primary/70 focus:ring-2 focus:ring-ring/20 dark:border-amber-300/30 dark:bg-black/35 dark:text-amber-50 dark:placeholder:text-amber-700 dark:focus:border-amber-200/70 dark:focus:ring-amber-500/20 sm:min-h-16 sm:px-2.5 sm:py-2 sm:text-sm"
+          maxLength={600}
+          name="character-appearance"
+          onChange={(event) => onChange("appearance", event.target.value)}
+          required
+          value={draft.appearance}
+        />
+      </label>
+      <label className="col-span-2 grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Portrait
         <span className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 rounded-md border border-border bg-input p-2 text-left shadow-inner shadow-black/5 dark:border-amber-300/30 dark:bg-black/35 sm:grid-cols-[7rem_minmax(0,1fr)]">
           <span className="relative grid aspect-square place-items-center overflow-hidden rounded-md border border-border/70 bg-background/70 dark:border-amber-200/20 dark:bg-black/35">
@@ -174,16 +201,30 @@ export function CharacterSetupForm({
             )}
           </span>
           <span className="flex min-w-0 flex-col justify-center gap-2">
-            <span className="text-xs leading-5 font-medium tracking-normal text-muted-foreground normal-case">
-              Upload a public character portrait. It will be resized to 1024px and stored as WebP.
-            </span>
-            <span className="inline-flex w-fit items-center gap-2 rounded-md border border-border bg-card/80 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-muted dark:border-amber-200/25 dark:bg-black/30 dark:text-amber-100">
-              {isPreparingImage ? (
-                <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
-              ) : (
-                <ImageIcon aria-hidden="true" className="size-3.5" />
-              )}
-              Choose Image
+            <span className="flex flex-wrap gap-2">
+              {onGenerateImage ? (
+                <button
+                  className="inline-flex w-fit items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/15 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-amber-500/25 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
+                  disabled={!canGenerateImage || isGeneratingImage}
+                  onClick={() => onGenerateImage()}
+                  type="button"
+                >
+                  {isGeneratingImage ? (
+                    <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+                  ) : (
+                    <SparklesIcon aria-hidden="true" className="size-3.5" />
+                  )}
+                  Generate
+                </button>
+              ) : null}
+              <span className="inline-flex w-fit items-center gap-2 rounded-md border border-border bg-card/80 px-3 py-2 text-xs font-bold tracking-[0.12em] text-foreground uppercase transition hover:bg-muted dark:border-amber-200/25 dark:bg-black/30 dark:text-amber-100">
+                {isPreparingImage ? (
+                  <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+                ) : (
+                  <ImageIcon aria-hidden="true" className="size-3.5" />
+                )}
+                Choose Image
+              </span>
             </span>
             <input
               accept="image/jpeg,image/png,image/webp"

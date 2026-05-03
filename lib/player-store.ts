@@ -17,15 +17,17 @@ export type PlayerDraftInput = {
   age: string;
   location: string;
   occupation: string;
+  appearance: string;
   bio: string;
   timeZone: string;
   characterImage?: CharacterImageInput;
 };
 
-export type DailyPlayer = PlayerDraftInput & {
+export type DailyPlayer = Omit<PlayerDraftInput, "appearance"> & {
   id: string;
   clerkUserId: string;
   dailyGameId: string;
+  appearance?: string;
   characterInfo?: CharacterInfo;
   firstDecision?: FirstDecision;
   firstRevealTextResponses?: FirstRevealTextResponse[];
@@ -502,6 +504,7 @@ export function validatePlayerDraft(input: unknown): PlayerDraftInput {
     age: readAge(source.age),
     location: readRequiredString(source.location, "Location", 120),
     occupation: readRequiredString(source.occupation, "Occupation", 120),
+    appearance: readRequiredString(source.appearance, "Appearance", 600),
     bio: readRequiredString(source.bio, "Bio", 800),
     timeZone: "",
     characterImage: validateCharacterImageInput(source.characterImage),

@@ -6,6 +6,7 @@ import {
   pendingDraftStorageKey,
   persistBrowserTimeZoneCookie,
 } from "@/lib/character-draft";
+import type { CharacterImage } from "@/lib/character-image";
 
 type JoinFlowProps = {
   fallbackHref: string;
@@ -30,13 +31,26 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
       }
 
       try {
+        const draft = JSON.parse(rawDraft) as Record<string, unknown>;
+        const characterImage =
+          isCharacterImage(draft.characterImage)
+            ? draft.characterImage
+            : await uploadCharacterImage(
+                typeof draft.characterImageDataUrl === "string"
+                  ? draft.characterImageDataUrl
+                  : undefined,
+              );
         const response = await fetch("/api/players", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            draft: JSON.parse(rawDraft),
+            draft: {
+              ...draft,
+              characterImage,
+              characterImageDataUrl: undefined,
+            },
           }),
         });
         const result = (await response.json()) as { error?: string };
@@ -89,4 +103,41 @@ export function JoinFlow({ fallbackHref, successHref }: JoinFlowProps) {
       </div>
     </main>
   );
+}
+
+function isCharacterImage(value: unknown): value is CharacterImage {
+  return (
+    Boolean(value) &&
+    typeof value === "object" &&
+    (value as CharacterImage).contentType === "image/webp" &&
+    typeof (value as CharacterImage).url === "string"
+  );
+}
+
+async function uploadCharacterImage(
+  imageDataUrl?: string,
+): Promise<CharacterImage> {
+  if (!imageDataUrl) {
+    throw new Error("Character image is required.");
+  }
+
+  const blob = await (await fetch(imageDataUrl)).blob();
+  const formData = new FormData();
+
+  formData.append("image", blob, "character.webp");
+
+  const response = await fetch("/api/players/character-image", {
+    method: "POST",
+    body: formData,
+  });
+  const result = (await response.json()) as {
+    image?: CharacterImage;
+    error?: string;
+  };
+
+  if (!response.ok || !result.image) {
+    throw new Error(result.error || "Unable to upload character image.");
+  }
+
+  return result.image;
 }

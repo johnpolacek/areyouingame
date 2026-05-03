@@ -31,6 +31,7 @@ export function NewPlayerForm({
   const router = useRouter();
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isPreparingImage, setIsPreparingImage] = useState(false);
   const [error, setError] = useState("");
   const canCreatePlayer = isCompleteDraft(draft) && !isSubmitting;
@@ -39,6 +40,7 @@ export function NewPlayerForm({
     draft.age.trim().length > 0 &&
     draft.location.trim().length > 0 &&
     draft.occupation.trim().length > 0 &&
+    draft.appearance.trim().length > 0 &&
     draft.bio.trim().length > 0;
 
   useEffect(() => {
@@ -61,6 +63,10 @@ export function NewPlayerForm({
         occupation:
           typeof parsedDraft.occupation === "string"
             ? parsedDraft.occupation
+            : "",
+        appearance:
+          typeof parsedDraft.appearance === "string"
+            ? parsedDraft.appearance
             : "",
         bio: typeof parsedDraft.bio === "string" ? parsedDraft.bio : "",
         characterImageDataUrl:
@@ -90,8 +96,62 @@ export function NewPlayerForm({
     setError("");
   }
 
+  async function generateImage() {
+    if (!hasEnteredAllFields) {
+      setError("Please fill out all fields before generating a portrait.");
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/players/character-image/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          draft: {
+            name: draft.name.trim(),
+            age: draft.age.trim(),
+            location: draft.location.trim(),
+            occupation: draft.occupation.trim(),
+            appearance: draft.appearance.trim(),
+            bio: draft.bio.trim(),
+          },
+        }),
+      });
+      const result = (await response.json()) as {
+        image?: CharacterImage;
+        error?: string;
+      };
+
+      if (!response.ok || !result.image) {
+        throw new Error(result.error || "Unable to generate character portrait.");
+      }
+
+      setDraft((currentDraft) => ({
+        ...currentDraft,
+        characterImage: result.image,
+        characterImageDataUrl: undefined,
+      }));
+    } catch (generateError) {
+      setError(
+        generateError instanceof Error
+          ? generateError.message
+          : "Unable to generate character portrait.",
+      );
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }
+
   async function createPlayer() {
-    if (!hasEnteredAllFields || !draft.characterImageDataUrl) {
+    if (
+      !hasEnteredAllFields ||
+      (!draft.characterImage && !draft.characterImageDataUrl)
+    ) {
       setError("Please fill out all fields");
       return;
     }
@@ -104,7 +164,9 @@ export function NewPlayerForm({
     setError("");
 
     try {
-      const characterImage = draft.characterImage ?? await uploadCharacterImage(draft.characterImageDataUrl);
+      const characterImage =
+        draft.characterImage ??
+        (await uploadCharacterImage(draft.characterImageDataUrl));
       const response = await fetch("/api/players", {
         method: "POST",
         headers: {
@@ -117,9 +179,11 @@ export function NewPlayerForm({
             age: draft.age.trim(),
             location: draft.location.trim(),
             occupation: draft.occupation.trim(),
+            appearance: draft.appearance.trim(),
             bio: draft.bio.trim(),
             timeZone: getDraftTimeZone(),
             characterImage,
+            characterImageDataUrl: undefined,
           },
         }),
       });
@@ -163,8 +227,12 @@ export function NewPlayerForm({
     >
       <CharacterSetupForm
         draft={draft}
+        isGeneratingImage={isGeneratingImage}
         isPreparingImage={isPreparingImage}
         onChange={updateDraft}
+        onGenerateImage={() => {
+          void generateImage();
+        }}
         onImageChange={(imageDataUrl) => {
           setIsPreparingImage(true);
           updateImage(imageDataUrl);

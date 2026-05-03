@@ -60,6 +60,7 @@ export function HomeEntryActions({
         age: draft.age.trim(),
         location: draft.location.trim(),
         occupation: draft.occupation.trim(),
+        appearance: draft.appearance.trim(),
         bio: draft.bio.trim(),
         timeZone: getDraftTimeZone(),
         characterImageDataUrl: draft.characterImageDataUrl,
