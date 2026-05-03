@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import {
   characterImageContentType,
   type CharacterImageContentType,
@@ -24,7 +24,7 @@ export async function writeCharacterImageObject({
     sizeBytes: body.byteLength,
   });
 
-  const { bucket, region } = getCharacterImageS3Config();
+  const { bucket } = getCharacterImageS3Config();
   const objectKey = createCharacterImageObjectKey({
     contentType,
     clerkUserId,
@@ -47,7 +47,34 @@ export async function writeCharacterImageObject({
     contentType,
     sizeBytes: body.byteLength,
     uploadedAt: new Date().toISOString(),
-    url: createPublicS3Url({ bucket, objectKey, region }),
+    url: createAppCharacterImageUrl(objectKey),
+  };
+}
+
+export async function readCharacterImageObject({
+  objectKey,
+}: {
+  objectKey: string;
+}): Promise<{ body: Uint8Array; contentType?: string }> {
+  if (!objectKey.startsWith("areyouin/character-images/")) {
+    throw new Error("Character image key is invalid.");
+  }
+
+  const { bucket } = getCharacterImageS3Config();
+  const response = await getS3Client().send(
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: objectKey,
+    }),
+  );
+
+  if (!response.Body) {
+    throw new Error("S3 object did not include a body.");
+  }
+
+  return {
+    body: await response.Body.transformToByteArray(),
+    contentType: response.ContentType,
   };
 }
 
@@ -92,22 +119,10 @@ function getCharacterImageS3Config() {
   return { bucket, region };
 }
 
-function createPublicS3Url({
-  bucket,
-  objectKey,
-  region,
-}: {
-  bucket: string;
-  objectKey: string;
-  region: string;
-}): string {
+function createAppCharacterImageUrl(objectKey: string): string {
   const encodedKey = objectKey.split("/").map(encodeURIComponent).join("/");
 
-  if (region === "us-east-1") {
-    return `https://${bucket}.s3.amazonaws.com/${encodedKey}`;
-  }
-
-  return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
+  return `/api/character-images/${encodedKey}`;
 }
 
 function getS3Client(): S3Client {

@@ -29,16 +29,16 @@ describe("character image", () => {
   it("accepts supported public image metadata", () => {
     expect(
       validateCharacterImageInput({
-        url: "https://areyouin-artifacts-dev.s3.amazonaws.com/areyouin/character-images/user/upload",
+        url: "/api/character-images/areyouin/character-images/user/upload.png",
         bucket: "areyouin-artifacts-dev",
-        objectKey: "areyouin/character-images/user/upload",
+        objectKey: "areyouin/character-images/user/upload.png",
         contentType: "image/png",
         sizeBytes: 1000,
         uploadedAt: "2026-05-02T00:00:00.000Z",
       }),
     ).toMatchObject({
       contentType: "image/png",
-      objectKey: "areyouin/character-images/user/upload",
+      objectKey: "areyouin/character-images/user/upload.png",
     });
   });
 
@@ -75,7 +75,7 @@ describe("character image", () => {
         sizeBytes: 1000,
         uploadedAt: "2026-05-02T00:00:00.000Z",
       }),
-    ).toThrow("HTTPS");
+    ).toThrow("public HTTPS or app-hosted");
 
     expect(() =>
       validateCharacterImageInput({

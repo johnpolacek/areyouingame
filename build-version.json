@@ -1,6 +1,6 @@
 {
-  "version": "0.1.29",
-  "label": "Build 0.1.29",
+  "version": "0.1.30",
+  "label": "Build 0.1.30",
   "updatedAt": "2026-05-03",
-  "summary": "Fix generated portrait image URLs"
+  "summary": "Proxy character portrait images"
 }

@@ -38,8 +38,11 @@ export function validateCharacterImageInput(input: unknown): CharacterImageInput
     throw new Error("Character image must be WebP, PNG, or JPEG.");
   }
 
-  if (!image.url.startsWith("https://")) {
-    throw new Error("Character image URL must be public HTTPS.");
+  if (
+    !image.url.startsWith("https://") &&
+    !image.url.startsWith("/api/character-images/")
+  ) {
+    throw new Error("Character image URL must be public HTTPS or app-hosted.");
   }
 
   if (!image.objectKey.startsWith("areyouin/character-images/")) {
