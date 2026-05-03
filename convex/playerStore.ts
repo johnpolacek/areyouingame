@@ -16,6 +16,45 @@ const characterImage = v.object({
   uploadedAt: v.string(),
 });
 
+const moderationDecision = v.union(
+  v.literal("allow"),
+  v.literal("review"),
+  v.literal("block"),
+);
+
+const moderationSource = v.union(
+  v.literal("character_draft"),
+  v.literal("character_image_upload"),
+  v.literal("opening_response"),
+  v.literal("yes_no_text_response"),
+  v.literal("post_choice_action"),
+  v.literal("connected_path_action"),
+  v.literal("orb_decision_action"),
+  v.literal("connected_asi_action"),
+  v.literal("character_info_correction"),
+);
+
+const moderationEvent = v.object({
+  id: v.string(),
+  source: moderationSource,
+  decision: moderationDecision,
+  model: v.string(),
+  inputType: v.union(v.literal("text"), v.literal("image")),
+  textHash: v.optional(v.string()),
+  dailyGameId: v.optional(v.string()),
+  playerId: v.optional(v.string()),
+  clerkUserId: v.optional(v.string()),
+  flagged: v.boolean(),
+  categories: v.array(
+    v.object({
+      category: v.string(),
+      flagged: v.boolean(),
+      score: v.number(),
+    }),
+  ),
+  createdAt: v.string(),
+});
+
 const playerDraft = {
   name: v.string(),
   age: v.string(),
@@ -932,6 +971,21 @@ export const recordAiUsageEvent = mutationGeneric({
     requireBackendSecret(args.backendSecret);
 
     await ctx.db.insert("aiUsageEvents", args.event);
+
+    return null;
+  },
+});
+
+export const recordModerationEvent = mutationGeneric({
+  args: {
+    backendSecret: v.string(),
+    event: moderationEvent,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+
+    await ctx.db.insert("moderationEvents", args.event);
 
     return null;
   },
@@ -2668,6 +2722,7 @@ export const deleteDailyGameForAdmin = mutationGeneric({
     deletedGameplayEvents: v.number(),
     deletedPublicActivityEvents: v.number(),
     deletedAiUsageEvents: v.number(),
+    deletedModerationEvents: v.number(),
     deletedPlayerTurnImages: v.number(),
     deletedStorylineContexts: v.number(),
     deletedArtifactObjects: v.number(),
@@ -2689,6 +2744,7 @@ export const deleteAllDailyGamesForAdmin = mutationGeneric({
     deletedGameplayEvents: v.number(),
     deletedPublicActivityEvents: v.number(),
     deletedAiUsageEvents: v.number(),
+    deletedModerationEvents: v.number(),
     deletedPlayerTurnImages: v.number(),
     deletedStorylineContexts: v.number(),
     deletedArtifactObjects: v.number(),
@@ -2781,6 +2837,13 @@ async function deleteDailyGameRecords(ctx: any, dailyGameId: string) {
       .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
       .collect(),
   );
+  totals.deletedModerationEvents += await deleteDocuments(
+    ctx,
+    await ctx.db
+      .query("moderationEvents")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
+      .collect(),
+  );
   totals.deletedPlayerTurnImages += await deleteDocuments(
     ctx,
     await ctx.db
@@ -2821,6 +2884,7 @@ function createDeleteDailyGameTotals() {
     deletedGameplayEvents: 0,
     deletedPublicActivityEvents: 0,
     deletedAiUsageEvents: 0,
+    deletedModerationEvents: 0,
     deletedPlayerTurnImages: 0,
     deletedStorylineContexts: 0,
     deletedArtifactObjects: 0,
@@ -2836,6 +2900,7 @@ function addDeleteDailyGameTotals(
   totals.deletedGameplayEvents += next.deletedGameplayEvents;
   totals.deletedPublicActivityEvents += next.deletedPublicActivityEvents;
   totals.deletedAiUsageEvents += next.deletedAiUsageEvents;
+  totals.deletedModerationEvents += next.deletedModerationEvents;
   totals.deletedPlayerTurnImages += next.deletedPlayerTurnImages;
   totals.deletedStorylineContexts += next.deletedStorylineContexts;
   totals.deletedArtifactObjects += next.deletedArtifactObjects;

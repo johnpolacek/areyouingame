@@ -1,4 +1,5 @@
 import { getOptionalAuthenticatedUserId } from "@/lib/playtest-auth";
+import { moderateTextOrThrow } from "@/lib/content-moderation";
 import { getTodayGameForRequest } from "@/lib/daily-game";
 import { createFirstChoiceConsequence } from "@/lib/first-choice-consequence";
 import { classifyFirstRevealTextResponse } from "@/lib/first-reveal-text-response";
@@ -40,6 +41,14 @@ export async function POST(request: Request) {
         { status: 409 },
       );
     }
+
+    await moderateTextOrThrow({
+      clerkUserId: userId,
+      dailyGameId: todayGame.id,
+      playerId: existingPlayer.id,
+      source: "yes_no_text_response",
+      text: responseText,
+    });
 
     const classification = await classifyFirstRevealTextResponse({
       player: existingPlayer,

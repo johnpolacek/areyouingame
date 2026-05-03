@@ -3,6 +3,7 @@ import {
   buildDay1GameplayContextPayload,
   getOrCreateDay1StorylineContextForDailyGame,
 } from "@/lib/day-1-storyline-context";
+import { moderateTextOrThrow } from "@/lib/content-moderation";
 import { getTodayGameForRequest } from "@/lib/daily-game";
 import { createFirstNoPostChoiceActionResponse } from "@/lib/first-post-choice-action-response";
 import {
@@ -43,6 +44,14 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    await moderateTextOrThrow({
+      clerkUserId: userId,
+      dailyGameId: todayGame.id,
+      playerId: existingPlayer.id,
+      source: "post_choice_action",
+      text: actionText,
+    });
 
     const day1StorylineContext =
       await getOrCreateDay1StorylineContextForDailyGame(todayGame.id);

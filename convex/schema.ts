@@ -319,6 +319,45 @@ const aiUsageEvent = v.object({
   createdAt: v.string(),
 });
 
+const moderationDecision = v.union(
+  v.literal("allow"),
+  v.literal("review"),
+  v.literal("block"),
+);
+
+const moderationSource = v.union(
+  v.literal("character_draft"),
+  v.literal("character_image_upload"),
+  v.literal("opening_response"),
+  v.literal("yes_no_text_response"),
+  v.literal("post_choice_action"),
+  v.literal("connected_path_action"),
+  v.literal("orb_decision_action"),
+  v.literal("connected_asi_action"),
+  v.literal("character_info_correction"),
+);
+
+const moderationEvent = v.object({
+  id: v.string(),
+  source: moderationSource,
+  decision: moderationDecision,
+  model: v.string(),
+  inputType: v.union(v.literal("text"), v.literal("image")),
+  textHash: v.optional(v.string()),
+  dailyGameId: v.optional(v.string()),
+  playerId: v.optional(v.string()),
+  clerkUserId: v.optional(v.string()),
+  flagged: v.boolean(),
+  categories: v.array(
+    v.object({
+      category: v.string(),
+      flagged: v.boolean(),
+      score: v.number(),
+    }),
+  ),
+  createdAt: v.string(),
+});
+
 const playerTurnImageStatus = v.union(
   v.literal("pending"),
   v.literal("generating"),
@@ -521,6 +560,14 @@ export default defineSchema({
     .index("by_operation", ["operation"])
     .index("by_dailyGameId", ["dailyGameId"])
     .index("by_clerkUserId", ["clerkUserId"]),
+
+  moderationEvents: defineTable(moderationEvent)
+    .index("by_createdAt", ["createdAt"])
+    .index("by_decision", ["decision"])
+    .index("by_dailyGameId", ["dailyGameId"])
+    .index("by_clerkUserId", ["clerkUserId"])
+    .index("by_source", ["source"])
+    .index("by_textHash", ["textHash"]),
 
   playerTurnImages: defineTable(playerTurnImage)
     .index("by_sourceTurnId", ["sourceTurnId"])

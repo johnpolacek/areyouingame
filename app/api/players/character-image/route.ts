@@ -2,6 +2,7 @@ import { getOptionalAuthenticatedUserId } from "@/lib/playtest-auth";
 import { getTodayGameForRequest } from "@/lib/daily-game";
 import { validateCharacterImageUpload } from "@/lib/character-image";
 import { writeCharacterImageObject } from "@/lib/character-image-store";
+import { moderateImageUploadOrThrow } from "@/lib/content-moderation";
 import { updateCharacterImageForUserGame } from "@/lib/player-store";
 
 export const runtime = "nodejs";
@@ -26,8 +27,17 @@ export async function POST(request: Request) {
       sizeBytes: file.size,
     });
 
+    const bytes = new Uint8Array(await file.arrayBuffer());
+
+    await moderateImageUploadOrThrow({
+      bytes,
+      clerkUserId: userId,
+      contentType: file.type,
+      source: "character_image_upload",
+    });
+
     const image = await writeCharacterImageObject({
-      body: new Uint8Array(await file.arrayBuffer()),
+      body: bytes,
       clerkUserId: userId,
     });
     const shouldAttachToCurrentPlayer =

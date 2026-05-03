@@ -5,6 +5,7 @@ import {
   getTodayGameForRequest,
   resolveValidTimeZone,
 } from "@/lib/daily-game";
+import { moderateTextOrThrow } from "@/lib/content-moderation";
 import { createOpeningSceneContextQuestion } from "@/lib/opening-scene-context";
 import {
   getPlayerForUserGame,
@@ -39,6 +40,14 @@ export async function POST(request: Request) {
     if (!existingPlayer) {
       return Response.json({ error: "Player not found." }, { status: 404 });
     }
+
+    await moderateTextOrThrow({
+      clerkUserId: userId,
+      dailyGameId: todayGame.id,
+      playerId: existingPlayer.id,
+      source: "opening_response",
+      text: openingResponse,
+    });
 
     const localGameStart = formatCurrentTimeForTimeZone(requestTimeZone);
     const openingSceneContext = await createOpeningSceneContextQuestion({
