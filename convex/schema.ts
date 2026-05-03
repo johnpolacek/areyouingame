@@ -419,6 +419,7 @@ export default defineSchema({
     age: v.string(),
     location: v.string(),
     occupation: v.string(),
+    appearance: v.optional(v.string()),
     bio: v.string(),
     timeZone: v.string(),
     characterImage: v.optional(characterImage),
