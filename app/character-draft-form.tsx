@@ -253,6 +253,9 @@ export function PlayerCreationView({
         <p className="max-w-2xl text-base leading-6 font-medium text-balance text-muted-foreground dark:text-amber-100 sm:text-lg sm:leading-7">
           {playerCreationSubhead}
         </p>
+        <p className="max-w-md text-xs leading-5 font-medium text-muted-foreground/80 dark:text-amber-100/70">
+          Heads up: your character and gameplay will be public.
+        </p>
       </div>
 
       <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
