@@ -11,6 +11,12 @@ gsap.registerPlugin(useGSAP, SplitText);
 const subtitleText = "An invitation to the future awaits.";
 const displayFontFamily =
   "var(--font-rubik-80s-fade), var(--font-rethink-sans), sans-serif";
+const titleWordClassName =
+  "block bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text text-transparent dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200 sm:inline-block";
+const titleWordAnimationStart = {
+  opacity: 0,
+  transform: "translate3d(0, 24px, 0)",
+};
 
 export function AnimatedHomeHero() {
   const containerRef = useRef<HTMLElement>(null);
@@ -307,27 +313,27 @@ export function AnimatedHomeHero() {
         ref={titleRef}
         aria-label="Are You In?"
         id="entry-title"
-        className="hero-display-title w-full bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(5rem,24vw,7.25rem)] leading-[0.78] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200 sm:whitespace-nowrap sm:text-[clamp(4.25rem,14vw,10rem)] sm:leading-[0.82]"
+        className="hero-display-title w-full selection:bg-amber-500/35 text-[clamp(5rem,24vw,7.25rem)] leading-[0.78] font-normal tracking-normal [font-kerning:none] [text-rendering:optimizeSpeed] sm:whitespace-nowrap sm:text-[clamp(4.25rem,14vw,10rem)] sm:leading-[0.82]"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
         <span
-          className="block sm:inline-block"
+          className={titleWordClassName}
           data-title-word
-          style={{ opacity: 0, transform: "translateY(24px)" }}
+          style={titleWordAnimationStart}
         >
           Are
         </span>
         <span
-          className="block sm:ml-[0.18em] sm:inline-block"
+          className={`${titleWordClassName} sm:ml-[0.18em]`}
           data-title-word
-          style={{ opacity: 0, transform: "translateY(24px)" }}
+          style={titleWordAnimationStart}
         >
           You
         </span>
         <span
-          className="block sm:ml-[0.18em] sm:inline-block"
+          className={`${titleWordClassName} sm:ml-[0.18em]`}
           data-title-word
-          style={{ opacity: 0, transform: "translateY(24px)" }}
+          style={titleWordAnimationStart}
         >
           In?
         </span>

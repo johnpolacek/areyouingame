@@ -1,6 +1,6 @@
 {
-  "version": "0.1.39",
-  "label": "Build 0.1.39",
+  "version": "0.1.40",
+  "label": "Build 0.1.40",
   "updatedAt": "2026-05-03",
-  "summary": "Smooth title word animation"
+  "summary": "Fix title fade-up animation paint"
 }
