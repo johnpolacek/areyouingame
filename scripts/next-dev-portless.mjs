@@ -9,6 +9,8 @@ const env = {
   ...process.env,
   ...readEnvFile(join(repoRoot, ".env.worktree.local")),
 };
+env.PORTLESS_PORT ||= "1355";
+
 const portlessName = env.AREYOUIN_PORTLESS_BASE_NAME || "are-you-in";
 const args = ["run", "--name", portlessName, "pnpm", "next:dev:app"];
 
