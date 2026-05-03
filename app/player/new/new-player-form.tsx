@@ -224,6 +224,7 @@ export function NewPlayerForm({
         </Button>
       }
       error={error}
+      showSubhead={false}
     >
       <CharacterSetupForm
         draft={draft}
