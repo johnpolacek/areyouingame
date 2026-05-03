@@ -285,13 +285,13 @@ export function AnimatedHomeHero() {
   return (
     <section
       ref={containerRef}
-      className="relative z-10 mx-auto flex w-full flex-col items-center justify-center gap-7 self-center text-center sm:gap-8"
+      className="relative z-10 mx-auto flex w-full max-w-[calc(100vw-2.5rem)] flex-col items-center justify-center gap-6 self-center text-center sm:max-w-none sm:gap-8"
       aria-labelledby="entry-title"
     >
       <h1
         ref={titleRef}
         id="entry-title"
-        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(4.25rem,14vw,10rem)] leading-[0.82] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200"
+        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(2.7rem,12.8vw,4rem)] leading-[0.9] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200 sm:text-[clamp(4.25rem,14vw,10rem)] sm:leading-[0.82]"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
         Are You In?
@@ -299,7 +299,7 @@ export function AnimatedHomeHero() {
       <p
         ref={subtitleRef}
         aria-label={subtitleText}
-        className="w-full max-w-none selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[11px] text-balance text-primary uppercase sm:text-xl"
+        className="w-full max-w-[22rem] selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[0.55em] text-balance text-primary uppercase sm:max-w-none sm:text-xl sm:tracking-[11px]"
         style={{ opacity: 0 }}
       >
         An invitation to the future awaits.
