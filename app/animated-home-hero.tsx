@@ -123,7 +123,8 @@ export function AnimatedHomeHero() {
           opacity: 1,
           y: 0,
           clearProps: "transform,willChange",
-          duration: 1,
+          duration: 2,
+          ease: "expo.out",
           stagger: 0.33,
         },
       )
@@ -145,7 +146,7 @@ export function AnimatedHomeHero() {
               from: "random",
             },
           },
-          "-=0.45",
+          "-=1",
         )
         .fromTo(
           actionsRef.current,
