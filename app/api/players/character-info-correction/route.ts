@@ -1,4 +1,5 @@
 import { getTodayGameForRequest } from "@/lib/daily-game";
+import { moderateTextOrThrow } from "@/lib/content-moderation";
 import {
   correctCharacterInfoForUserGame,
   validateCharacterInfoCorrection,
@@ -18,6 +19,14 @@ export async function POST(request: Request) {
     const body = (await request.json()) as { correction?: unknown };
     const correction = validateCharacterInfoCorrection(body.correction);
     const todayGame = await getTodayGameForRequest();
+
+    await moderateTextOrThrow({
+      clerkUserId: userId,
+      dailyGameId: todayGame.id,
+      source: "character_info_correction",
+      text: correction.text,
+    });
+
     const player = await correctCharacterInfoForUserGame({
       clerkUserId: userId,
       dailyGameId: todayGame.id,

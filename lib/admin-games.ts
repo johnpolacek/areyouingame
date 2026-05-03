@@ -11,6 +11,7 @@ export type DeleteDailyGameResult = {
   deletedGameplayEvents: number;
   deletedPublicActivityEvents: number;
   deletedAiUsageEvents: number;
+  deletedModerationEvents: number;
   deletedPlayerTurnImages: number;
   deletedStorylineContexts: number;
   deletedArtifactObjects: number;

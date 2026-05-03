@@ -3,6 +3,7 @@ import {
   buildDay1GameplayContextPayload,
   getOrCreateDay1StorylineContextForDailyGame,
 } from "@/lib/day-1-storyline-context";
+import { moderateTextOrThrow } from "@/lib/content-moderation";
 import { getTodayGameForRequest } from "@/lib/daily-game";
 import { createFirstConnectedPathTurnResponse } from "@/lib/first-connected-path-response";
 import {
@@ -47,6 +48,14 @@ export async function POST(request: Request) {
     if (existingPlayer.firstConnectedPath?.orbStatus === "revealed") {
       return Response.json({ player: existingPlayer });
     }
+
+    await moderateTextOrThrow({
+      clerkUserId: userId,
+      dailyGameId: todayGame.id,
+      playerId: existingPlayer.id,
+      source: "connected_path_action",
+      text: actionText,
+    });
 
     const day1StorylineContext =
       await getOrCreateDay1StorylineContextForDailyGame(todayGame.id);

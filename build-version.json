@@ -1,6 +1,6 @@
 {
-  "version": "0.1.25",
-  "label": "Build 0.1.25",
+  "version": "0.1.26",
+  "label": "Build 0.1.26",
   "updatedAt": "2026-05-03",
-  "summary": "Add generated character portraits"
+  "summary": "Add content moderation"
 }
