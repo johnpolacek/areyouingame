@@ -16,6 +16,7 @@ export type AiUsageOperation =
   | "connected_path_turn"
   | "orb_decision_turn"
   | "connected_asi_turn"
+  | "character_draft_fill"
   | "player_turn_image_prompt";
 
 export type AiUsageStatus = "success" | "error";

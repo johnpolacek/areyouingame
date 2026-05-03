@@ -1,6 +1,6 @@
 {
-  "version": "0.1.26",
-  "label": "Build 0.1.26",
+  "version": "0.1.27",
+  "label": "Build 0.1.27",
   "updatedAt": "2026-05-03",
-  "summary": "Add content moderation"
+  "summary": "Add AI character form fill"
 }

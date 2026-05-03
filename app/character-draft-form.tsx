@@ -71,17 +71,21 @@ function fieldClass() {
 export function CharacterSetupForm({
   draft,
   onChange,
+  onGenerateDraft,
   onImageChange,
   onGenerateImage,
   onSubmit,
+  isGeneratingDraft = false,
   isGeneratingImage = false,
   isPreparingImage = false,
 }: {
   draft: CharacterDraft;
   onChange: (field: CharacterDraftField, value: string) => void;
+  onGenerateDraft?: () => void;
   onImageChange?: (imageDataUrl: string) => void;
   onGenerateImage?: () => void;
   onSubmit?: () => void;
+  isGeneratingDraft?: boolean;
   isGeneratingImage?: boolean;
   isPreparingImage?: boolean;
 }) {
@@ -123,6 +127,23 @@ export function CharacterSetupForm({
         onSubmit?.();
       }}
     >
+      {onGenerateDraft ? (
+        <div className="col-span-2 flex justify-end">
+          <button
+            className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold tracking-[0.12em] text-primary uppercase transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
+            disabled={isGeneratingDraft}
+            onClick={() => onGenerateDraft()}
+            type="button"
+          >
+            {isGeneratingDraft ? (
+              <LoaderCircleIcon aria-hidden="true" className="size-3.5 animate-spin" />
+            ) : (
+              <SparklesIcon aria-hidden="true" className="size-3.5" />
+            )}
+            Generate Character
+          </button>
+        </div>
+      ) : null}
       <label className="grid gap-0.5 text-[0.56rem] font-bold tracking-[0.16em] text-primary uppercase dark:text-amber-400 sm:gap-1 sm:text-[0.62rem] sm:tracking-[0.18em]">
         Name
         <input

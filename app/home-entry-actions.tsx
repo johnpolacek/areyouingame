@@ -33,6 +33,8 @@ export function HomeEntryActions({
   const { isLoaded, isSignedIn } = useAuth();
   const [showLocalAuthActions, setShowLocalAuthActions] = useState(false);
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
+  const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
+  const [error, setError] = useState("");
   const shouldShowAuthActions = showAuthActions || showLocalAuthActions;
   const canCreateAccount = isCompleteDraft(draft);
 
@@ -45,6 +47,60 @@ export function HomeEntryActions({
       ...currentDraft,
       [field]: value,
     }));
+    setError("");
+  }
+
+  async function generateDraft() {
+    setIsGeneratingDraft(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/players/character-draft/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          draft: {
+            name: draft.name,
+            age: draft.age,
+            location: draft.location,
+            occupation: draft.occupation,
+            appearance: draft.appearance,
+            bio: draft.bio,
+          },
+        }),
+      });
+      const result = (await response.json()) as {
+        draft?: Partial<CharacterDraft>;
+        error?: string;
+      };
+
+      if (!response.ok || !result.draft) {
+        throw new Error(result.error || "Unable to generate character.");
+      }
+
+      setDraft((currentDraft) => ({
+        ...currentDraft,
+        name: currentDraft.name.trim() || result.draft?.name || "",
+        age: currentDraft.age.trim() || result.draft?.age || "",
+        location:
+          currentDraft.location.trim() || result.draft?.location || "",
+        occupation:
+          currentDraft.occupation.trim() || result.draft?.occupation || "",
+        appearance:
+          currentDraft.appearance.trim() || result.draft?.appearance || "",
+        bio: currentDraft.bio.trim() || result.draft?.bio || "",
+      }));
+    } catch (generateError) {
+      setError(
+        generateError instanceof Error
+          ? generateError.message
+          : "Unable to generate character.",
+      );
+    } finally {
+      setIsGeneratingDraft(false);
+    }
   }
 
   function savePendingDraft() {
@@ -104,10 +160,15 @@ export function HomeEntryActions({
             </SignInButton>
           </>
         }
+        error={error}
       >
         <CharacterSetupForm
           draft={draft}
+          isGeneratingDraft={isGeneratingDraft}
           onChange={updateDraft}
+          onGenerateDraft={() => {
+            void generateDraft();
+          }}
           onImageChange={(characterImageDataUrl) =>
             setDraft((currentDraft) => ({
               ...currentDraft,
