@@ -1,6 +1,6 @@
 {
-  "version": "0.1.35",
-  "label": "Build 0.1.35",
+  "version": "0.1.36",
+  "label": "Build 0.1.36",
   "updatedAt": "2026-05-03",
-  "summary": "Fix mobile game beginning layout"
+  "summary": "Stack mobile game title"
 }

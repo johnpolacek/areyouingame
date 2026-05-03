@@ -290,11 +290,14 @@ export function AnimatedHomeHero() {
     >
       <h1
         ref={titleRef}
+        aria-label="Are You In?"
         id="entry-title"
-        className="hero-display-title w-full whitespace-nowrap bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(2.7rem,12.8vw,4rem)] leading-[0.9] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200 sm:text-[clamp(4.25rem,14vw,10rem)] sm:leading-[0.82]"
+        className="hero-display-title w-full bg-gradient-to-t from-amber-950 via-amber-700 to-amber-500 bg-clip-text selection:bg-amber-500/35 text-[clamp(5rem,24vw,7.25rem)] leading-[0.78] font-normal tracking-normal text-transparent [font-kerning:none] [text-rendering:optimizeSpeed] dark:from-amber-600/90 dark:via-amber-500 dark:to-amber-200 sm:whitespace-nowrap sm:text-[clamp(4.25rem,14vw,10rem)] sm:leading-[0.82]"
         style={{ fontFamily: displayFontFamily, opacity: 0 }}
       >
-        Are You In?
+        <span className="block sm:inline">Are</span>
+        <span className="block sm:ml-[0.18em] sm:inline">You</span>
+        <span className="block sm:ml-[0.18em] sm:inline">In?</span>
       </h1>
       <p
         ref={subtitleRef}
