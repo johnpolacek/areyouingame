@@ -54,7 +54,7 @@ type PublicCharacterImage = {
   url: string;
   bucket: string;
   objectKey: string;
-  contentType: "image/webp";
+  contentType: "image/webp" | "image/png" | "image/jpeg";
   sizeBytes: number;
   uploadedAt: string;
 };
@@ -222,7 +222,7 @@ function toPublicCharacterImage(source: any): PublicCharacterImage | undefined {
     typeof source.url !== "string" ||
     typeof source.bucket !== "string" ||
     typeof source.objectKey !== "string" ||
-    source.contentType !== "image/webp" ||
+    !isPublicCharacterImageContentType(source.contentType) ||
     typeof source.sizeBytes !== "number" ||
     typeof source.uploadedAt !== "string"
   ) {
@@ -237,6 +237,16 @@ function toPublicCharacterImage(source: any): PublicCharacterImage | undefined {
     sizeBytes: source.sizeBytes,
     uploadedAt: source.uploadedAt,
   };
+}
+
+function isPublicCharacterImageContentType(
+  contentType: unknown,
+): contentType is PublicCharacterImage["contentType"] {
+  return (
+    contentType === "image/webp" ||
+    contentType === "image/png" ||
+    contentType === "image/jpeg"
+  );
 }
 
 export function toPublicLivePlayerId(playerId: string): string {

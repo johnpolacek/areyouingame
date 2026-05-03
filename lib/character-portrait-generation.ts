@@ -1,5 +1,9 @@
 import { generateImage } from "ai";
-import { characterImageContentType, type CharacterImage } from "./character-image";
+import {
+  characterImageContentType,
+  isCharacterImageContentType,
+  type CharacterImage,
+} from "./character-image";
 import { writeCharacterImageObject } from "./character-image-store";
 
 export const CHARACTER_PORTRAIT_IMAGE_MODEL = "openai/gpt-image-2";
@@ -35,13 +39,14 @@ export async function generateCharacterPortraitImage({
   });
   const contentType = image.mediaType || characterImageContentType;
 
-  if (contentType !== characterImageContentType) {
-    throw new Error("Generated character portrait must be WebP.");
+  if (!isCharacterImageContentType(contentType)) {
+    throw new Error("Generated character portrait must be WebP, PNG, or JPEG.");
   }
 
   return await writeCharacterImageObject({
     body: image.uint8Array,
     clerkUserId,
+    contentType,
   });
 }
 

@@ -6,7 +6,10 @@ import {
   pendingDraftStorageKey,
   persistBrowserTimeZoneCookie,
 } from "@/lib/character-draft";
-import type { CharacterImage } from "@/lib/character-image";
+import {
+  isCharacterImageContentType,
+  type CharacterImage,
+} from "@/lib/character-image";
 
 type JoinFlowProps = {
   fallbackHref: string;
@@ -109,7 +112,7 @@ function isCharacterImage(value: unknown): value is CharacterImage {
   return (
     Boolean(value) &&
     typeof value === "object" &&
-    (value as CharacterImage).contentType === "image/webp" &&
+    isCharacterImageContentType((value as CharacterImage).contentType) &&
     typeof (value as CharacterImage).url === "string"
   );
 }

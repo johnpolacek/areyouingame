@@ -11,7 +11,11 @@ const characterImage = v.object({
   url: v.string(),
   bucket: v.string(),
   objectKey: v.string(),
-  contentType: v.literal("image/webp"),
+  contentType: v.union(
+    v.literal("image/webp"),
+    v.literal("image/png"),
+    v.literal("image/jpeg"),
+  ),
   sizeBytes: v.number(),
   uploadedAt: v.string(),
 });

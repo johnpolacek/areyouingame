@@ -7,19 +7,19 @@ import {
 } from "./character-image";
 
 describe("character image", () => {
-  it("accepts public WebP image metadata", () => {
+  it("accepts supported public image metadata", () => {
     expect(
       validateCharacterImageInput({
-        url: "https://areyouin-artifacts-dev.s3.amazonaws.com/areyouin/character-images/user/upload.webp",
+        url: "https://areyouin-artifacts-dev.s3.amazonaws.com/areyouin/character-images/user/upload",
         bucket: "areyouin-artifacts-dev",
-        objectKey: "areyouin/character-images/user/upload.webp",
-        contentType: characterImageContentType,
+        objectKey: "areyouin/character-images/user/upload",
+        contentType: "image/png",
         sizeBytes: 1000,
         uploadedAt: "2026-05-02T00:00:00.000Z",
       }),
     ).toMatchObject({
-      contentType: "image/webp",
-      objectKey: "areyouin/character-images/user/upload.webp",
+      contentType: "image/png",
+      objectKey: "areyouin/character-images/user/upload",
     });
   });
 
@@ -29,7 +29,14 @@ describe("character image", () => {
         contentType: "image/png",
         sizeBytes: 1000,
       }),
-    ).toThrow("WebP");
+    ).not.toThrow();
+
+    expect(() =>
+      validateCharacterImageUpload({
+        contentType: "image/gif",
+        sizeBytes: 1000,
+      }),
+    ).toThrow("PNG");
 
     expect(() =>
       validateCharacterImageUpload({

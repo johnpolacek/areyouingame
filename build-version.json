@@ -1,6 +1,6 @@
 {
-  "version": "0.1.27",
-  "label": "Build 0.1.27",
+  "version": "0.1.28",
+  "label": "Build 0.1.28",
   "updatedAt": "2026-05-03",
-  "summary": "Add AI character form fill"
+  "summary": "Allow generated portrait image formats"
 }

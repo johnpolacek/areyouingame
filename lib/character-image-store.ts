@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import {
   characterImageContentType,
+  type CharacterImageContentType,
   maxCharacterImageBytes,
   validateCharacterImageUpload,
   type CharacterImage,
@@ -10,14 +11,16 @@ import {
 type WriteCharacterImageInput = {
   body: Uint8Array;
   clerkUserId: string;
+  contentType?: CharacterImageContentType;
 };
 
 export async function writeCharacterImageObject({
   body,
   clerkUserId,
+  contentType = characterImageContentType,
 }: WriteCharacterImageInput): Promise<CharacterImage> {
   validateCharacterImageUpload({
-    contentType: characterImageContentType,
+    contentType,
     sizeBytes: body.byteLength,
   });
 
@@ -32,7 +35,7 @@ export async function writeCharacterImageObject({
       Bucket: bucket,
       Key: objectKey,
       Body: body,
-      ContentType: characterImageContentType,
+      ContentType: contentType,
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
@@ -40,7 +43,7 @@ export async function writeCharacterImageObject({
   return {
     bucket,
     objectKey,
-    contentType: characterImageContentType,
+    contentType,
     sizeBytes: body.byteLength,
     uploadedAt: new Date().toISOString(),
     url: createPublicS3Url({ bucket, objectKey, region }),
@@ -56,7 +59,7 @@ export function createCharacterImageObjectKey({
 }): string {
   const safeUserId = clerkUserId.replaceAll(/[^a-zA-Z0-9._:-]/g, "-").slice(0, 120);
 
-  return `areyouin/character-images/${safeUserId}/${uploadId}.webp`;
+  return `areyouin/character-images/${safeUserId}/${uploadId}`;
 }
 
 function getCharacterImageS3Config() {

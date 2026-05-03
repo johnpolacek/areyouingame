@@ -1,11 +1,18 @@
 export const characterImageContentType = "image/webp";
+export const characterImageContentTypes = [
+  "image/webp",
+  "image/png",
+  "image/jpeg",
+] as const;
 export const maxCharacterImageBytes = 2_500_000;
+
+export type CharacterImageContentType = (typeof characterImageContentTypes)[number];
 
 export type CharacterImage = {
   url: string;
   bucket: string;
   objectKey: string;
-  contentType: typeof characterImageContentType;
+  contentType: CharacterImageContentType;
   sizeBytes: number;
   uploadedAt: string;
 };
@@ -27,8 +34,8 @@ export function validateCharacterImageInput(input: unknown): CharacterImageInput
     uploadedAt: readRequiredString(source.uploadedAt, "Character image upload time", 80),
   };
 
-  if (image.contentType !== characterImageContentType) {
-    throw new Error("Character image must be WebP.");
+  if (!isCharacterImageContentType(image.contentType)) {
+    throw new Error("Character image must be WebP, PNG, or JPEG.");
   }
 
   if (!image.url.startsWith("https://")) {
@@ -41,7 +48,7 @@ export function validateCharacterImageInput(input: unknown): CharacterImageInput
 
   return {
     ...image,
-    contentType: characterImageContentType,
+    contentType: image.contentType,
   };
 }
 
@@ -52,8 +59,8 @@ export function validateCharacterImageUpload({
   contentType: string;
   sizeBytes: number;
 }) {
-  if (contentType !== characterImageContentType) {
-    throw new Error("Upload a WebP character image.");
+  if (!isCharacterImageContentType(contentType)) {
+    throw new Error("Upload a WebP, PNG, or JPEG character image.");
   }
 
   if (!Number.isInteger(sizeBytes) || sizeBytes <= 0) {
@@ -63,6 +70,14 @@ export function validateCharacterImageUpload({
   if (sizeBytes > maxCharacterImageBytes) {
     throw new Error("Character image must be 2.5 MB or smaller.");
   }
+}
+
+export function isCharacterImageContentType(
+  contentType: string,
+): contentType is CharacterImageContentType {
+  return characterImageContentTypes.includes(
+    contentType as CharacterImageContentType,
+  );
 }
 
 function readRequiredString(
