@@ -1,6 +1,6 @@
 {
-  "version": "0.1.41",
-  "label": "Build 0.1.41",
+  "version": "0.1.42",
+  "label": "Build 0.1.42",
   "updatedAt": "2026-05-03",
-  "summary": "Extend title word animation"
+  "summary": "Start subtitle animation sooner"
 }

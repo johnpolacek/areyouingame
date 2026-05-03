@@ -146,7 +146,7 @@ export function AnimatedHomeHero() {
               from: "random",
             },
           },
-          "-=1",
+          "-=1.6",
         )
         .fromTo(
           actionsRef.current,
