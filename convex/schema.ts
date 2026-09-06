@@ -143,6 +143,7 @@ const firstPostChoiceAction = v.object({
 });
 
 const firstPostChoiceTurn = v.object({
+  requestId: v.optional(v.string()),
   id: v.string(),
   turnNumber: v.number(),
   actionText: v.string(),

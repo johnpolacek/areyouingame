@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -371,6 +371,9 @@ export function FirstChoiceConsequence({
   const router = useRouter();
   const [actionText, setActionText] = useState("");
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const pendingNoAction = useRef<{
+    requestId: string; expectedStateVersion: number; actionText: string;
+  } | null>(null);
   const [error, setError] = useState("");
   const choiceClass =
     decision.choice === "YES"
@@ -450,19 +453,33 @@ export function FirstChoiceConsequence({
             ? "/api/players/first-orb-decision-action"
             : "/api/players/first-connected-path-action"
           : "/api/players/first-post-choice-action";
+      if (decision.choice === "NO" &&
+          (!pendingNoAction.current || pendingNoAction.current.actionText !== nextActionText)) {
+        pendingNoAction.current = {
+          requestId: crypto.randomUUID(),
+          expectedStateVersion: firstPostChoiceTurns?.length ??
+            (firstPostChoiceAction?.responseText ? 1 : 0),
+          actionText: nextActionText,
+        };
+      }
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ actionText: nextActionText }),
+        body: JSON.stringify(decision.choice === "NO" ? pendingNoAction.current : { actionText: nextActionText }),
       });
       const result = (await response.json()) as { error?: string };
 
       if (!response.ok) {
+        if (response.status === 409) {
+          pendingNoAction.current = null;
+          router.refresh();
+        }
         throw new Error(result.error || "Unable to submit action.");
       }
 
+      pendingNoAction.current = null;
       setActionText("");
       router.refresh();
     } catch (submitError) {

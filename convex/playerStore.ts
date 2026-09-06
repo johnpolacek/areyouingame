@@ -205,6 +205,7 @@ const firstPostChoiceAction = v.object({
 });
 
 const firstPostChoiceTurn = v.object({
+  requestId: v.optional(v.string()),
   id: v.string(),
   turnNumber: v.number(),
   actionText: v.string(),
@@ -1555,6 +1556,9 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
 export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
   args: {
     ...authenticatedArgs,
+    requestId: v.string(),
+    expectedStateVersion: v.number(),
+    expectedUpdatedAt: v.string(),
     actionText: v.string(),
     responseText: v.string(),
     sceneTitle: v.string(),
@@ -1620,12 +1624,29 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
         : [];
     const existingTurns =
       existingPlayer.firstPostChoiceTurns ?? legacyFirstTurn;
-    const turnNumber = existingTurns.length + 1;
+    if (!args.requestId.trim() || args.requestId.length > 128 ||
+        !Number.isSafeInteger(args.expectedStateVersion) || args.expectedStateVersion < 0) {
+      throw new ConvexError("Invalid action request.");
+    }
+    const previous = existingTurns.find((turn: { requestId?: string; actionText: string; turnNumber: number }) => turn.requestId === args.requestId);
+    if (previous) {
+      if (previous.actionText !== args.actionText ||
+          previous.turnNumber !== args.expectedStateVersion + 1) {
+        throw new ConvexError("ACTION_CONFLICT: Request ID was already used.");
+      }
+      return toDailyPlayer(existingPlayer);
+    }
+    if (existingTurns.length !== args.expectedStateVersion ||
+        existingPlayer.updatedAt !== args.expectedUpdatedAt) {
+      throw new ConvexError("ACTION_CONFLICT: Player state changed. Review the latest scene and try again.");
+    }
+    const turnNumber = args.expectedStateVersion + 1;
 
     const now = new Date().toISOString();
     const firstPostChoiceActionRecord = {
       id: `${args.dailyGameId}:${existingPlayer.id}:first-post-choice-action:${turnNumber}`,
       turnNumber,
+      requestId: args.requestId,
       actionText: args.actionText,
       submittedAt: now,
       responseText: args.responseText,

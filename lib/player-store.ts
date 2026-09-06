@@ -111,6 +111,7 @@ export type FirstPostChoiceAction = {
 };
 
 export type FirstPostChoiceTurn = FirstPostChoiceAction & {
+  requestId?: string;
   turnNumber: number;
   responseText: string;
   sceneTitle: string;
@@ -396,6 +397,9 @@ const submitFirstRevealTextResponseForUserGameRef = makeFunctionReference<
 const submitFirstPostChoiceActionForUserGameRef = makeFunctionReference<
   "mutation",
   AuthenticatedPlayerArgs & {
+    requestId: string;
+    expectedStateVersion: number;
+    expectedUpdatedAt: string;
     actionText: string;
     responseText: string;
     sceneTitle: string;
@@ -832,6 +836,9 @@ export function validateFirstConnectedAsiAction(input: unknown): string {
 export async function submitFirstPostChoiceActionForUserGame({
   clerkUserId,
   dailyGameId,
+  requestId,
+  expectedStateVersion,
+  expectedUpdatedAt,
   actionText,
   responseText,
   sceneTitle,
@@ -844,6 +851,9 @@ export async function submitFirstPostChoiceActionForUserGame({
 }: {
   clerkUserId: string;
   dailyGameId: string;
+  requestId: string;
+  expectedStateVersion: number;
+  expectedUpdatedAt: string;
   actionText: string;
   responseText: string;
   sceneTitle: string;
@@ -858,6 +868,9 @@ export async function submitFirstPostChoiceActionForUserGame({
     backendSecret: getBackendSecret(),
     clerkUserId,
     dailyGameId,
+    requestId,
+    expectedStateVersion,
+    expectedUpdatedAt,
     actionText,
     responseText,
     sceneTitle,

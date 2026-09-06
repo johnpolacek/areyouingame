@@ -22,8 +22,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { actionText?: unknown };
+    const body = (await request.json()) as { actionText?: unknown; requestId?: unknown; expectedStateVersion?: unknown };
     const actionText = validateFirstPostChoiceAction(body.actionText);
+    const { requestId, expectedStateVersion } = body;
+    if (typeof requestId !== "string" || !requestId.trim() || requestId.length > 128 ||
+        typeof expectedStateVersion !== "number" || !Number.isSafeInteger(expectedStateVersion) ||
+        expectedStateVersion < 0) {
+      return Response.json({ error: "A request ID and expected state version are required." }, { status: 400 });
+    }
     const todayGame = await getTodayGameForRequest();
     const existingPlayer = await getPlayerForUserGame(userId, todayGame.id);
 
@@ -43,6 +49,20 @@ export async function POST(request: Request) {
         { error: "The YES path continues in a later turn." },
         { status: 400 },
       );
+    }
+
+    const turns = existingPlayer.firstPostChoiceTurns;
+    const previous = turns?.find((turn) => turn.requestId === requestId);
+    if (previous) {
+      if (previous.actionText !== actionText || previous.turnNumber !== expectedStateVersion + 1) {
+        return Response.json({ error: "Request ID was already used." }, { status: 409 });
+      }
+      return Response.json({ player: existingPlayer });
+    }
+    const stateVersion = turns?.length ??
+      (existingPlayer.firstPostChoiceAction?.responseText ? 1 : 0);
+    if (stateVersion !== expectedStateVersion) {
+      return Response.json({ error: "Player state changed. Review the latest scene and try again." }, { status: 409 });
     }
 
     await moderateTextOrThrow({
@@ -68,6 +88,9 @@ export async function POST(request: Request) {
       player: existingPlayer,
     });
     const player = await submitFirstPostChoiceActionForUserGame({
+      requestId,
+      expectedStateVersion,
+      expectedUpdatedAt: existingPlayer.updatedAt,
       clerkUserId: userId,
       dailyGameId: todayGame.id,
       actionText,
@@ -89,6 +112,6 @@ export async function POST(request: Request) {
         ? error.message
         : "Unable to submit first post-choice action.";
 
-    return Response.json({ error: message }, { status: 400 });
+    return Response.json({ error: message }, { status: message.includes("ACTION_CONFLICT:") ? 409 : 400 });
   }
 }

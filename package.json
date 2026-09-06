@@ -1,6 +1,6 @@
 {
   "name": "are-you-in",
-  "version": "0.1.46",
+  "version": "0.1.47",
   "private": true,
   "packageManager": "pnpm@10.6.4",
   "scripts": {
