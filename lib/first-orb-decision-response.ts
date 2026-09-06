@@ -85,13 +85,13 @@ export async function createFirstOrbDecisionTurnResponse({
 export function classifyOrbDecisionAction(
   actionText: string,
 ): ConnectedOrbLifecycle {
-  const normalized = normalizeActionText(actionText);
+  const committedActions = getCommittedOrbActions(actionText);
 
-  if (isOrbLostAction(normalized)) {
+  if (committedActions.some(isOrbLostAction)) {
     return "orb_lost";
   }
 
-  if (isOrbAcceptedAction(normalized)) {
+  if (committedActions.some(isOrbAcceptedAction)) {
     return "orb_accepted";
   }
 
@@ -119,18 +119,38 @@ export function getCurrentOrbLifecycle(
   return undefined;
 }
 
+// Final lifecycle transitions require a direct player action. Treat unsupported or
+// ambiguous language as non-final so a mention cannot consume the player's orb.
+function getCommittedOrbActions(actionText: string): string[] {
+  return normalizeActionText(actionText)
+    .split(/(?<=[.!?;])\s+/)
+    .filter((sentence) => {
+      // These can scope over multiple clauses, including an action at the start
+      // ("put it on my forehead if it is safe"). Keep the whole sentence pending.
+      return (
+        !/[?"“”]/.test(sentence) &&
+        !/\b(?:not|never|no|cannot|can't|won't|don't|doesn't|didn't|wouldn't|shouldn't|couldn't|isn't|aren't|wasn't|weren't|haven't|hasn't|hadn't|if|unless|until|before|after|would|could|should|might|may|maybe|perhaps|hypothetically|suppose|assuming|whether|instead)\b/.test(sentence)
+      );
+    })
+    .map((sentence) =>
+      sentence
+        .replace(/^i(?: will|'ll)?\s+/, "")
+        .replace(/^(?:now|finally)\s+/, ""),
+    );
+}
+
 function isOrbAcceptedAction(normalized: string): boolean {
   return (
-    /\b(?:put|place|press|set|hold|touch|stick|attach|apply)\s+(?:the\s+)?(?:orb|it)\s+(?:on|to|against|at)\s+(?:the\s+)?(?:center\s+of\s+)?(?:my\s+|the\s+)?forehead\b/.test(
+    /^(?:put|place|press|set|hold|touch|stick|attach|apply)\s+(?:the\s+)?(?:orb|it)\s+(?:on|to|against|at)\s+(?:the\s+)?(?:center\s+of\s+)?(?:my\s+|the\s+)?forehead\b/.test(
       normalized,
     ) ||
-    /\b(?:put|place|press|set|hold|touch|stick|attach|apply)\s+(?:the\s+)?(?:orb|it)\s+(?:at|on|to|against)\s+(?:the\s+)?center\s+of\s+(?:my\s+|the\s+)?forehead\b/.test(
+    /^(?:put|place|press|set|hold|touch|stick|attach|apply)\s+(?:the\s+)?(?:orb|it)\s+(?:at|on|to|against)\s+(?:the\s+)?center\s+of\s+(?:my\s+|the\s+)?forehead\b/.test(
       normalized,
     ) ||
-    /\b(?:do|follow)\s+(?:what\s+)?(?:it|the note|the instruction|the instructions|the card|the message)\s+(?:says|said|tells me|told me|instructs)\b/.test(
+    /^(?:do|follow)\s+(?:what\s+)?(?:it|the note|the instruction|the instructions|the card|the message)\s+(?:says|said|tells me|told me|instructs)\b/.test(
       normalized,
     ) ||
-    /\bi\s+(?:do|follow)\s+(?:what\s+)?(?:it|the note|the instruction|the instructions|the card|the message)\s+(?:says|said|tells me|told me|instructs)\b/.test(
+    /^i\s+(?:do|follow)\s+(?:what\s+)?(?:it|the note|the instruction|the instructions|the card|the message)\s+(?:says|said|tells me|told me|instructs)\b/.test(
       normalized,
     )
   );
@@ -138,22 +158,22 @@ function isOrbAcceptedAction(normalized: string): boolean {
 
 function isOrbLostAction(normalized: string): boolean {
   return (
-    /\b(?:destroy|smash|break|crush|shatter|burn|melt|hammer|stomp|shoot)\s+(?:the\s+)?(?:orb|it)\b/.test(
+    /^(?:destroy|smash|break|crush|shatter|burn|melt|hammer|stomp|shoot)\s+(?:the\s+)?(?:orb|it)\b/.test(
       normalized,
     ) ||
-    /\b(?:throw|toss|pitch|chuck)\s+(?:the\s+)?(?:orb|it)\s+(?:away|out|into|in)\b/.test(
+    /^(?:throw|toss|pitch|chuck)\s+(?:the\s+)?(?:orb|it)\s+(?:away|out|into|in)\b/.test(
       normalized,
     ) ||
-    /\b(?:trash|discard|dump|flush|bury)\s+(?:the\s+)?(?:orb|it)\b/.test(
+    /^(?:trash|discard|dump|flush|bury)\s+(?:the\s+)?(?:orb|it)\b/.test(
       normalized,
     ) ||
-    /\b(?:give|hand|pass|mail|ship)\s+(?:the\s+)?(?:orb|it)\s+(?:to|over to|away to)\b/.test(
+    /^(?:give|hand|pass|mail|ship)\s+(?:the\s+)?(?:orb|it)\s+(?:to|over to|away to)\b/.test(
       normalized,
     ) ||
-    /\b(?:run away|flee|drive away|leave town|abandon|leave behind|escape)\b.*\b(?:orb|it)\b/.test(
+    /^(?:run away|flee|drive away|leave town|abandon|leave behind|escape)\b.*\b(?:orb|it)\b/.test(
       normalized,
     ) ||
-    /\b(?:get rid of|want nothing to do with)\s+(?:the\s+)?(?:orb|it)\b/.test(
+    /^(?:get rid of|want nothing to do with)\s+(?:the\s+)?(?:orb|it)\b/.test(
       normalized,
     )
   );
