@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { isLocalAdminHost } from "./admin-access";
+import { isSignupEnabledForRequest } from "./signup-access";
 
 export const playtestAuthHeader = "x-areyouin-playtest";
 export const playtestUserHeader = "x-areyouin-playtest-user";
@@ -13,6 +15,10 @@ export async function getAuthenticatedUserId(): Promise<string> {
     return playtestUserId;
   }
 
+  if (!(await isSignupEnabledForRequest())) {
+    redirect("/");
+  }
+
   const { userId } = await auth.protect();
 
   return userId;
@@ -23,6 +29,10 @@ export async function getOptionalAuthenticatedUserId(): Promise<string | null> {
 
   if (playtestUserId) {
     return playtestUserId;
+  }
+
+  if (!(await isSignupEnabledForRequest())) {
+    return null;
   }
 
   const { userId } = await auth();

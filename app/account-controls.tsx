@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Show, UserButton } from "@clerk/nextjs";
+import { useSignupEnabled } from "./signup-access-provider";
 import { ThemeToggle } from "./theme-provider";
 
 export function AccountControls() {
   const [isMounted, setIsMounted] = useState(false);
+  const signupEnabled = useSignupEnabled();
 
   useEffect(() => {
     setIsMounted(true);
@@ -17,7 +19,7 @@ export function AccountControls() {
       aria-label="Account and display settings"
     >
       <ThemeToggle />
-      {isMounted ? (
+      {isMounted && signupEnabled ? (
         <Show when="signed-in">
           <UserButton />
         </Show>

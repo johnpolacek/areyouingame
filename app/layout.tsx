@@ -6,7 +6,9 @@ import { AccountControls } from "./account-controls";
 import { CommandEnterSubmit } from "./command-enter-submit";
 import { ConvexClientProvider } from "./convex-client-provider";
 import { isTheme, themeCookieKey } from "./theme";
+import { SignupAccessProvider } from "./signup-access-provider";
 import { ThemeProvider } from "./theme-provider";
+import { isSignupEnabledForRequest } from "@/lib/signup-access";
 import { BUILD_VERSION_LABEL } from "@/lib/build-version";
 import "./globals.css";
 
@@ -41,6 +43,14 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const storedTheme = cookieStore.get(themeCookieKey)?.value;
   const theme = isTheme(storedTheme) ? storedTheme : "dark";
+  const signupEnabled = await isSignupEnabledForRequest();
+  const content = (
+    <ConvexClientProvider>
+      <CommandEnterSubmit />
+      <AccountControls />
+      {children}
+    </ConvexClientProvider>
+  );
 
   return (
     <html
@@ -54,19 +64,19 @@ export default async function RootLayout({
         className={`${rethinkSans.variable} ${stalinist.variable} ${rubik80sFade.variable} bg-background`}
       >
         <ThemeProvider>
-          <ClerkProvider>
-            <ConvexClientProvider>
-              <CommandEnterSubmit />
-              <AccountControls />
-              {children}
-            </ConvexClientProvider>
+          <SignupAccessProvider enabled={signupEnabled}>
+            {signupEnabled ? (
+              <ClerkProvider>{content}</ClerkProvider>
+            ) : (
+              content
+            )}
             <div
               className="fixed bottom-3 left-3 z-20 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-foreground/45"
               aria-label={BUILD_VERSION_LABEL}
             >
               {BUILD_VERSION_LABEL}
             </div>
-          </ClerkProvider>
+          </SignupAccessProvider>
         </ThemeProvider>
       </body>
     </html>

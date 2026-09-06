@@ -1,6 +1,20 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import {
+  NextResponse,
+  type NextFetchEvent,
+  type NextRequest,
+} from "next/server";
+import { isSignupEnabledForHost } from "./lib/signup-access-shared";
 
-export default clerkMiddleware();
+const clerk = clerkMiddleware();
+
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  if (!isSignupEnabledForHost(request.headers.get("host"))) {
+    return NextResponse.next();
+  }
+
+  return clerk(request, event);
+}
 
 export const config = {
   matcher: [

@@ -345,12 +345,14 @@ export function PlayerCreationView({
   actions,
   children,
   error,
+  notice,
   showSubhead = true,
   titleId = "player-create-title",
 }: {
   actions: ReactNode;
   children: ReactNode;
   error?: string;
+  notice?: string;
   showSubhead?: boolean;
   titleId?: string;
 }) {
@@ -360,6 +362,14 @@ export function PlayerCreationView({
       aria-labelledby={titleId}
     >
       <div className="player-creation-copy flex w-full max-w-2xl flex-col items-center gap-3 text-center sm:gap-4">
+        {notice ? (
+          <p
+            className="player-creation-notice max-w-lg rounded-md border border-amber-600/40 bg-amber-500/15 px-4 py-3 text-sm leading-6 font-semibold text-foreground backdrop-blur dark:border-amber-200/35 dark:bg-amber-400/10 dark:text-amber-100"
+            role="status"
+          >
+            {notice}
+          </p>
+        ) : null}
         <h1
           id={titleId}
           className="hero-display-title max-w-2xl text-5xl leading-none font-normal text-balance text-primary dark:text-amber-500 sm:text-8xl"

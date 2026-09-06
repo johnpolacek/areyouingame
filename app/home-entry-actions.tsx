@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import {
   pendingDraftStorageKey,
   persistBrowserTimeZoneCookie,
 } from "@/lib/character-draft";
+import { signupDisabledMessage } from "@/lib/signup-access-shared";
 import { cn } from "@/lib/utils";
+import { useSignupEnabled } from "./signup-access-provider";
 import {
   CharacterSetupForm,
   type CharacterDraft,
@@ -22,11 +24,93 @@ import {
 } from "./character-draft-form";
 
 type HomeEntryActionsProps = {
+  onDeclineRequest?: () => void;
   onJoinRequest?: () => void;
   showAuthActions?: boolean;
 };
 
-export function HomeEntryActions({
+const choiceButtonClass = cn(
+  primaryActionClass,
+  "w-auto min-w-[8.5rem] flex-1 sm:min-w-[12rem] sm:flex-none",
+);
+const declineButtonClass =
+  "h-12 w-auto min-w-[8.5rem] flex-1 rounded-lg border-border bg-card/70 px-6 font-accent text-[0.78rem] font-normal tracking-[0.06em] text-foreground uppercase shadow-lg shadow-black/10 backdrop-blur transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:bg-muted/80 active:translate-y-px dark:border-amber-600/45 dark:bg-slate-950/55 dark:text-amber-100 dark:shadow-amber-700/15 dark:hover:bg-amber-600/10 dark:hover:text-amber-50 sm:h-[4.5rem] sm:min-w-[12rem] sm:flex-none sm:px-8 sm:text-[1.12rem] sm:tracking-[0.08em]";
+
+function ChoiceLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="relative z-[1] inline-flex translate-y-px items-center justify-center">
+      {children}
+    </span>
+  );
+}
+
+export function HomeEntryActions(props: HomeEntryActionsProps) {
+  const signupEnabled = useSignupEnabled();
+
+  if (!signupEnabled) {
+    return <DisabledHomeEntryActions {...props} />;
+  }
+
+  return <ClerkHomeEntryActions {...props} />;
+}
+
+function DisabledHomeEntryActions({
+  onDeclineRequest,
+  onJoinRequest,
+  showAuthActions = false,
+}: HomeEntryActionsProps) {
+  const [showLocalAuthActions, setShowLocalAuthActions] = useState(false);
+  const shouldShowAuthActions = showAuthActions || showLocalAuthActions;
+
+  if (shouldShowAuthActions) {
+    return (
+      <PlayerCreationView
+        actions={
+          <Button className={`${primaryActionClass} hero-create-account`} disabled>
+            <PrimaryActionLabel>Create Account</PrimaryActionLabel>
+          </Button>
+        }
+        notice={signupDisabledMessage}
+      >
+        <fieldset
+          className="contents"
+          disabled
+          aria-label="Character setup (sign ups closed)"
+        >
+          <CharacterSetupForm draft={emptyDraft} onChange={() => {}} />
+        </fieldset>
+      </PlayerCreationView>
+    );
+  }
+
+  return (
+    <div className="flex w-full max-w-[min(31rem,calc(100vw-2.5rem))] items-stretch justify-center gap-3 sm:gap-5">
+      <Button
+        className={choiceButtonClass}
+        onClick={() => {
+          if (onJoinRequest) {
+            onJoinRequest();
+            return;
+          }
+
+          setShowLocalAuthActions(true);
+        }}
+      >
+        <ChoiceLabel>Yeah</ChoiceLabel>
+      </Button>
+      <Button
+        className={declineButtonClass}
+        onClick={onDeclineRequest}
+        variant="outline"
+      >
+        <ChoiceLabel>Nah</ChoiceLabel>
+      </Button>
+    </div>
+  );
+}
+
+function ClerkHomeEntryActions({
+  onDeclineRequest,
   onJoinRequest,
   showAuthActions = false,
 }: HomeEntryActionsProps) {
@@ -124,14 +208,27 @@ export function HomeEntryActions({
     );
   }
 
+  const declineButton = (
+    <Button
+      className={declineButtonClass}
+      onClick={onDeclineRequest}
+      variant="outline"
+    >
+      <ChoiceLabel>Nah</ChoiceLabel>
+    </Button>
+  );
+
   if (isLoaded && isSignedIn) {
     return (
-      <Link
-        className={cn(buttonVariants({ className: primaryActionClass }))}
-        href="/join"
-      >
-        <PrimaryActionLabel>Join Game</PrimaryActionLabel>
-      </Link>
+      <div className="flex w-full max-w-[min(31rem,calc(100vw-2.5rem))] items-stretch justify-center gap-3 sm:gap-5">
+        <Link
+          className={cn(buttonVariants({ className: choiceButtonClass }))}
+          href="/join"
+        >
+          <ChoiceLabel>Yeah</ChoiceLabel>
+        </Link>
+        {declineButton}
+      </div>
     );
   }
 
@@ -181,19 +278,22 @@ export function HomeEntryActions({
   }
 
   return (
-    <Button
-      className={primaryActionClass}
-      disabled={!isLoaded}
-      onClick={() => {
-        if (onJoinRequest) {
-          onJoinRequest();
-          return;
-        }
+    <div className="flex w-full max-w-[min(31rem,calc(100vw-2.5rem))] items-stretch justify-center gap-3 sm:gap-5">
+      <Button
+        className={choiceButtonClass}
+        disabled={!isLoaded}
+        onClick={() => {
+          if (onJoinRequest) {
+            onJoinRequest();
+            return;
+          }
 
-        setShowLocalAuthActions(true);
-      }}
-    >
-      <PrimaryActionLabel>Join Game</PrimaryActionLabel>
-    </Button>
+          setShowLocalAuthActions(true);
+        }}
+      >
+        <ChoiceLabel>Yeah</ChoiceLabel>
+      </Button>
+      {declineButton}
+    </div>
   );
 }

@@ -8,7 +8,14 @@ import { HomeEntryActions } from "./home-entry-actions";
 
 gsap.registerPlugin(useGSAP, SplitText);
 
-const subtitleText = "An invitation to the future awaits.";
+const subtitleLines = [
+  "A new way of being is available.",
+  "Connection. Understanding. Freedom.",
+  "Are you down or nah?",
+];
+const subtitleText = subtitleLines.join(" ");
+const declineHeading = "OK then";
+const declineSubtext = "We\u2019ll let you give it some more thought";
 const displayFontFamily =
   "var(--font-rubik-80s-fade), var(--font-rethink-sans), sans-serif";
 const titleWordClassName =
@@ -21,10 +28,12 @@ const titleWordAnimationStart = {
 export function AnimatedHomeHero() {
   const containerRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const subtitleRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const declineRef = useRef<HTMLDivElement>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showAuthActions, setShowAuthActions] = useState(false);
+  const [declined, setDeclined] = useState(false);
 
   useGSAP(
     () => {
@@ -53,7 +62,6 @@ export function AnimatedHomeHero() {
           y: 0,
           clearProps: "transform,willChange",
         });
-        subtitleRef.current.textContent = subtitleText;
         return;
       }
 
@@ -72,8 +80,6 @@ export function AnimatedHomeHero() {
         position: "relative",
       });
 
-      subtitleRef.current.textContent = subtitleText;
-
       gsap.set(titleRef.current, {
         opacity: 1,
         transformOrigin: "50% 50%",
@@ -83,10 +89,13 @@ export function AnimatedHomeHero() {
         y: 24,
         willChange: "opacity, transform",
       });
-      const subtitleSplit = SplitText.create(subtitleRef.current, {
-        type: "words,chars",
-        tag: "span",
-      });
+      const subtitleSplit = SplitText.create(
+        subtitleRef.current.querySelectorAll("[data-subtitle-line]"),
+        {
+          type: "words,chars",
+          tag: "span",
+        },
+      );
       gsap.set(subtitleRef.current, {
         opacity: 1,
         perspective: 800,
@@ -166,9 +175,6 @@ export function AnimatedHomeHero() {
       return () => {
         tl.kill();
         subtitleSplit.revert();
-        if (subtitleRef.current) {
-          subtitleRef.current.textContent = subtitleText;
-        }
       };
     },
     { scope: containerRef },
@@ -215,6 +221,75 @@ export function AnimatedHomeHero() {
     },
     {
       dependencies: [showAuthPrompt],
+      scope: containerRef,
+    },
+  );
+
+  useGSAP(
+    () => {
+      if (
+        !declined ||
+        !containerRef.current ||
+        !titleRef.current ||
+        !subtitleRef.current ||
+        !actionsRef.current ||
+        !declineRef.current
+      ) {
+        return;
+      }
+
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const declineHeadingEl = declineRef.current.querySelector(
+        "[data-decline-heading]",
+      );
+      const declineSubtextEl = declineRef.current.querySelector(
+        "[data-decline-subtext]",
+      );
+
+      if (prefersReducedMotion) {
+        gsap.set([titleRef.current, subtitleRef.current, actionsRef.current], {
+          display: "none",
+        });
+        gsap.set(declineRef.current, { display: "flex", autoAlpha: 1 });
+        gsap.set([declineHeadingEl, declineSubtextEl], { autoAlpha: 1 });
+        return;
+      }
+
+      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+
+      tl.to(
+        [titleRef.current, subtitleRef.current, actionsRef.current],
+        {
+          autoAlpha: 0,
+          duration: 0.24,
+          ease: "power2.out",
+        },
+        0,
+      )
+        .set([titleRef.current, subtitleRef.current, actionsRef.current], {
+          display: "none",
+        })
+        .set(declineRef.current, { display: "flex", autoAlpha: 1 })
+        .fromTo(
+          declineHeadingEl,
+          { autoAlpha: 0, y: 24 },
+          { autoAlpha: 1, y: 0, duration: 1.4 },
+        )
+        .fromTo(
+          declineSubtextEl,
+          { autoAlpha: 0, y: 12 },
+          { autoAlpha: 1, y: 0, duration: 1.1 },
+          "-=1",
+        );
+
+      return () => {
+        tl.kill();
+      };
+    },
+    {
+      dependencies: [declined],
       scope: containerRef,
     },
   );
@@ -339,14 +414,18 @@ export function AnimatedHomeHero() {
           In?
         </span>
       </h1>
-      <p
+      <div
         ref={subtitleRef}
         aria-label={subtitleText}
-        className="w-full max-w-[22rem] selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[0.55em] text-balance text-primary uppercase sm:max-w-none sm:text-xl sm:tracking-[11px]"
+        className="flex w-full max-w-[22rem] flex-col gap-3 selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[0.55em] text-balance text-primary uppercase sm:max-w-none sm:gap-4 sm:text-xl sm:tracking-[11px]"
         style={{ opacity: 0 }}
       >
-        An invitation to the future awaits.
-      </p>
+        {subtitleLines.map((line) => (
+          <p key={line} data-subtitle-line>
+            {line}
+          </p>
+        ))}
+      </div>
       <div
         ref={actionsRef}
         className={
@@ -358,9 +437,31 @@ export function AnimatedHomeHero() {
         style={{ opacity: 0 }}
       >
         <HomeEntryActions
+          onDeclineRequest={() => setDeclined(true)}
           onJoinRequest={() => setShowAuthPrompt(true)}
           showAuthActions={showAuthActions}
         />
+      </div>
+      <div
+        ref={declineRef}
+        aria-live="polite"
+        className="hidden w-full flex-col items-center gap-6 sm:gap-8"
+        style={{ opacity: 0 }}
+      >
+        <h2
+          data-decline-heading
+          className="hero-display-title w-full selection:bg-amber-500/35 text-[clamp(4rem,20vw,6rem)] leading-[0.82] font-normal tracking-normal [font-kerning:none] [text-rendering:optimizeSpeed] sm:whitespace-nowrap sm:text-[clamp(4rem,12vw,8.5rem)]"
+          style={{ fontFamily: displayFontFamily, opacity: 0 }}
+        >
+          <span className={titleWordClassName}>{declineHeading}</span>
+        </h2>
+        <p
+          data-decline-subtext
+          className="w-full max-w-[22rem] selection:bg-amber-500/35 text-[0.78rem] leading-7 font-medium tracking-[0.55em] text-balance text-primary uppercase sm:max-w-none sm:text-xl sm:tracking-[11px]"
+          style={{ opacity: 0 }}
+        >
+          {declineSubtext}
+        </p>
       </div>
     </section>
   );
