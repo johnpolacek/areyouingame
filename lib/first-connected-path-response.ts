@@ -58,41 +58,16 @@ export async function createFirstConnectedPathTurnResponse({
     actionText,
     firstConnectedPath: player.firstConnectedPath,
   });
+  const beat = buildConnectedPathPromptBeat(transition, player.firstConnectedPath);
   const generatedResponse = await createEarlyPostChoiceTurnResponse({
     actionText,
     branch: "YES",
-    branchInstructions: [
-      "For the first two connected-path turns after YES, nothing physical happens directly to the player because of the answer.",
-      "People who answered YES are likely in the minority and may wonder whether anything has happened to them or whether they made a mistake.",
-      "Only after that first waiting period can drone/package reports become personally relevant to this YES player.",
-      "The structured transition supplied in the prompt is canonical. Do not contradict it or invent a different delivery, package, or orb state.",
-      "If the transition is waiting, do not mention drones, packages, boxes, deliveries, or orbs in any form, including by saying they are absent, not visible, not outside, not waiting, or not happening yet. Keep the consequences uncertain and social/informational.",
-      "When the player asks about terms, reversibility, control, consequences, or what changed, answer through concrete scene facts, limits, and choices. Do not use recap headings.",
-      "Do not strand the player in dead-end phrasing such as 'No terms' or 'No receipt' unless the same response also gives an actionable next step grounded in the current scene.",
-      "If the transition is delivered, describe a small, minimal, sleek package delivered by a plausible drone to a nearby place. Keep it physical and logistical, not magical.",
-      "Fit the delivery to the player's current situation. If they are moving through public transit, a workplace, a crowd, or another constrained place, the drone should deliver to the nearest plausible reachable surface or threshold without contradicting the scene.",
-      "If delivery happens while the player looks through a window or checks outside, the package can be visible nearby before they touch it.",
-      "If the package is already available and the player picks it up, brings it inside, stages it, photographs it, starts a livestream, waits for likes, reads chat, or otherwise delays, keep the package sealed and present. Do not reveal the orb until they explicitly open, unbox, unwrap, or look inside.",
-      "If the package is already available and remains sealed, each response must add a concrete new observable delta tied to the player's action: a marking, weight, sound, temperature, sensor reading, public reaction, nearby person's response, safety constraint, or changed access to the package.",
-      "Do not repeat the previous connected-path scene. The current turn must give the player a sharper fork, new information, or a changed risk even when the canonical package/orb state is unchanged.",
-      "If the player repeats a prior check, inspection, or public-feed action, treat repetition as caution: preserve continuity, then reveal a different observable detail or a changed public/local reaction.",
-      "For sealed-package caution, let non-opening actions matter. Photographing, weighing, shielding, moving, labeling, scanning, or asking another person should each produce a distinct clue or constraint while keeping the package closed.",
-      "After two sealed-package verification turns, stop rewarding more measurement with more measurement. If the player keeps the package closed, escalate the decision space with an outside interruption, a handling constraint, a social consequence, or a clear preservation/reporting path. It is acceptable to say further measuring adds no new facts.",
-      "For livestream or chat actions around the sealed package, make the public reaction messy and useful for later NO/unconnected discovery: viewers ask for proof, warn them not to open it, dare them to open it, compare other YES/package reports, and argue over whether it is fake or dangerous.",
-      "If the transition is opened, describe the player opening the small sleek package and finding a smooth featureless orb with the instruction to place it at the center of their forehead. Do not simulate full connected cognition yet.",
-      "If the player tries something drastic that plausibly prevents delivery, respect the supplied waiting transition and make the delay feel causal.",
-    ],
+    branchInstructions: beat.instructions,
     dailyGame,
     day1GameplayContext,
     defaultActionKind: "connected_path_action",
     player,
-    promptExtras: {
-      previousConnectedPath: player.firstConnectedPath ?? null,
-      sealedPackageVerificationCount: countSealedPackageVerificationTurns(
-        player.firstConnectedPath,
-      ),
-      transition,
-    },
+    promptExtras: beat.context,
     responseValidation:
       transition.transitionKind === "waiting"
         ? validatePreDeliveryConnectedPathResponse
@@ -109,6 +84,47 @@ export async function createFirstConnectedPathTurnResponse({
   };
 }
 
+
+export function buildConnectedPathPromptBeat(
+  transition: ConnectedPathTransition,
+  path?: FirstConnectedPath,
+) {
+  const instructions = [
+      "When the player asks about terms, reversibility, control, consequences, or what changed, answer through concrete scene facts, limits, and choices. Do not use recap headings.",
+      "Do not strand the player in dead-end phrasing such as 'No terms' or 'No receipt' unless the same response also gives an actionable next step grounded in the current scene.",
+      "Do not repeat the previous connected-path scene. The current turn must give the player a sharper fork, new information, or a changed risk even when the visible situation is unchanged.",
+      "If the player repeats a prior check, inspection, or public-feed action, treat repetition as caution: preserve continuity, then reveal a different observable detail or a changed public/local reaction.",
+  ];
+  if (transition.transitionKind === "waiting") {
+    return {
+      instructions: [...instructions, "Narrate ordinary life after YES. Nothing direct changes; advance social or informational uncertainty using only current visible evidence."],
+      context: { currentBeat: "no_direct_visible_change" },
+    };
+  }
+  if (transition.packageStatus === "opened") {
+    return {
+      instructions: [...instructions, "Describe the opened small package containing a smooth featureless orb with the instruction to place it at the center of the forehead. Keep the experience physical and local."],
+      context: { currentBeat: "package_opened" },
+    };
+  }
+  return {
+    instructions: [
+      ...instructions,
+      ...(transition.transitionKind === "delivered"
+        ? ["Describe a plausible drone delivering a small, minimal, sleek package to the nearest reachable surface or threshold appropriate to the current scene."]
+        : ["The small package is present and sealed. Keep its contents concealed."]),
+      "If the package is already available and remains sealed, each response must add a concrete new observable delta tied to the player's action: a marking, weight, sound, temperature, sensor reading, public reaction, nearby person's response, safety constraint, or changed access to the package.",
+      "For sealed-package caution, let non-opening actions matter. Photographing, weighing, shielding, moving, labeling, scanning, or asking another person should each produce a distinct clue or constraint while keeping the package closed.",
+      "After two sealed-package verification turns, stop rewarding more measurement with more measurement. If the player keeps the package closed, escalate the decision space with an outside interruption, a handling constraint, a social consequence, or a clear preservation/reporting path. It is acceptable to say further measuring adds no new facts.",
+      "For livestream or chat actions around the sealed package, make the public reaction messy and useful for later NO/unconnected discovery: viewers ask for proof, warn them not to open it, dare them to open it, compare other YES/package reports, and argue over whether it is fake or dangerous.",
+    ],
+    context: {
+      currentBeat: transition.transitionKind === "delivered" ? "package_arrives" : "sealed_package",
+      sealedPackageVerificationCount: countSealedPackageVerificationTurns(path),
+    },
+  };
+}
+
 function validatePreDeliveryConnectedPathResponse({
   responseText,
   playerVisibleFacts,
@@ -122,7 +138,7 @@ function validatePreDeliveryConnectedPathResponse({
     return null;
   }
 
-  return "Pre-delivery YES turns must not mention or negatively foreshadow drones, deliveries, boxes, packages, parcels, or orbs. Preserve the future delivery reveal by describing only the player's immediate scene, uncertainty, public confusion, and social or informational consequences.";
+  return "Use only the current visible beat. Remove unsupported physical outcomes and speculation about future events.";
 }
 
 function validateDeliveredConnectedPathResponse({

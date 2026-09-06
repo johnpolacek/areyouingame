@@ -5,9 +5,10 @@ import {
   normalizeCharacterInfoUpdates,
   type CharacterInfoUpdate,
 } from "./character-info";
-import type {
-  Day1GameplayContextPayload,
-  Day1StorylineContext,
+import {
+  buildDay1GameplayContextPayload,
+  type Day1GameplayContextPayload,
+  type Day1StorylineContext,
 } from "./day-1-storyline-context";
 import type { DailyGame } from "./daily-game";
 import {
@@ -57,7 +58,6 @@ const day1MediaContext = {
     "After those first scattered posts, the volume accelerates quickly into a firehose.",
     "People are posting screenshots of the same invitation across phones, laptops, televisions, cars, watches, and workplace displays.",
     "Some posts treat the prompt like a coordinated hack; others frame it as a religious event, marketing stunt, government warning, or AI emergence.",
-    "Early claims about pressing YES and seeing drones are mixed with jokes, obvious fakes, and frightened secondhand reports.",
     "The strongest pattern is not certainty. It is scale: strangers in unrelated places are describing the same words within minutes of each other.",
   ],
   bskyFeed: [
@@ -132,16 +132,9 @@ export async function createEarlyPostChoiceTurnResponse({
   let generatedResponse: NormalizedEarlyTurnResponse | null = null;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const transitionKind =
-      promptExtras &&
-      typeof promptExtras.transition === "object" &&
-      promptExtras.transition &&
-      "transitionKind" in promptExtras.transition
-        ? (promptExtras.transition as { transitionKind?: unknown }).transitionKind
-        : undefined;
     const characterInfo = buildPlayerCharacterInfoPromptContext({
       player,
-      hideConnectedRevealTerms: branch === "YES" && transitionKind === "waiting",
+      hideConnectedRevealTerms: branch === "NO" || promptExtras?.currentBeat === "no_direct_visible_change",
     });
     const { text } = await trackedGenerateText({
       model,
@@ -192,14 +185,20 @@ export async function createEarlyPostChoiceTurnResponse({
             eventStartsAtIso: dailyGame.eventStartsAtIso,
             eventStartsAtLabel: dailyGame.eventStartsAtLabel,
           },
-          firstDecision: player.firstDecision,
-          firstMoveReveal: player.firstMoveReveal,
+          firstDecision: player.firstDecision ? {
+            choice: player.firstDecision.choice,
+            consequenceBody: player.firstDecision.consequenceBody,
+          } : null,
+          firstMoveReveal: player.firstMoveReveal ? {
+            sceneIntro: player.firstMoveReveal.sceneIntro,
+            revealCopy: player.firstMoveReveal.revealCopy,
+          } : null,
           characterInfo,
           characterInfoCorrections: buildCharacterInfoCorrectionPromptContext({
             characterInfo: player.characterInfo,
           }),
           actionText,
-          day1GameplayContext,
+          day1GameplayContext: buildDay1GameplayContextPayload({ dailyGame, player, storylineContext }),
           day1MediaContext,
           ...(promptExtras ?? {}),
         },

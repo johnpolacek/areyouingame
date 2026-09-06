@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  buildConnectedPathPromptBeat,
   createFirstConnectedPathTurnResponse,
   getNextConnectedPathTransition,
 } from "./first-connected-path-response";
@@ -241,6 +242,8 @@ describe("createFirstConnectedPathTurnResponse", () => {
 
       const firstCall = vi.mocked(trackedGenerateText).mock.calls[0]?.[0];
 
+      expect(JSON.stringify({ system: firstCall?.system, prompt: firstCall?.prompt }))
+        .not.toMatch(/drone|package|orb|delivery|parcel|not_arrived|deliveryStatus|orbStatus/i);
       expect(firstCall?.system).toContain(
         "answer through concrete scene facts, limits, and choices",
       );
@@ -366,5 +369,34 @@ describe("createFirstConnectedPathTurnResponse", () => {
     const firstCall = vi.mocked(trackedGenerateText).mock.calls[0]?.[0];
 
     expect(firstCall?.prompt).toContain('"sealedPackageVerificationCount": 2');
+  });
+});
+
+
+describe("connected prompt reveal boundaries", () => {
+  it.each([
+    ["I look outside.", 0, "waiting"],
+    ["I check social media.", 0, "waiting"],
+    ["I wait.", 1, "delivered"],
+    ["I open the package.", 3, "opened"],
+  ])("scopes the current beat for %s", (actionText, turnCount, kind) => {
+    const path = {
+      ...player.firstConnectedPath!,
+      turnCount: Number(turnCount),
+      ...(kind === "opened" ? {
+        deliveryStatus: "delivered" as const,
+        packageStatus: "available" as const,
+      } : {}),
+    };
+    const transition = getNextConnectedPathTransition({ actionText: String(actionText), firstConnectedPath: path });
+    expect(transition.transitionKind).toBe(kind);
+    const serialized = JSON.stringify(buildConnectedPathPromptBeat(transition, path));
+    expect(serialized).not.toMatch(/deliveryStatus|packageStatus|orbStatus|previousConnectedPath|not_arrived/);
+    if (kind === "waiting") expect(serialized).not.toMatch(/drone|package|orb|delivery|parcel|box/i);
+    if (kind === "delivered") {
+      expect(serialized).toContain("drone");
+      expect(serialized).not.toMatch(/orb|ASI|forehead/);
+    }
+    if (kind === "opened") expect(serialized).toContain("forehead");
   });
 });

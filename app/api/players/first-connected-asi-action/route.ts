@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       expectedTurnNumber: generatedResponse.expectedTurnNumber,
     });
 
-    return Response.json({ day1GameplayContext, player });
+    return Response.json({ player });
   } catch (error) {
     const message =
       error instanceof Error

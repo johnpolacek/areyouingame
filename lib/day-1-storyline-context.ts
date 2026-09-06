@@ -49,19 +49,8 @@ export type Day1GameplayContextPayload = {
     eventStartsAtLabel: string;
   };
   storyline: {
-    currentPhase: Day1StorylinePhaseId;
-    activePhaseIds: Day1StorylinePhaseId[];
-    phases: Day1StorylinePhase[];
-    globalTruth: string[];
-    publicReports: string[];
-    rumors: string[];
-    officialNarratives: string[];
-    regionalVariationNotes: string[];
-    socialFeedSignals: string[];
-    playerVisibleConstraints: string[];
-    externalContentPolicy: string;
-    source: Day1StorylineContext["source"];
-    sourceVersion: string;
+    stage: "local" | "invitation" | "waiting" | "package_available" | "orb_revealed" | "connected";
+    visibleFacts: string[];
   };
   player: {
     id: string;
@@ -210,10 +199,23 @@ export function buildDay1GameplayContextPayload({
   player: DailyPlayer;
   storylineContext: Day1StorylineContext;
 }): Day1GameplayContextPayload {
-  const runtimeContext = getDay1RuntimeContextForPlayer({
-    player,
-    storylineContext,
-  });
+  // Allowlist visible facts; persisted story-bible fields never cross this boundary.
+  const path = player.firstConnectedPath;
+  const stage = path?.orbAcceptedAt ? "connected"
+    : path?.packageStatus === "opened" ? "orb_revealed"
+    : path?.deliveryStatus === "delivered" ? "package_available"
+    : player.firstDecision ? "waiting"
+    : player.firstMoveReveal ? "invitation" : "local";
+  const visibleFacts: string[] = [];
+  if (stage !== "local") visibleFacts.push("The player witnessed the YES/NO invitation.");
+  if (player.firstDecision) visibleFacts.push(`The player answered ${player.firstDecision.choice}.`);
+  if (["package_available", "orb_revealed", "connected"].includes(stage)) {
+    visibleFacts.push("A drone delivered a small package nearby.");
+  }
+  if (["orb_revealed", "connected"].includes(stage)) {
+    visibleFacts.push("The opened package contains a smooth featureless orb with instructions to place it at the center of the forehead.");
+  }
+  if (stage === "connected") visibleFacts.push("The player accepted the orb and encountered the ASI interface.");
 
   return {
     dayNumber: 1,
@@ -222,21 +224,7 @@ export function buildDay1GameplayContextPayload({
       eventStartsAtIso: dailyGame.eventStartsAtIso,
       eventStartsAtLabel: dailyGame.eventStartsAtLabel,
     },
-    storyline: {
-      currentPhase: runtimeContext.currentPhase,
-      activePhaseIds: runtimeContext.activePhaseIds,
-      phases: runtimeContext.phases,
-      globalTruth: runtimeContext.globalTruth,
-      publicReports: runtimeContext.publicReports,
-      rumors: runtimeContext.rumors,
-      officialNarratives: runtimeContext.officialNarratives,
-      regionalVariationNotes: runtimeContext.regionalVariationNotes,
-      socialFeedSignals: runtimeContext.socialFeedSignals,
-      playerVisibleConstraints: runtimeContext.playerVisibleConstraints,
-      externalContentPolicy: runtimeContext.externalContentPolicy,
-      source: runtimeContext.source,
-      sourceVersion: runtimeContext.sourceVersion,
-    },
+    storyline: { stage, visibleFacts },
     player: {
       id: player.id,
       name: player.name,
@@ -246,8 +234,8 @@ export function buildDay1GameplayContextPayload({
       ...(player.firstDecision
         ? { choice: player.firstDecision.choice }
         : {}),
-      knownFacts: getPlayerKnownFacts(player),
-      recentEvents: getRecentPlayerEvents(player),
+      knownFacts: [...visibleFacts],
+      recentEvents: [],
     },
   };
 }
@@ -276,139 +264,6 @@ function getActivePhaseIdsForPlayer(
   }
 
   return ["consequences_realization", "confusion_spread"];
-}
-
-function getPlayerKnownFacts(player: DailyPlayer): string[] {
-  const knownFacts = [
-    `The player is ${player.name}, located in ${player.location}, with occupation ${player.occupation}.`,
-  ];
-
-  if (player.openingResponse) {
-    knownFacts.push(`Opening scene response: ${player.openingResponse}`);
-  }
-
-  if (player.openingSceneContext?.answerText) {
-    knownFacts.push(
-      `Opening scene clarification: ${player.openingSceneContext.answerText}`,
-    );
-  }
-
-  if (player.firstMoveReveal) {
-    knownFacts.push("The player personally witnessed the YES/NO invitation.");
-  }
-
-  if (player.firstDecision) {
-    knownFacts.push(`The player answered ${player.firstDecision.choice}.`);
-  }
-
-  if (player.firstPostChoiceAction) {
-    knownFacts.push(
-      `The player's first post-choice action: ${player.firstPostChoiceAction.actionText}`,
-    );
-  }
-
-  for (const turn of player.firstPostChoiceTurns ?? []) {
-    knownFacts.push(
-      `NO-path investigation turn ${turn.turnNumber}: ${turn.actionText}`,
-    );
-  }
-
-  if (player.firstConnectedPath) {
-    knownFacts.push(
-      `The player's connected path delivery status is ${player.firstConnectedPath.deliveryStatus}.`,
-    );
-    knownFacts.push(
-      `The player's connected path package status is ${player.firstConnectedPath.packageStatus}.`,
-    );
-    knownFacts.push(
-      `The player's connected path orb status is ${player.firstConnectedPath.orbStatus}.`,
-    );
-
-    const orbLifecycle =
-      player.firstConnectedPath.orbLifecycle ??
-      (player.firstConnectedPath.packageStatus === "opened" &&
-      player.firstConnectedPath.orbStatus === "revealed"
-        ? "orb_delivered"
-        : undefined);
-
-    if (orbLifecycle) {
-      knownFacts.push(`The player's orb lifecycle is ${orbLifecycle}.`);
-    }
-
-    if (player.firstConnectedPath.turns.length > 0) {
-      const lastTurn =
-        player.firstConnectedPath.turns[player.firstConnectedPath.turns.length - 1];
-
-      knownFacts.push(`Most recent connected path action: ${lastTurn.actionText}`);
-    }
-
-    if ((player.firstConnectedPath.orbDecisionTurns ?? []).length > 0) {
-      const orbDecisionTurns = player.firstConnectedPath.orbDecisionTurns ?? [];
-      const lastOrbDecisionTurn = orbDecisionTurns[orbDecisionTurns.length - 1];
-
-      knownFacts.push(
-        `Most recent orb decision action: ${lastOrbDecisionTurn.actionText}`,
-      );
-    }
-
-    if ((player.firstConnectedPath.connectedAsiTurns ?? []).length > 0) {
-      const connectedAsiTurns = player.firstConnectedPath.connectedAsiTurns ?? [];
-      const lastConnectedAsiTurn =
-        connectedAsiTurns[connectedAsiTurns.length - 1];
-
-      knownFacts.push(
-        `Most recent connected ASI action: ${lastConnectedAsiTurn.actionText}`,
-      );
-    }
-  }
-
-  return knownFacts;
-}
-
-function getRecentPlayerEvents(player: DailyPlayer): string[] {
-  const events: string[] = [];
-
-  if (player.openingResponseSubmittedAt) {
-    events.push(`Opening response submitted at ${player.openingResponseSubmittedAt}.`);
-  }
-
-  if (player.firstMoveReveal) {
-    events.push(`YES/NO reveal generated at ${player.firstMoveReveal.generatedAt}.`);
-  }
-
-  if (player.firstDecision) {
-    events.push(
-      `First decision ${player.firstDecision.choice} submitted at ${player.firstDecision.submittedAt}.`,
-    );
-  }
-
-  if (player.firstPostChoiceAction) {
-    events.push(
-      `First post-choice action submitted at ${player.firstPostChoiceAction.submittedAt}.`,
-    );
-  }
-
-  if (player.firstConnectedPath) {
-    events.push(
-      `Connected path updated at ${player.firstConnectedPath.updatedAt}.`,
-    );
-
-    if (player.firstConnectedPath.orbAcceptedAt) {
-      events.push(`Orb accepted at ${player.firstConnectedPath.orbAcceptedAt}.`);
-    }
-
-    if (player.firstConnectedPath.orbLostAt) {
-      events.push(`Orb lost at ${player.firstConnectedPath.orbLostAt}.`);
-    }
-
-    if (player.firstConnectedPath.connectedAsiStartedAt) {
-      events.push(
-        `Connected ASI interface started at ${player.firstConnectedPath.connectedAsiStartedAt}.`,
-      );
-    }
-  }
-
-  return events;
 }
 
 function getBackendSecret(): string {
