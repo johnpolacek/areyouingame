@@ -29,10 +29,37 @@ const rubik80sFade = Rubik_80s_Fade({
   variable: "--font-rubik-80s-fade",
 });
 
+const siteTitle = "Are You In?";
+const siteDescription =
+  "A daily persistent simulation of humanity's first contact with artificial superintelligence.";
+const shareImage = {
+  url: "/areyouin-screenshot.png",
+  width: 2638,
+  height: 1714,
+  alt: siteTitle,
+};
+
 export const metadata: Metadata = {
-  title: "Are You In?",
-  description:
-    "A daily persistent simulation of humanity's first contact with artificial superintelligence.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : "http://localhost:3000"),
+  ),
+  title: siteTitle,
+  description: siteDescription,
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    type: "website",
+    images: [shareImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [shareImage],
+  },
 };
 
 export default async function RootLayout({
