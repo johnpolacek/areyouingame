@@ -1,6 +1,6 @@
 {
-  "version": "0.1.44",
-  "label": "Build 0.1.44",
+  "version": "0.1.45",
+  "label": "Build 0.1.45",
   "updatedAt": "2026-09-06",
-  "summary": "Start subtitle animation sooner"
+  "summary": "Protect public player, activity, and image identifiers"
 }

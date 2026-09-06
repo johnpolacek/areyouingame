@@ -1,8 +1,13 @@
 import { fetchQuery } from "convex/nextjs";
 import { makeFunctionReference } from "convex/server";
 import type { CharacterImage } from "./character-image";
+import type { PublicCharacterImage } from "./public-live-transcript";
 import type { CharacterInfo } from "./character-info";
-import type { PlayerDraftInput, PlayerTurnImage, YesNoChoice } from "./player-store";
+import type {
+  PlayerDraftInput,
+  PlayerTurnImage,
+  YesNoChoice,
+} from "./player-store";
 
 export type PublicLiveGameSummary = {
   dailyGameId: string;
@@ -64,7 +69,7 @@ export type PublicLivePlayerSummary = {
   location: string;
   occupation: string;
   bio: string;
-  characterImage?: CharacterImage;
+  characterImage?: PublicCharacterImage;
   choice?: YesNoChoice;
   turnCount: number;
   lastActivityAt?: string;
@@ -87,7 +92,7 @@ export type PublicLivePlayer = PlayerDraftInput & {
   id: string;
   publicId: string;
   dailyGameId: string;
-  characterImage?: CharacterImage;
+  characterImage?: PublicCharacterImage;
   characterInfo?: CharacterInfo;
   choice?: YesNoChoice;
   transcript: PublicLiveTranscriptEntry[];
@@ -135,6 +140,8 @@ const getPublicPlayerTurnImageRef = makeFunctionReference<
   "query",
   {
     sourceTurnId: string;
+    backendSecret: string;
+    clerkUserId?: string;
   },
   PlayerTurnImage | null
 >("playerStore:getPublicPlayerTurnImage");
@@ -180,6 +187,30 @@ export async function getPublicLivePlayer({
 
 export async function getPublicPlayerTurnImage(
   sourceTurnId: string,
+  clerkUserId?: string,
 ): Promise<PlayerTurnImage | null> {
-  return await fetchQuery(getPublicPlayerTurnImageRef, { sourceTurnId });
+  return await fetchQuery(getPublicPlayerTurnImageRef, {
+    sourceTurnId,
+    backendSecret: getBackendSecret(),
+    ...(clerkUserId ? { clerkUserId } : {}),
+  });
+}
+
+const getPublicCharacterImageStorageRef = makeFunctionReference<
+  "query",
+  { publicId: string; backendSecret: string },
+  CharacterImage | null
+>("playerStore:getPublicCharacterImageStorage");
+
+export async function getPublicCharacterImageStorage(publicId: string) {
+  return await fetchQuery(getPublicCharacterImageStorageRef, {
+    publicId,
+    backendSecret: getBackendSecret(),
+  });
+}
+
+function getBackendSecret(): string {
+  const secret = process.env.AREYOUIN_BACKEND_SECRET;
+  if (!secret) throw new Error("AREYOUIN_BACKEND_SECRET is required.");
+  return secret;
 }

@@ -1,9 +1,10 @@
 import { mutationGeneric, queryGeneric } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import {
-  fromPublicLivePlayerId,
+  publicRecordId,
+  toPublicCharacterImage,
+  toPublicPlayerTurnImage,
   toPublicLivePlayerProjection,
-  toPublicLivePlayerId,
   toPublicLivePlayerSummaryProjection,
 } from "../lib/public-live-transcript";
 
@@ -230,10 +231,7 @@ const connectedPackageStatus = v.union(
   v.literal("opened"),
 );
 
-const connectedOrbStatus = v.union(
-  v.literal("unknown"),
-  v.literal("revealed"),
-);
+const connectedOrbStatus = v.union(v.literal("unknown"), v.literal("revealed"));
 
 const connectedOrbLifecycle = v.union(
   v.literal("orb_delivered"),
@@ -441,13 +439,24 @@ const publicPlayerTurnImage = v.object({
   generatedAt: v.optional(v.string()),
 });
 
+const publicCharacterImage = v.object({
+  url: v.string(),
+  contentType: v.union(
+    v.literal("image/webp"),
+    v.literal("image/png"),
+    v.literal("image/jpeg"),
+  ),
+  sizeBytes: v.number(),
+  uploadedAt: v.string(),
+});
+
 const publicCharacterSnapshot = v.object({
   name: v.string(),
   age: v.string(),
   location: v.string(),
   occupation: v.string(),
   bio: v.string(),
-  characterImage: v.optional(characterImage),
+  characterImage: v.optional(publicCharacterImage),
 });
 
 const publicActivityPlaytestMetadata = v.object({
@@ -509,7 +518,7 @@ const publicLivePlayerSummary = v.object({
   location: v.string(),
   occupation: v.string(),
   bio: v.string(),
-  characterImage: v.optional(characterImage),
+  characterImage: v.optional(publicCharacterImage),
   choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
   turnCount: v.number(),
   lastActivityAt: v.optional(v.string()),
@@ -533,6 +542,7 @@ const publicLivePlayer = v.object({
   publicId: v.string(),
   dailyGameId: v.string(),
   ...playerDraft,
+  characterImage: v.optional(publicCharacterImage),
   characterInfo: v.optional(characterInfo),
   choice: v.optional(v.union(v.literal("YES"), v.literal("NO"))),
   transcript: v.array(publicLiveTranscriptEntry),
@@ -614,9 +624,8 @@ export const getDailyGameStats = queryGeneric({
 
     return {
       playerCount: players.length,
-      totalMessages: new Set(
-        gameplayEvents.map((event) => event.sourceTurnId),
-      ).size,
+      totalMessages: new Set(gameplayEvents.map((event) => event.sourceTurnId))
+        .size,
     };
   },
 });
@@ -643,7 +652,37 @@ export const getPublicActivityEvents = queryGeneric({
           .order("desc")
           .take(limit);
 
-    return events.map(toPublicActivityEvent);
+    const playerIdsByGame = new Map<string, Map<string, string>>();
+    await Promise.all(
+      [...new Set(events.map((event) => event.dailyGameId))].map(
+        async (dailyGameId) => {
+          const players = await ctx.db
+            .query("players")
+            .withIndex("by_dailyGameId", (q) =>
+              q.eq("dailyGameId", dailyGameId),
+            )
+            .collect();
+          const ids = new Map<string, string>();
+          for (const player of players) {
+            ids.set(player.id, player._id);
+            // Legacy activity records stored punctuation-escaped private IDs.
+            ids.set(
+              player.id.replaceAll("~", "~~").replaceAll(":", "~c"),
+              player._id,
+            );
+          }
+          playerIdsByGame.set(dailyGameId, ids);
+        },
+      ),
+    );
+    return events.map((event) =>
+      toPublicActivityEvent(
+        event,
+        event.playerId
+          ? playerIdsByGame.get(event.dailyGameId)?.get(event.playerId)
+          : undefined,
+      ),
+    );
   },
 });
 
@@ -729,19 +768,9 @@ export const getPublicLivePlayer = queryGeneric({
   },
   returns: v.union(publicLivePlayer, v.null()),
   handler: async (ctx, args) => {
-    const players = await ctx.db
-      .query("players")
-      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
-      .collect();
-    const decodedPublicPlayerId = fromPublicLivePlayerId(args.playerId);
-    const selectedPlayer = players.find((candidate) => {
-      return (
-        candidate.id === args.playerId ||
-        (decodedPublicPlayerId !== null && candidate.id === decodedPublicPlayerId)
-      );
-    });
-
-    if (!selectedPlayer) {
+    const recordId = ctx.db.normalizeId("players", args.playerId);
+    const selectedPlayer = recordId ? await ctx.db.get(recordId) : null;
+    if (!selectedPlayer || selectedPlayer.dailyGameId !== args.dailyGameId) {
       return null;
     }
 
@@ -819,16 +848,51 @@ export const getPlayerTurnImageForUserGame = queryGeneric({
 export const getPublicPlayerTurnImage = queryGeneric({
   args: {
     sourceTurnId: v.string(),
+    backendSecret: v.optional(v.string()),
+    clerkUserId: v.optional(v.string()),
   },
   returns: v.union(publicPlayerTurnImage, v.null()),
   handler: async (ctx, args) => {
-    const image = await findPlayerTurnImage(ctx, args.sourceTurnId);
-
-    if (!image || image.status !== "ready") {
+    const includeStorage = args.backendSecret !== undefined;
+    if (includeStorage) requireBackendSecret(args.backendSecret!);
+    const recordId = ctx.db.normalizeId("playerTurnImages", args.sourceTurnId);
+    const image = recordId
+      ? await ctx.db.get(recordId)
+      : includeStorage && args.clerkUserId
+        ? await findPlayerTurnImage(ctx, args.sourceTurnId)
+        : null;
+    if (!image || image.status !== "ready") return null;
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_dailyGameId", (q) =>
+        q.eq("dailyGameId", image.dailyGameId),
+      )
+      .collect();
+    const player = players.find((candidate) => candidate.id === image.playerId);
+    if (!player || (!recordId && player.clerkUserId !== args.clerkUserId))
       return null;
-    }
+    return {
+      ...toPublicPlayerTurnImage(image, player._id)!,
+      ...(includeStorage
+        ? { bucket: image.bucket, objectKey: image.objectKey }
+        : {}),
+    };
+  },
+});
 
-    return toPublicPlayerTurnImage(image, { includeStorage: true });
+// Storage paths for legacy images can contain account IDs. Only the server
+// image proxy may read them; public payloads use opaque record URLs instead.
+export const getPublicCharacterImageStorage = queryGeneric({
+  args: { publicId: v.string(), backendSecret: v.string() },
+  returns: v.union(characterImage, v.null()),
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+    const playerId = ctx.db.normalizeId("players", args.publicId);
+    if (playerId) return (await ctx.db.get(playerId))?.characterImage ?? null;
+    const eventId = ctx.db.normalizeId("publicActivityEvents", args.publicId);
+    return eventId
+      ? ((await ctx.db.get(eventId))?.character.characterImage ?? null)
+      : null;
   },
 });
 
@@ -1086,6 +1150,8 @@ export const createPlayerForUserGame = mutationGeneric({
     const characterInfoRecord = createInitialCharacterInfo(args.draft, now);
     const newPlayer = {
       ...args.draft,
+      // Private application key only. Public identity is the independently
+      // allocated Convex _id, including for players created before this boundary.
       id: `${args.dailyGameId}:${args.clerkUserId}`,
       clerkUserId: args.clerkUserId,
       dailyGameId: args.dailyGameId,
@@ -1518,7 +1584,9 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
     }
 
     if (existingPlayer.firstDecision.choice !== "NO") {
-      throw new ConvexError("Post-choice investigation is only available after NO.");
+      throw new ConvexError(
+        "Post-choice investigation is only available after NO.",
+      );
     }
 
     const legacyFirstTurn =
@@ -2119,13 +2187,17 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
     }
 
     if (existingPlayer.firstDecision.choice !== "YES") {
-      throw new ConvexError("Connected ASI interaction is only available after YES.");
+      throw new ConvexError(
+        "Connected ASI interaction is only available after YES.",
+      );
     }
 
     const existingPath = existingPlayer.firstConnectedPath;
 
     if (!existingPath || existingPath.orbLifecycle !== "orb_accepted") {
-      throw new ConvexError("The connected ASI interface is not available yet.");
+      throw new ConvexError(
+        "The connected ASI interface is not available yet.",
+      );
     }
 
     const existingConnectedAsiTurns = existingPath.connectedAsiTurns ?? [];
@@ -2425,7 +2497,9 @@ function mergeCharacterInfoUpdates({
     return characterInfo ? normalizeCharacterInfo(characterInfo) : undefined;
   }
 
-  const next = normalizeCharacterInfo(characterInfo ?? { sections: {}, updatedAt: now });
+  const next = normalizeCharacterInfo(
+    characterInfo ?? { sections: {}, updatedAt: now },
+  );
 
   for (const update of normalizedUpdates) {
     const items = [...(next.sections[update.section] ?? [])];
@@ -2438,7 +2512,11 @@ function mergeCharacterInfoUpdates({
         continue;
       }
       items.push({
-        id: createCharacterInfoItemId(update.section, sourceTurnId, items.length),
+        id: createCharacterInfoItemId(
+          update.section,
+          sourceTurnId,
+          items.length,
+        ),
         text: updateText,
         updatedAt: now,
         source: "ai",
@@ -2492,7 +2570,9 @@ function applyCharacterInfoCorrection({
     throw new ConvexError("Character correction is invalid.");
   }
 
-  const next = normalizeCharacterInfo(characterInfo ?? { sections: {}, updatedAt: now });
+  const next = normalizeCharacterInfo(
+    characterInfo ?? { sections: {}, updatedAt: now },
+  );
   const items = [...(next.sections[section] ?? [])];
   const existingIndex = correction.itemId
     ? items.findIndex((item: any) => item.id === correction.itemId)
@@ -2707,7 +2787,9 @@ function createCharacterInfoItemId(
     .slice(0, 140);
 }
 
-function isCharacterInfoSection(value: any): value is (typeof CHARACTER_INFO_SECTIONS)[number] {
+function isCharacterInfoSection(
+  value: any,
+): value is (typeof CHARACTER_INFO_SECTIONS)[number] {
   return CHARACTER_INFO_SECTIONS.includes(value);
 }
 
@@ -2910,11 +2992,7 @@ function addDeleteDailyGameTotals(
   totals.deletedArtifactObjects += next.deletedArtifactObjects;
 }
 
-async function findPlayer(
-  ctx: any,
-  clerkUserId: string,
-  dailyGameId: string,
-) {
+async function findPlayer(ctx: any, clerkUserId: string, dailyGameId: string) {
   return await ctx.db
     .query("players")
     .withIndex("by_clerkUserId_and_dailyGameId", (q: any) =>
@@ -3181,7 +3259,7 @@ async function insertPublicActivityEvent(
   await ctx.db.insert("publicActivityEvents", {
     id: event.id,
     dailyGameId: event.dailyGameId,
-    ...(event.player.id ? { playerId: toPublicLivePlayerId(event.player.id) } : {}),
+    ...(event.player.id ? { playerId: event.player.id } : {}),
     createdAt: event.createdAt,
     character: toPublicCharacterSnapshot(event.player),
     eventKind: event.eventKind,
@@ -3196,20 +3274,26 @@ async function insertPublicActivityEvent(
   });
 }
 
-function toPublicActivityEvent(source: any) {
+function toPublicActivityEvent(source: any, playerId?: string) {
   return {
-    id: source.id,
+    id: publicRecordId(source),
     dailyGameId: source.dailyGameId,
-    ...(source.playerId
-      ? {
-          playerId:
-            fromPublicLivePlayerId(source.playerId) === null
-              ? toPublicLivePlayerId(source.playerId)
-              : source.playerId,
-        }
-      : {}),
+    ...(playerId ? { playerId } : {}),
     createdAt: source.createdAt,
-    character: toPublicCharacterSnapshot(source.character),
+    character: {
+      ...toPublicCharacterSnapshot({
+        ...source.character,
+        characterImage: undefined,
+      }),
+      ...(source.character.characterImage
+        ? {
+            characterImage: toPublicCharacterImage(
+              source.character.characterImage,
+              publicRecordId(source),
+            ),
+          }
+        : {}),
+    },
     eventKind: source.eventKind,
     ...(source.gameText ? { gameText: source.gameText } : {}),
     ...(source.playerInput ? { playerInput: source.playerInput } : {}),
@@ -3222,33 +3306,6 @@ function toPublicActivityEvent(source: any) {
   };
 }
 
-function toPublicPlayerTurnImage(
-  source: any,
-  { includeStorage = false }: { includeStorage?: boolean } = {},
-) {
-  return {
-    id: source.id,
-    dailyGameId: source.dailyGameId,
-    playerId: source.playerId,
-    sourceTurnId: source.sourceTurnId,
-    sourceTurnKind: source.sourceTurnKind,
-    status: source.status,
-    ...(includeStorage && source.prompt ? { prompt: source.prompt } : {}),
-    ...(includeStorage && source.promptModel
-      ? { promptModel: source.promptModel }
-      : {}),
-    ...(source.imageModel ? { imageModel: source.imageModel } : {}),
-    ...(source.quality ? { quality: source.quality } : {}),
-    ...(source.size ? { size: source.size } : {}),
-    ...(includeStorage && source.bucket ? { bucket: source.bucket } : {}),
-    ...(includeStorage && source.objectKey ? { objectKey: source.objectKey } : {}),
-    ...(source.contentType ? { contentType: source.contentType } : {}),
-    ...(source.errorMessage ? { errorMessage: source.errorMessage } : {}),
-    createdAt: source.createdAt,
-    updatedAt: source.updatedAt,
-    ...(source.generatedAt ? { generatedAt: source.generatedAt } : {}),
-  };
-}
 function toPublicCharacterSnapshot(source: {
   name: string;
   age: string;

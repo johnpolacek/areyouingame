@@ -50,10 +50,8 @@ export type PublicLivePlayerProjection = {
   updatedAt: string;
 };
 
-type PublicCharacterImage = {
+export type PublicCharacterImage = {
   url: string;
-  bucket: string;
-  objectKey: string;
   contentType: "image/webp" | "image/png" | "image/jpeg";
   sizeBytes: number;
   uploadedAt: string;
@@ -95,8 +93,8 @@ export function toPublicLivePlayerProjection(
   const lastActivityAt = getLastActivityAt(transcript);
 
   return {
-    id: source.id,
-    publicId: toPublicLivePlayerId(source.id),
+    id: publicRecordId(source),
+    publicId: publicRecordId(source),
     dailyGameId: source.dailyGameId,
     name: source.name,
     age: source.age,
@@ -105,10 +103,20 @@ export function toPublicLivePlayerProjection(
     bio: source.bio,
     timeZone: source.timeZone,
     ...(source.characterImage
-      ? { characterImage: toPublicCharacterImage(source.characterImage) }
+      ? {
+          characterImage: toPublicCharacterImage(
+            source.characterImage,
+            publicRecordId(source),
+          ),
+        }
       : {}),
     ...(source.characterInfo
-      ? { characterInfo: toPublicCharacterInfo(source.characterInfo) }
+      ? {
+          characterInfo: toPublicCharacterInfo(
+            source.characterInfo,
+            publicRecordId(source),
+          ),
+        }
       : {}),
     ...(source.firstDecision?.choice
       ? { choice: source.firstDecision.choice }
@@ -121,7 +129,10 @@ export function toPublicLivePlayerProjection(
   };
 }
 
-function toPublicCharacterInfo(source: any): PublicCharacterInfo | undefined {
+function toPublicCharacterInfo(
+  source: any,
+  playerId: string,
+): PublicCharacterInfo | undefined {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     return undefined;
   }
@@ -138,7 +149,12 @@ function toPublicCharacterInfo(source: any): PublicCharacterInfo | undefined {
     }
 
     const publicItems = items
-      .map((item) => toPublicCharacterInfoItem(item))
+      .map((item, index) =>
+        toPublicCharacterInfoItem(
+          item,
+          `${playerId}:info:${Object.keys(sectionsSource).indexOf(section)}:${index}`,
+        ),
+      )
       .filter((item): item is PublicCharacterInfoItem => Boolean(item));
 
     if (publicItems.length > 0) {
@@ -157,6 +173,7 @@ function toPublicCharacterInfo(source: any): PublicCharacterInfo | undefined {
 
 function toPublicCharacterInfoItem(
   source: any,
+  publicId: string,
 ): PublicCharacterInfoItem | undefined {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     return undefined;
@@ -172,7 +189,7 @@ function toPublicCharacterInfoItem(
   }
 
   return {
-    id: source.id,
+    id: publicId,
     text: source.text,
     updatedAt: source.updatedAt,
     source: source.source,
@@ -192,8 +209,8 @@ export function toPublicLivePlayerSummaryProjection(
   const lastActivityAt = getLastActivityAt(transcript);
 
   return {
-    id: source.id,
-    publicId: toPublicLivePlayerId(source.id),
+    id: publicRecordId(source),
+    publicId: publicRecordId(source),
     dailyGameId: source.dailyGameId,
     name: source.name,
     age: source.age,
@@ -201,7 +218,12 @@ export function toPublicLivePlayerSummaryProjection(
     occupation: source.occupation,
     bio: source.bio,
     ...(source.characterImage
-      ? { characterImage: toPublicCharacterImage(source.characterImage) }
+      ? {
+          characterImage: toPublicCharacterImage(
+            source.characterImage,
+            publicRecordId(source),
+          ),
+        }
       : {}),
     ...(source.firstDecision?.choice
       ? { choice: source.firstDecision.choice }
@@ -213,7 +235,10 @@ export function toPublicLivePlayerSummaryProjection(
   };
 }
 
-function toPublicCharacterImage(source: any): PublicCharacterImage | undefined {
+export function toPublicCharacterImage(
+  source: any,
+  publicId: string,
+): PublicCharacterImage | undefined {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     return undefined;
   }
@@ -230,9 +255,7 @@ function toPublicCharacterImage(source: any): PublicCharacterImage | undefined {
   }
 
   return {
-    url: source.url,
-    bucket: source.bucket,
-    objectKey: source.objectKey,
+    url: `/api/public-character-images/${encodeURIComponent(publicId)}`,
     contentType: source.contentType,
     sizeBytes: source.sizeBytes,
     uploadedAt: source.uploadedAt,
@@ -249,43 +272,28 @@ function isPublicCharacterImageContentType(
   );
 }
 
-export function toPublicLivePlayerId(playerId: string): string {
-  return encodeUrlSafeBase64(playerId);
-}
-
-export function fromPublicLivePlayerId(publicId: string): string | null {
-  return decodeUrlSafeBase64(publicId);
-}
-
-function encodeUrlSafeBase64(value: string): string {
-  return value.replaceAll("~", "~~").replaceAll(":", "~c");
-}
-
-function decodeUrlSafeBase64(value: string): string | null {
-  if (value.includes("%") || value.includes(":")) {
-    return null;
-  }
-
-  return value.replaceAll("~c", ":").replaceAll("~~", "~");
+// Convex allocates these IDs independently of account and application IDs.
+// Never fall back to source.id: legacy application IDs contain Clerk IDs.
+export function publicRecordId(source: { _id?: string }): string {
+  if (!source._id)
+    throw new Error("Public projections require a persisted record ID.");
+  return source._id;
 }
 
 export function buildPublicLiveTranscript(
   source: any,
 ): PublicLiveTranscriptEntry[] {
   const entries: PublicLiveTranscriptEntry[] = [];
-  const publicTurnImages: PublicPlayerTurnImage[] = (source.turnImages ?? [])
-    .map((image: any) => toPublicPlayerTurnImage(image))
-    .filter(
-      (image: PublicPlayerTurnImage | undefined): image is PublicPlayerTurnImage =>
-        Boolean(image),
-    );
-  const imagesByTurnId = new Map<string, PublicPlayerTurnImage>(
-    publicTurnImages.map((image) => [image.sourceTurnId, image]),
-  );
+  const playerId = publicRecordId(source);
+  const imagesByTurnId = new Map<string, PublicPlayerTurnImage>();
+  for (const image of source.turnImages ?? []) {
+    const projected = toPublicPlayerTurnImage(image, playerId);
+    if (projected) imagesByTurnId.set(image.sourceTurnId, projected);
+  }
 
   if (source.openingResponse && source.openingResponseSubmittedAt) {
     entries.push({
-      id: `${source.id}:opening-response`,
+      id: `${playerId}:opening-response`,
       at: source.openingResponseSubmittedAt,
       label: "Opening",
       title: "Before we begin",
@@ -298,7 +306,7 @@ export function buildPublicLiveTranscript(
     source.openingSceneContext.answeredAt
   ) {
     entries.push({
-      id: `${source.id}:opening-context`,
+      id: `${playerId}:opening-context`,
       at: source.openingSceneContext.answeredAt,
       label: "Opening context",
       title: source.openingSceneContext.promptText,
@@ -308,7 +316,7 @@ export function buildPublicLiveTranscript(
 
   if (source.firstMoveReveal) {
     entries.push({
-      id: source.firstMoveReveal.id,
+      id: `${playerId}:reveal`,
       at: source.firstMoveReveal.generatedAt,
       label: "Reveal",
       title: source.firstMoveReveal.revealCopy.question,
@@ -322,7 +330,7 @@ export function buildPublicLiveTranscript(
 
   if (source.firstDecision) {
     entries.push({
-      id: source.firstDecision.id,
+      id: `${playerId}:decision`,
       at: source.firstDecision.submittedAt,
       label: "Decision",
       title:
@@ -333,9 +341,11 @@ export function buildPublicLiveTranscript(
     });
   }
 
-  for (const response of source.firstRevealTextResponses ?? []) {
+  for (const [index, response] of (
+    source.firstRevealTextResponses ?? []
+  ).entries()) {
     entries.push({
-      id: response.id,
+      id: `${playerId}:voice:${index}`,
       at: response.submittedAt,
       label: "Voice response",
       title: response.classification,
@@ -344,9 +354,9 @@ export function buildPublicLiveTranscript(
     });
   }
 
-  for (const turn of source.firstPostChoiceTurns ?? []) {
+  for (const [index, turn] of (source.firstPostChoiceTurns ?? []).entries()) {
     entries.push({
-      id: `${source.id}:post-choice:${turn.id}`,
+      id: `${playerId}:post-choice:${index}`,
       at: turn.resolvedAt,
       label: `Turn ${turn.turnNumber}`,
       title: turn.sceneTitle,
@@ -358,9 +368,11 @@ export function buildPublicLiveTranscript(
     });
   }
 
-  for (const turn of source.firstConnectedPath?.turns ?? []) {
+  for (const [index, turn] of (
+    source.firstConnectedPath?.turns ?? []
+  ).entries()) {
     entries.push({
-      id: `${source.id}:connected:${turn.id}`,
+      id: `${playerId}:connected:${index}`,
       at: turn.resolvedAt,
       label: `Connected path ${turn.turnNumber}`,
       title: turn.sceneTitle ?? "Connected path",
@@ -372,9 +384,11 @@ export function buildPublicLiveTranscript(
     });
   }
 
-  for (const turn of source.firstConnectedPath?.orbDecisionTurns ?? []) {
+  for (const [index, turn] of (
+    source.firstConnectedPath?.orbDecisionTurns ?? []
+  ).entries()) {
     entries.push({
-      id: `${source.id}:orb:${turn.id}`,
+      id: `${playerId}:orb:${index}`,
       at: turn.resolvedAt,
       label: `Orb ${turn.turnNumber}`,
       title: turn.sceneTitle ?? "Orb decision",
@@ -386,9 +400,11 @@ export function buildPublicLiveTranscript(
     });
   }
 
-  for (const turn of source.firstConnectedPath?.connectedAsiTurns ?? []) {
+  for (const [index, turn] of (
+    source.firstConnectedPath?.connectedAsiTurns ?? []
+  ).entries()) {
     entries.push({
-      id: `${source.id}:asi:${turn.id}`,
+      id: `${playerId}:asi:${index}`,
       at: turn.resolvedAt,
       label: `ASI ${turn.turnNumber}`,
       title: turn.sceneTitle ?? "Connected ASI",
@@ -404,10 +420,16 @@ export function buildPublicLiveTranscript(
 }
 
 function getLastActivityAt(entries: PublicLiveTranscriptEntry[]) {
-  return entries.map((entry) => entry.at).sort().at(-1);
+  return entries
+    .map((entry) => entry.at)
+    .sort()
+    .at(-1);
 }
 
-function toPublicPlayerTurnImage(source: any): PublicPlayerTurnImage | undefined {
+export function toPublicPlayerTurnImage(
+  source: any,
+  playerId: string,
+): PublicPlayerTurnImage | undefined {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     return undefined;
   }
@@ -426,10 +448,10 @@ function toPublicPlayerTurnImage(source: any): PublicPlayerTurnImage | undefined
   }
 
   return {
-    id: source.id,
+    id: publicRecordId(source),
     dailyGameId: source.dailyGameId,
-    playerId: source.playerId,
-    sourceTurnId: source.sourceTurnId,
+    playerId,
+    sourceTurnId: publicRecordId(source),
     sourceTurnKind: source.sourceTurnKind,
     status: source.status,
     ...(typeof source.imageModel === "string"
@@ -440,8 +462,8 @@ function toPublicPlayerTurnImage(source: any): PublicPlayerTurnImage | undefined
     ...(typeof source.contentType === "string"
       ? { contentType: source.contentType }
       : {}),
-    ...(typeof source.errorMessage === "string"
-      ? { errorMessage: source.errorMessage }
+    ...(source.status === "error"
+      ? { errorMessage: "Image generation failed." }
       : {}),
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,

@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPublicLiveTranscript,
-  fromPublicLivePlayerId,
   toPublicLivePlayerProjection,
-  toPublicLivePlayerId,
   toPublicLivePlayerSummaryProjection,
 } from "./public-live-transcript";
 
 const player = {
+  _id: "opaque-player-record-a",
   id: "game-1:user-1",
   clerkUserId: "user-1",
   dailyGameId: "game-1",
@@ -118,12 +117,13 @@ describe("public live transcript projection", () => {
     const serialized = JSON.stringify(publicPlayer);
 
     expect(publicPlayer).toMatchObject({
-      id: "game-1:user-1",
-      publicId: toPublicLivePlayerId("game-1:user-1"),
+      id: player._id,
+      publicId: player._id,
       choice: "NO",
       turnCount: 5,
       lastActivityAt: "2026-05-02T09:06:00.000Z",
     });
+    expect(serialized).not.toContain(player.clerkUserId);
     expect(serialized).not.toContain("clerkUserId");
     expect(serialized).not.toContain("publicGameplayAgreementAcceptedAt");
     expect(serialized).not.toContain("responseModel");
@@ -135,8 +135,8 @@ describe("public live transcript projection", () => {
 
   it("keeps summaries compact for public room cards", () => {
     expect(toPublicLivePlayerSummaryProjection(player)).toEqual({
-      id: "game-1:user-1",
-      publicId: toPublicLivePlayerId("game-1:user-1"),
+      id: player._id,
+      publicId: player._id,
       dailyGameId: "game-1",
       name: "Mara Ilyin",
       age: "36",
@@ -151,12 +151,17 @@ describe("public live transcript projection", () => {
     });
   });
 
-  it("uses a URL-safe public player id that round-trips to the stored id", () => {
-    const publicId = toPublicLivePlayerId("2026-05-02:user_123");
-
-    expect(publicId).not.toContain(":");
-    expect(publicId).not.toContain("%");
-    expect(fromPublicLivePlayerId(publicId)).toBe("2026-05-02:user_123");
-    expect(fromPublicLivePlayerId("2026-05-02%3Auser_123")).toBeNull();
+  it("requires an independent persisted ID and never falls back to an account-derived ID", () => {
+    expect(() =>
+      toPublicLivePlayerProjection({ ...player, _id: undefined }),
+    ).toThrow();
+    const otherGame = toPublicLivePlayerProjection({
+      ...player,
+      _id: "opaque-player-record-b",
+      dailyGameId: "game-2",
+    });
+    expect(otherGame.publicId).not.toBe(
+      toPublicLivePlayerProjection(player).publicId,
+    );
   });
 });
