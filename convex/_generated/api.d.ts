@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as characterDraftQuota from "../characterDraftQuota.js";
 import type * as playerStore from "../playerStore.js";
 
 import type {
@@ -17,6 +18,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  characterDraftQuota: typeof characterDraftQuota;
   playerStore: typeof playerStore;
 }>;
 

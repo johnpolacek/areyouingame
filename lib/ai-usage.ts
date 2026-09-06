@@ -66,6 +66,8 @@ export type AiUsageBreakdownRow = AiUsageTotals & {
 };
 
 type TrackableGenerateTextOptions = {
+  maxOutputTokens?: number;
+  maxRetries?: number;
   model: string;
   operation: AiUsageOperation;
   system: string;
@@ -133,6 +135,8 @@ export async function trackedGenerateText(options: TrackableGenerateTextOptions)
       model: openai(options.model),
       system: options.system,
       prompt: options.prompt,
+      maxOutputTokens: options.maxOutputTokens,
+      maxRetries: options.maxRetries,
     });
 
     await recordAiUsage({

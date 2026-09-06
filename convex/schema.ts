@@ -446,6 +446,12 @@ const publicActivityEvent = v.object({
 });
 
 export default defineSchema({
+  characterDraftQuotas: defineTable({
+    key: v.string(),
+    windowStart: v.number(),
+    count: v.number(),
+  }).index("by_key", ["key"]),
+
   dailyGames: defineTable({
     dailyGameId: v.string(),
     eventStartsAtIso: v.string(),

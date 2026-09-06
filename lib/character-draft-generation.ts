@@ -12,7 +12,7 @@ export type CharacterDraftFields = {
 
 export type CharacterDraftSuggestion = Required<CharacterDraftFields>;
 
-const fieldLimits = {
+export const fieldLimits = {
   name: 80,
   age: 3,
   location: 120,
@@ -32,6 +32,8 @@ export async function generateCharacterDraftSuggestion({
   const result = await trackedGenerateText({
     model,
     operation: "character_draft_fill",
+    maxOutputTokens: 2048,
+    maxRetries: 0,
     clerkUserId,
     system:
       "You create concise, grounded player characters for a near-future interactive fiction game. Return only valid JSON.",
