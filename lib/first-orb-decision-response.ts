@@ -39,7 +39,7 @@ export async function createFirstOrbDecisionTurnResponse({
 }): Promise<FirstOrbDecisionTurnResponse> {
   const orbLifecycle = classifyOrbDecisionAction(actionText);
   const expectedTurnNumber =
-    (player.firstConnectedPath?.orbDecisionTurns?.length ?? 0) + 1;
+    (player.firstConnectedPath?.orbDecisionTurns?.at(-1)?.turnNumber ?? 0) + 1;
   const generatedResponse = await createEarlyPostChoiceTurnResponse({
     actionText,
     branch: "YES",

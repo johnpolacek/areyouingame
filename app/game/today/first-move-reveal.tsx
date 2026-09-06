@@ -457,7 +457,7 @@ export function FirstChoiceConsequence({
           (!pendingNoAction.current || pendingNoAction.current.actionText !== nextActionText)) {
         pendingNoAction.current = {
           requestId: crypto.randomUUID(),
-          expectedStateVersion: firstPostChoiceTurns?.length ??
+          expectedStateVersion: firstPostChoiceTurns?.at(-1)?.turnNumber ??
             (firstPostChoiceAction?.responseText ? 1 : 0),
           actionText: nextActionText,
         };

@@ -10,18 +10,20 @@ import {
 import { HeroBackgroundVideo } from "../hero-background-video";
 import {
   getPublicActivityEvents,
-  getPublicLiveGameSummaries,
+  getPublicGamesPage,
   type PublicActivityEvent,
 } from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
 
-export default async function LiveGamesPage() {
-  const [games, recentActivity] = await Promise.all([
-    getPublicLiveGameSummaries({ limit: 100 }),
+export default async function LiveGamesPage({ searchParams }: { searchParams: Promise<{ cursor?: string }> }) {
+  const { cursor } = await searchParams;
+  const [result, recentActivity] = await Promise.all([
+    getPublicGamesPage(cursor ?? null),
     getPublicActivityEvents({ limit: 12 }),
   ]);
 
+  const games = result.page;
   return (
     <main className="relative isolate min-h-svh overflow-hidden bg-background px-5 py-8 text-foreground sm:px-8">
       <HeroBackgroundVideo />
@@ -107,6 +109,10 @@ export default async function LiveGamesPage() {
             body="Create a player or run a persona playtest to populate the live browser."
           />
         )}
+        <nav aria-label="Game pages" className="flex gap-6 text-sm font-semibold underline">
+          {cursor && <Link href="/live">Latest games</Link>}
+          {!result.isDone && <Link href={`/live?cursor=${encodeURIComponent(result.continueCursor)}`}>More games</Link>}
+        </nav>
       </div>
     </main>
   );

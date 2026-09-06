@@ -1,3 +1,4 @@
+import { stringifyNarrativeContext } from "./narrative-context-budget";
 import { trackedGenerateText, type AiUsageOperation } from "./ai-usage";
 import {
   buildCharacterInfoCorrectionPromptContext,
@@ -170,8 +171,9 @@ export async function createEarlyPostChoiceTurnResponse({
         "playerVisibleFacts should contain 2 to 5 short durable facts the player learned or established, not literary prose.",
         "characterInfoUpdates is optional and should contain at most 3 public-safe continuity updates. Use objects with section, operation, text, and optional targetText. Allowed sections: currentSituation, relationships, resources, constraints, goals, knowledge, openThreads, recentChanges. Use only facts visible to the player in this exact stage. Do not include internal status labels.",
       ]),
-      prompt: JSON.stringify(
+      prompt: stringifyNarrativeContext(
         {
+          actionText,
           player: {
             name: player.name,
             location: player.location,
@@ -197,13 +199,10 @@ export async function createEarlyPostChoiceTurnResponse({
           characterInfoCorrections: buildCharacterInfoCorrectionPromptContext({
             characterInfo: player.characterInfo,
           }),
-          actionText,
           day1GameplayContext: buildDay1GameplayContextPayload({ dailyGame, player, storylineContext }),
           day1MediaContext,
           ...(promptExtras ?? {}),
         },
-        null,
-        2,
       ),
     });
     const generated = parseGeneratedResponse(text);

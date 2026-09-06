@@ -1,3 +1,4 @@
+import { stringifyNarrativeContext } from "./narrative-context-budget";
 import { trackedGenerateText } from "./ai-usage";
 import {
   buildCharacterInfoCorrectionPromptContext,
@@ -88,7 +89,7 @@ export async function createFirstConnectedAsiTurnResponse({
 }): Promise<FirstConnectedAsiTurnResponse> {
   const model = getOpenAINarrativeModel();
   const expectedTurnNumber =
-    (player.firstConnectedPath?.connectedAsiTurns?.length ?? 0) + 1;
+    (player.firstConnectedPath?.connectedAsiTurns?.at(-1)?.turnNumber ?? 0) + 1;
   const { text } = await trackedGenerateText({
     model,
     operation: "connected_asi_turn",
@@ -113,8 +114,9 @@ export async function createFirstConnectedAsiTurnResponse({
       "playerVisibleFacts should contain 2 to 5 short durable facts learned or established, not literary prose.",
       "characterInfoUpdates is optional and should contain at most 3 public-safe continuity updates. Use objects with section, operation, text, and optional targetText. Allowed sections: currentSituation, relationships, resources, constraints, goals, knowledge, openThreads, recentChanges. Use only player-visible facts and correction-aware continuity. Do not include internal status labels.",
     ]),
-    prompt: JSON.stringify(
+    prompt: stringifyNarrativeContext(
       {
+        actionText,
         player: {
           name: player.name,
           location: player.location,
@@ -135,15 +137,12 @@ export async function createFirstConnectedAsiTurnResponse({
         characterInfoCorrections: buildCharacterInfoCorrectionPromptContext({
           characterInfo: player.characterInfo,
         }),
-        actionText,
         day1GameplayContext,
         connectedAsiGuide,
         connectedAsiInteraction: {
           expectedTurnNumber,
         },
       },
-      null,
-      2,
     ),
   });
   const generated = parseGeneratedResponse(text);

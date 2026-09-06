@@ -122,7 +122,7 @@ export function toPublicLivePlayerProjection(
       ? { choice: source.firstDecision.choice }
       : {}),
     transcript,
-    turnCount: transcript.length,
+    turnCount: fullTranscriptCount(source, transcript.length),
     ...(lastActivityAt ? { lastActivityAt } : {}),
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
@@ -228,7 +228,7 @@ export function toPublicLivePlayerSummaryProjection(
     ...(source.firstDecision?.choice
       ? { choice: source.firstDecision.choice }
       : {}),
-    turnCount: transcript.length,
+    turnCount: fullTranscriptCount(source, transcript.length),
     ...(lastActivityAt ? { lastActivityAt } : {}),
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
@@ -345,7 +345,7 @@ export function buildPublicLiveTranscript(
     source.firstRevealTextResponses ?? []
   ).entries()) {
     entries.push({
-      id: `${playerId}:voice:${index}`,
+      id: `${playerId}:voice:${(Number(response.id?.split(":").at(-1)) || index + 1) - 1}`,
       at: response.submittedAt,
       label: "Voice response",
       title: response.classification,
@@ -356,7 +356,7 @@ export function buildPublicLiveTranscript(
 
   for (const [index, turn] of (source.firstPostChoiceTurns ?? []).entries()) {
     entries.push({
-      id: `${playerId}:post-choice:${index}`,
+      id: `${playerId}:post-choice:${(turn.turnNumber ?? index + 1) - 1}`,
       at: turn.resolvedAt,
       label: `Turn ${turn.turnNumber}`,
       title: turn.sceneTitle,
@@ -372,7 +372,7 @@ export function buildPublicLiveTranscript(
     source.firstConnectedPath?.turns ?? []
   ).entries()) {
     entries.push({
-      id: `${playerId}:connected:${index}`,
+      id: `${playerId}:connected:${(turn.turnNumber ?? index + 1) - 1}`,
       at: turn.resolvedAt,
       label: `Connected path ${turn.turnNumber}`,
       title: turn.sceneTitle ?? "Connected path",
@@ -388,7 +388,7 @@ export function buildPublicLiveTranscript(
     source.firstConnectedPath?.orbDecisionTurns ?? []
   ).entries()) {
     entries.push({
-      id: `${playerId}:orb:${index}`,
+      id: `${playerId}:orb:${(turn.turnNumber ?? index + 1) - 1}`,
       at: turn.resolvedAt,
       label: `Orb ${turn.turnNumber}`,
       title: turn.sceneTitle ?? "Orb decision",
@@ -404,7 +404,7 @@ export function buildPublicLiveTranscript(
     source.firstConnectedPath?.connectedAsiTurns ?? []
   ).entries()) {
     entries.push({
-      id: `${playerId}:asi:${index}`,
+      id: `${playerId}:asi:${(turn.turnNumber ?? index + 1) - 1}`,
       at: turn.resolvedAt,
       label: `ASI ${turn.turnNumber}`,
       title: turn.sceneTitle ?? "Connected ASI",
@@ -493,4 +493,16 @@ function isPlayerTurnImageStatus(
     value === "ready" ||
     value === "error"
   );
+}
+
+function fullTranscriptCount(source: any, recentCount: number): number {
+  const histories = [source.firstPostChoiceTurns, source.firstConnectedPath?.turns,
+    source.firstConnectedPath?.orbDecisionTurns, source.firstConnectedPath?.connectedAsiTurns];
+  let count = recentCount;
+  for (const turns of histories) {
+    if (turns?.length) count += Math.max(0, (turns.at(-1).turnNumber ?? turns.length) - turns.length);
+  }
+  const responses = source.firstRevealTextResponses;
+  if (responses?.length) count += Math.max(0, (Number(responses.at(-1).id.split(":").at(-1)) || responses.length) - responses.length);
+  return count;
 }

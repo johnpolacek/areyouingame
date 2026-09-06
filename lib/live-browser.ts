@@ -214,3 +214,26 @@ function getBackendSecret(): string {
   if (!secret) throw new Error("AREYOUIN_BACKEND_SECRET is required.");
   return secret;
 }
+
+type Page<T> = { page: T[]; isDone: boolean; continueCursor: string };
+type Pagination = { numItems: number; cursor: string | null };
+
+export async function getPublicGamesPage(cursor: string | null) {
+  return fetchQuery(makeFunctionReference<"query", { paginationOpts: Pagination }, Page<PublicLiveGameSummary>>(
+    "playerStore:getPublicLiveGameSummariesPage"), { paginationOpts: { cursor, numItems: 30 } });
+}
+
+export async function getPublicGameSummary(dailyGameId: string) {
+  return fetchQuery(makeFunctionReference<"query", { dailyGameId: string }, PublicLiveGameSummary | null>(
+    "playerStore:getPublicLiveGameSummary"), { dailyGameId });
+}
+
+export async function getPublicPlayersPage(dailyGameId: string, cursor: string | null) {
+  return fetchQuery(makeFunctionReference<"query", { dailyGameId: string; paginationOpts: Pagination }, Page<PublicLivePlayerSummary>>(
+    "playerStore:getPublicLivePlayersPage"), { dailyGameId, paginationOpts: { cursor, numItems: 30 } });
+}
+
+export async function getPublicPlayerActivityPage(playerId: string, cursor: string | null) {
+  return fetchQuery(makeFunctionReference<"query", { playerId: string; paginationOpts: Pagination }, Page<PublicActivityEvent>>(
+    "playerStore:getPublicPlayerActivityPage"), { playerId, paginationOpts: { cursor, numItems: 30 } });
+}

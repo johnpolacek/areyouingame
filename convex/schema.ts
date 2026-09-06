@@ -242,6 +242,7 @@ const firstConnectedPath = v.object({
   orbStatus: connectedOrbStatus,
   orbLifecycle: v.optional(connectedOrbLifecycle),
   turnCount: v.number(),
+  sealedPackageVerificationCount: v.optional(v.number()),
   turns: v.array(firstConnectedPathTurn),
   orbDecisionTurns: v.optional(v.array(firstOrbDecisionTurn)),
   connectedAsiTurns: v.optional(v.array(firstConnectedAsiTurn)),
@@ -447,6 +448,19 @@ const publicActivityEvent = v.object({
 });
 
 export default defineSchema({
+  playerTurns: defineTable({
+    playerId: v.string(), dailyGameId: v.string(), kind: v.string(),
+    recordedAt: v.string(), turnId: v.string(), requestId: v.optional(v.string()),
+    record: v.union(firstPostChoiceTurn, firstConnectedPathTurn, firstOrbDecisionTurn, firstConnectedAsiTurn, firstRevealTextResponse),
+  }).index("by_turnId", ["turnId"])
+    .index("by_playerId", ["playerId", "recordedAt"])
+    .index("by_playerId_requestId", ["playerId", "requestId"])
+    .index("by_dailyGameId", ["dailyGameId"]),
+  publicGameParticipants: defineTable({
+    dailyGameId: v.string(), playerId: v.string(),
+  }).index("by_game_player", ["dailyGameId", "playerId"])
+    .index("by_dailyGameId", ["dailyGameId"]),
+
   characterDraftQuotas: defineTable({
     key: v.string(),
     windowStart: v.number(),
@@ -454,14 +468,20 @@ export default defineSchema({
   }).index("by_key", ["key"]),
 
   dailyGames: defineTable({
+    registeredPlayerCount: v.optional(v.number()),
+    totalMessages: v.optional(v.number()),
+    playerCount: v.optional(v.number()),
+    activityCount: v.optional(v.number()),
+    lastActivityAt: v.optional(v.string()),
     dailyGameId: v.string(),
     eventStartsAtIso: v.string(),
     eventStartsAtLabel: v.string(),
     createdAt: v.string(),
     updatedAt: v.string(),
-  }).index("by_dailyGameId", ["dailyGameId"]),
+  }).index("by_dailyGameId", ["dailyGameId"]).index("by_lastActivityAt", ["lastActivityAt"]),
 
   players: defineTable({
+    registrationCounted: v.optional(v.boolean()),
     id: v.string(),
     clerkUserId: v.string(),
     dailyGameId: v.string(),
@@ -491,7 +511,8 @@ export default defineSchema({
       "clerkUserId",
       "dailyGameId",
     ])
-    .index("by_dailyGameId", ["dailyGameId"]),
+    .index("by_dailyGameId", ["dailyGameId"])
+    .index("by_id", ["id"]),
 
   artifactObjects: defineTable({
     artifactType: v.union(
@@ -561,7 +582,8 @@ export default defineSchema({
     .index("by_playerId", ["playerId"])
     .index("by_clerkUserId", ["clerkUserId"]),
 
-  publicActivityEvents: defineTable(publicActivityEvent)
+  publicActivityEvents: defineTable({ ...publicActivityEvent.fields, summaryCounted: v.optional(v.boolean()) })
+    .index("by_playerId", ["playerId"])
     .index("by_dailyGameId_and_createdAt", ["dailyGameId", "createdAt"])
     .index("by_createdAt", ["createdAt"]),
 

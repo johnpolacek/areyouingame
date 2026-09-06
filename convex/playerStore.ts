@@ -1,4 +1,4 @@
-import { mutationGeneric, queryGeneric } from "convex/server";
+import { mutationGeneric, queryGeneric, paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import {
   publicRecordId,
@@ -301,6 +301,7 @@ const firstConnectedPath = v.object({
   orbStatus: connectedOrbStatus,
   orbLifecycle: v.optional(connectedOrbLifecycle),
   turnCount: v.number(),
+  sealedPackageVerificationCount: v.optional(v.number()),
   turns: v.array(firstConnectedPathTurn),
   orbDecisionTurns: v.optional(v.array(firstOrbDecisionTurn)),
   connectedAsiTurns: v.optional(v.array(firstConnectedAsiTurn)),
@@ -614,20 +615,9 @@ export const getDailyGameStats = queryGeneric({
   handler: async (ctx, args) => {
     requireBackendSecret(args.backendSecret);
 
-    const players = await ctx.db
-      .query("players")
-      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
-      .collect();
-    const gameplayEvents = await ctx.db
-      .query("gameplayEvents")
-      .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
-      .collect();
-
-    return {
-      playerCount: players.length,
-      totalMessages: new Set(gameplayEvents.map((event) => event.sourceTurnId))
-        .size,
-    };
+    const game = await ctx.db.query("dailyGames")
+      .withIndex("by_dailyGameId", q => q.eq("dailyGameId", args.dailyGameId)).unique();
+    return { playerCount: game?.registeredPlayerCount ?? 0, totalMessages: game?.totalMessages ?? 0 };
   },
 });
 
@@ -653,37 +643,10 @@ export const getPublicActivityEvents = queryGeneric({
           .order("desc")
           .take(limit);
 
-    const playerIdsByGame = new Map<string, Map<string, string>>();
-    await Promise.all(
-      [...new Set(events.map((event) => event.dailyGameId))].map(
-        async (dailyGameId) => {
-          const players = await ctx.db
-            .query("players")
-            .withIndex("by_dailyGameId", (q) =>
-              q.eq("dailyGameId", dailyGameId),
-            )
-            .collect();
-          const ids = new Map<string, string>();
-          for (const player of players) {
-            ids.set(player.id, player._id);
-            // Legacy activity records stored punctuation-escaped private IDs.
-            ids.set(
-              player.id.replaceAll("~", "~~").replaceAll(":", "~c"),
-              player._id,
-            );
-          }
-          playerIdsByGame.set(dailyGameId, ids);
-        },
-      ),
-    );
-    return events.map((event) =>
-      toPublicActivityEvent(
-        event,
-        event.playerId
-          ? playerIdsByGame.get(event.dailyGameId)?.get(event.playerId)
-          : undefined,
-      ),
-    );
+    return await Promise.all(events.map(async (event) => {
+      const player = await findActivityPlayer(ctx, event.playerId);
+      return toPublicActivityEvent(event, player?._id);
+    }));
   },
 });
 
@@ -694,49 +657,11 @@ export const getPublicLiveGameSummaries = queryGeneric({
   returns: v.array(publicLiveGameSummary),
   handler: async (ctx, args) => {
     const limit = Math.min(Math.max(args.limit ?? 50, 1), 200);
-    const games = await ctx.db.query("dailyGames").collect();
-    const summaries = await Promise.all(
-      games.map(async (game) => {
-        const players = await ctx.db
-          .query("players")
-          .withIndex("by_dailyGameId", (q) =>
-            q.eq("dailyGameId", game.dailyGameId),
-          )
-          .collect();
-        const publicPlayerSummaries = players
-          .map((source) => toPublicLivePlayerSummaryProjection(source))
-          .filter((player) => player.turnCount > 0);
-        const activity = await ctx.db
-          .query("publicActivityEvents")
-          .withIndex("by_dailyGameId_and_createdAt", (q) =>
-            q.eq("dailyGameId", game.dailyGameId),
-          )
-          .order("desc")
-          .collect();
+    const games = await ctx.db.query("dailyGames")
+      .withIndex("by_lastActivityAt", (q) => q.gt("lastActivityAt", ""))
+      .order("desc").take(limit);
+    return games.map(gameSummary);
 
-        return {
-          dailyGameId: game.dailyGameId,
-          eventStartsAtIso: game.eventStartsAtIso,
-          eventStartsAtLabel: game.eventStartsAtLabel,
-          playerCount: publicPlayerSummaries.length,
-          activityCount: activity.length,
-          ...(activity[0]?.createdAt
-            ? { lastActivityAt: activity[0].createdAt }
-            : {}),
-          createdAt: game.createdAt,
-          updatedAt: game.updatedAt,
-        };
-      }),
-    );
-
-    return summaries
-      .filter((summary) => summary.playerCount > 0 || summary.activityCount > 0)
-      .sort((a, b) =>
-        (b.lastActivityAt ?? b.eventStartsAtIso).localeCompare(
-          a.lastActivityAt ?? a.eventStartsAtIso,
-        ),
-      )
-      .slice(0, limit);
   },
 });
 
@@ -749,10 +674,10 @@ export const getPublicLivePlayersForGame = queryGeneric({
     const players = await ctx.db
       .query("players")
       .withIndex("by_dailyGameId", (q) => q.eq("dailyGameId", args.dailyGameId))
-      .collect();
+      .order("desc").take(50);
 
     return players
-      .map((source) => toPublicLivePlayerSummaryProjection(source))
+      .map((source) => toPublicLivePlayerSummaryProjection(recentPlayer(source)))
       .filter((player) => player.turnCount > 0)
       .sort((a, b) =>
         (b.lastActivityAt ?? b.updatedAt).localeCompare(
@@ -778,9 +703,9 @@ export const getPublicLivePlayer = queryGeneric({
     const turnImages = await ctx.db
       .query("playerTurnImages")
       .withIndex("by_playerId", (q) => q.eq("playerId", selectedPlayer.id))
-      .collect();
+      .order("desc").take(50);
 
-    return toPublicLivePlayerProjection({ ...selectedPlayer, turnImages });
+    return toPublicLivePlayerProjection(recentPlayer({ ...selectedPlayer, turnImages }));
   },
 });
 
@@ -818,7 +743,7 @@ export const getPlayerTurnImagesForUserGame = queryGeneric({
     return await ctx.db
       .query("playerTurnImages")
       .withIndex("by_playerId", (q) => q.eq("playerId", existingPlayer.id))
-      .collect();
+      .order("desc").take(50);
   },
 });
 
@@ -863,13 +788,8 @@ export const getPublicPlayerTurnImage = queryGeneric({
         ? await findPlayerTurnImage(ctx, args.sourceTurnId)
         : null;
     if (!image || image.status !== "ready") return null;
-    const players = await ctx.db
-      .query("players")
-      .withIndex("by_dailyGameId", (q) =>
-        q.eq("dailyGameId", image.dailyGameId),
-      )
-      .collect();
-    const player = players.find((candidate) => candidate.id === image.playerId);
+    const player = await ctx.db.query("players")
+      .withIndex("by_id", q => q.eq("id", image.playerId)).first();
     if (!player || (!recordId && player.clerkUserId !== args.clerkUserId))
       return null;
     return {
@@ -1161,7 +1081,10 @@ export const createPlayerForUserGame = mutationGeneric({
       updatedAt: now,
     };
 
-    await ctx.db.insert("players", newPlayer);
+    await ctx.db.insert("players", { ...newPlayer, registrationCounted: true });
+    const game = await ctx.db.query("dailyGames")
+      .withIndex("by_dailyGameId", q => q.eq("dailyGameId", args.dailyGameId)).unique();
+    if (game) await ctx.db.patch(game._id, { registeredPlayerCount: (game.registeredPlayerCount ?? 0) + 1 });
 
     return toDailyPlayer(newPlayer);
   },
@@ -1182,7 +1105,7 @@ export const acceptPublicGameplayAgreement = mutationGeneric({
     const publicGameplayAgreementAcceptedAt =
       existingPlayer.publicGameplayAgreementAcceptedAt ?? now;
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       publicGameplayAgreementAcceptedAt,
       updatedAt: now,
     });
@@ -1221,7 +1144,7 @@ export const submitOpeningResponseForUserGame = mutationGeneric({
 
     const now = new Date().toISOString();
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       ...(args.openingSceneContext
         ? { openingSceneContext: args.openingSceneContext }
         : {}),
@@ -1287,7 +1210,7 @@ export const answerOpeningSceneContextForUserGame = mutationGeneric({
       answeredAt: now,
     };
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       openingSceneContext: openingSceneContextRecord,
       updatedAt: now,
     });
@@ -1336,7 +1259,7 @@ export const saveFirstMoveRevealForUserGame = mutationGeneric({
       return toDailyPlayer(existingPlayer);
     }
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstMoveReveal: args.reveal,
       updatedAt: args.reveal.generatedAt,
     });
@@ -1399,7 +1322,7 @@ export const submitFirstDecisionForUserGame = mutationGeneric({
       submittedAt: now,
     });
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstDecision: firstDecisionRecord,
       updatedAt: now,
     });
@@ -1475,7 +1398,7 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
     }
 
     const responseRecord = {
-      id: `${args.dailyGameId}:${existingPlayer.id}:first-reveal-text-response:${previousResponses.length + 1}`,
+      id: `${args.dailyGameId}:${existingPlayer.id}:first-reveal-text-response:${(Number(previousResponses.at(-1)?.id.split(":").at(-1)) || 0) + 1}`,
       inputText: args.responseText,
       classification: args.classification,
       model: args.model,
@@ -1492,7 +1415,7 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
       args.classification === "DEFERRED" ||
       args.classification === "END_DAY"
     ) {
-      await ctx.db.patch(existingPlayer._id, {
+      await patchPlayerHistory(ctx, existingPlayer, {
         firstRevealTextResponses,
         updatedAt: now,
       });
@@ -1525,7 +1448,7 @@ export const submitFirstRevealTextResponseForUserGame = mutationGeneric({
       submittedAt: now,
     });
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstDecision: firstDecisionRecord,
       firstRevealTextResponses,
       updatedAt: now,
@@ -1593,42 +1516,16 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       );
     }
 
-    const legacyFirstTurn =
-      existingPlayer.firstPostChoiceAction?.responseText &&
-      !existingPlayer.firstPostChoiceTurns
-        ? [
-            {
-              ...existingPlayer.firstPostChoiceAction,
-              turnNumber: 1,
-              responseText: existingPlayer.firstPostChoiceAction.responseText,
-              sceneTitle:
-                existingPlayer.firstPostChoiceAction.sceneTitle ??
-                "The World Answers",
-              responseModel:
-                existingPlayer.firstPostChoiceAction.responseModel ?? "unknown",
-              responseSource:
-                existingPlayer.firstPostChoiceAction.responseSource ?? "ai",
-              actionKind:
-                existingPlayer.firstPostChoiceAction.actionKind ??
-                "open_world_action",
-              playerVisibleFacts:
-                existingPlayer.firstPostChoiceAction.playerVisibleFacts ?? [],
-              storylineContextSourceVersion:
-                existingPlayer.firstPostChoiceAction
-                  .storylineContextSourceVersion ?? "unknown",
-              resolvedAt:
-                existingPlayer.firstPostChoiceAction.resolvedAt ??
-                existingPlayer.firstPostChoiceAction.submittedAt,
-            },
-          ]
-        : [];
+    const legacyFirstTurn = legacyPostChoiceTurns(existingPlayer);
     const existingTurns =
       existingPlayer.firstPostChoiceTurns ?? legacyFirstTurn;
     if (!args.requestId.trim() || args.requestId.length > 128 ||
         !Number.isSafeInteger(args.expectedStateVersion) || args.expectedStateVersion < 0) {
       throw new ConvexError("Invalid action request.");
     }
-    const previous = existingTurns.find((turn: { requestId?: string; actionText: string; turnNumber: number }) => turn.requestId === args.requestId);
+    const previous = existingTurns.find((turn: { requestId?: string }) => turn.requestId === args.requestId)
+      ?? (await ctx.db.query("playerTurns").withIndex("by_playerId_requestId", (q: any) =>
+        q.eq("playerId", existingPlayer.id).eq("requestId", args.requestId)).first())?.record;
     if (previous) {
       if (previous.actionText !== args.actionText ||
           previous.turnNumber !== args.expectedStateVersion + 1) {
@@ -1636,7 +1533,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       }
       return toDailyPlayer(existingPlayer);
     }
-    if (existingTurns.length !== args.expectedStateVersion ||
+    if ((existingTurns.at(-1)?.turnNumber ?? 0) !== args.expectedStateVersion ||
         existingPlayer.updatedAt !== args.expectedUpdatedAt) {
       throw new ConvexError("ACTION_CONFLICT: Player state changed. Review the latest scene and try again.");
     }
@@ -1712,7 +1609,7 @@ export const submitFirstPostChoiceActionForUserGame = mutationGeneric({
       createdAt: now,
     };
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstPostChoiceAction,
       firstPostChoiceTurns,
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
@@ -1798,11 +1695,11 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
     const existingPath = existingPlayer.firstConnectedPath;
     const existingTurns = existingPath?.turns ?? [];
 
-    if (existingTurns.length >= args.expectedTurnNumber) {
+    if ((existingTurns.at(-1)?.turnNumber ?? 0) >= args.expectedTurnNumber) {
       return toDailyPlayer(existingPlayer);
     }
 
-    if (existingTurns.length !== args.expectedTurnNumber - 1) {
+    if ((existingTurns.at(-1)?.turnNumber ?? 0) !== args.expectedTurnNumber - 1) {
       throw new ConvexError("Connected path turn is out of order.");
     }
 
@@ -1890,7 +1787,7 @@ export const submitFirstConnectedPathTurnForUserGame = mutationGeneric({
       createdAt: now,
     };
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstConnectedPath: firstConnectedPathRecord,
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
@@ -2033,11 +1930,11 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
 
     const existingOrbDecisionTurns = existingPath.orbDecisionTurns ?? [];
 
-    if (existingOrbDecisionTurns.length >= args.expectedTurnNumber) {
+    if ((existingOrbDecisionTurns.at(-1)?.turnNumber ?? 0) >= args.expectedTurnNumber) {
       return toDailyPlayer(existingPlayer);
     }
 
-    if (existingOrbDecisionTurns.length !== args.expectedTurnNumber - 1) {
+    if ((existingOrbDecisionTurns.at(-1)?.turnNumber ?? 0) !== args.expectedTurnNumber - 1) {
       throw new ConvexError("Orb decision turn is out of order.");
     }
 
@@ -2094,7 +1991,7 @@ export const submitFirstOrbDecisionTurnForUserGame = mutationGeneric({
       createdAt: now,
     };
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstConnectedPath: firstConnectedPathRecord,
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
@@ -2223,15 +2120,15 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
 
     const existingConnectedAsiTurns = existingPath.connectedAsiTurns ?? [];
 
-    if (existingConnectedAsiTurns.length > 0) {
+    if ((existingConnectedAsiTurns.at(-1)?.turnNumber ?? 0) > 0) {
       return toDailyPlayer(existingPlayer);
     }
 
-    if (existingConnectedAsiTurns.length >= args.expectedTurnNumber) {
+    if ((existingConnectedAsiTurns.at(-1)?.turnNumber ?? 0) >= args.expectedTurnNumber) {
       return toDailyPlayer(existingPlayer);
     }
 
-    if (existingConnectedAsiTurns.length !== args.expectedTurnNumber - 1) {
+    if ((existingConnectedAsiTurns.at(-1)?.turnNumber ?? 0) !== args.expectedTurnNumber - 1) {
       throw new ConvexError("Connected ASI turn is out of order.");
     }
 
@@ -2285,7 +2182,7 @@ export const submitFirstConnectedAsiTurnForUserGame = mutationGeneric({
       createdAt: now,
     };
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstConnectedPath: firstConnectedPathRecord,
       ...(characterInfoRecord ? { characterInfo: characterInfoRecord } : {}),
       updatedAt: now,
@@ -2374,7 +2271,7 @@ export const resetPlayerDayForUserGame = mutationGeneric({
 
     const now = new Date().toISOString();
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       firstDecision: undefined,
       firstRevealTextResponses: undefined,
       firstPostChoiceAction: undefined,
@@ -2416,7 +2313,7 @@ export const correctCharacterInfoForUserGame = mutationGeneric({
       now,
     });
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       characterInfo: characterInfoRecord,
       updatedAt: now,
     });
@@ -2445,7 +2342,7 @@ export const updateCharacterImageForUserGame = mutationGeneric({
     );
     const now = new Date().toISOString();
 
-    await ctx.db.patch(existingPlayer._id, {
+    await patchPlayerHistory(ctx, existingPlayer, {
       characterImage: args.characterImage,
       updatedAt: now,
     });
@@ -2913,6 +2810,10 @@ async function deleteDailyGameRecords(ctx: any, dailyGameId: string) {
     .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId))
     .collect();
 
+  for (const table of ["playerTurns", "publicGameParticipants"]) {
+    await deleteDocuments(ctx, await ctx.db.query(table)
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", dailyGameId)).collect());
+  }
   totals.deletedGames += await deleteDocuments(ctx, games);
   totals.deletedPlayers += await deleteDocuments(
     ctx,
@@ -3158,6 +3059,7 @@ function createFirstDecision({
 }
 
 function toDailyPlayer(source: any) {
+  source = recentPlayer(source);
   return {
     id: source.id,
     clerkUserId: source.clerkUserId,
@@ -3276,8 +3178,10 @@ async function insertPublicActivityEvent(
   },
 ) {
   const playtest = getPlaytestMetadata(event.clerkUserId);
+  await countPublicActivity(ctx, event);
 
   await ctx.db.insert("publicActivityEvents", {
+    summaryCounted: true,
     id: event.id,
     dailyGameId: event.dailyGameId,
     ...(event.player.id ? { playerId: event.player.id } : {}),
@@ -3380,4 +3284,226 @@ function toDay1StorylineContext(source: any) {
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
   };
+}
+
+// Player documents are a bounded working set. Full records live in playerTurns.
+const RECENT_TURNS = 12;
+const historyFields = ["firstPostChoiceTurns", "firstRevealTextResponses"] as const;
+const pathHistoryFields = ["turns", "orbDecisionTurns", "connectedAsiTurns"] as const;
+
+function recentPlayer(source: any) {
+  const result = { ...source };
+  for (const key of historyFields) {
+    if (result[key]) result[key] = result[key].slice(-RECENT_TURNS);
+  }
+  if (result.firstConnectedPath) {
+    result.firstConnectedPath = { ...result.firstConnectedPath };
+    for (const key of pathHistoryFields) {
+      if (result.firstConnectedPath[key]) {
+        result.firstConnectedPath[key] = result.firstConnectedPath[key].slice(-RECENT_TURNS);
+      }
+    }
+  }
+  return result;
+}
+
+async function patchPlayerHistory(ctx: any, source: any, patch: any) {
+  if (!patch.firstPostChoiceTurns && !source.firstPostChoiceTurns) {
+    const legacy = legacyPostChoiceTurns(source);
+    if (legacy.length) patch.firstPostChoiceTurns = legacy;
+  }
+  let addedMessages = 0;
+  const groups = [
+    ...historyFields.map(key => [key, patch[key] ?? source[key]] as const),
+    ...pathHistoryFields.map(key => [key, (patch.firstConnectedPath ?? source.firstConnectedPath)?.[key]] as const),
+  ];
+  for (const [kind, records] of groups) {
+    for (const record of records ?? []) {
+      const exists = await ctx.db.query("playerTurns")
+        .withIndex("by_turnId", (q: any) => q.eq("turnId", record.id)).first();
+      if (!exists) {
+        if (kind !== "firstRevealTextResponses") addedMessages++;
+        await ctx.db.insert("playerTurns", {
+          playerId: source.id, dailyGameId: source.dailyGameId, kind,
+          recordedAt: record.resolvedAt ?? record.submittedAt,
+          turnId: record.id, ...(record.requestId ? { requestId: record.requestId } : {}), record,
+        });
+      }
+    }
+  }
+  if (addedMessages || !source.registrationCounted) {
+    const game = await ctx.db.query("dailyGames")
+      .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", source.dailyGameId)).unique();
+    if (game) {
+      await ctx.db.patch(game._id, {
+        registeredPlayerCount: (game.registeredPlayerCount ?? 0) + (source.registrationCounted ? 0 : 1),
+        totalMessages: (game.totalMessages ?? 0) + addedMessages,
+      });
+      patch.registrationCounted = true;
+    }
+  }
+  const path = patch.firstConnectedPath ?? source.firstConnectedPath;
+  if (path) {
+    const previous = source.firstConnectedPath;
+    const known = new Set((previous?.turns ?? []).map((turn: any) => turn.id));
+    const added = previous?.sealedPackageVerificationCount === undefined
+      ? path.turns : path.turns.filter((turn: any) => !known.has(turn.id));
+    patch.firstConnectedPath = { ...path, sealedPackageVerificationCount:
+      (previous?.sealedPackageVerificationCount ?? 0) + added.filter((turn: any) =>
+        /inspect|measure|weigh|verify|photo|document|compare/.test(turn.actionKind)).length };
+  }
+  const bounded = recentPlayer({ ...source, ...patch });
+  for (const key of [...historyFields, "firstConnectedPath"]) {
+    if (bounded[key] !== undefined) patch[key] = bounded[key];
+  }
+  await ctx.db.patch(source._id, patch);
+}
+
+function gameSummary(game: any) {
+  return {
+    dailyGameId: game.dailyGameId, eventStartsAtIso: game.eventStartsAtIso,
+    eventStartsAtLabel: game.eventStartsAtLabel,
+    playerCount: game.playerCount ?? 0, activityCount: game.activityCount ?? 0,
+    ...(game.lastActivityAt ? { lastActivityAt: game.lastActivityAt } : {}),
+    createdAt: game.createdAt, updatedAt: game.updatedAt,
+  };
+}
+
+async function countPublicActivity(ctx: any, event: any) {
+  const game = await ctx.db.query("dailyGames")
+    .withIndex("by_dailyGameId", (q: any) => q.eq("dailyGameId", event.dailyGameId)).unique();
+  if (!game) return;
+  const playerId = event.player?.id ?? event.playerId;
+  const participant = playerId ? await ctx.db.query("publicGameParticipants")
+    .withIndex("by_game_player", (q: any) => q.eq("dailyGameId", event.dailyGameId).eq("playerId", playerId)).first() : null;
+  if (playerId && !participant) await ctx.db.insert("publicGameParticipants", {
+    dailyGameId: event.dailyGameId, playerId,
+  });
+  await ctx.db.patch(game._id, {
+    activityCount: (game.activityCount ?? 0) + 1,
+    playerCount: (game.playerCount ?? 0) + (playerId && !participant ? 1 : 0),
+    lastActivityAt: [game.lastActivityAt ?? "", event.createdAt].sort().at(-1),
+  });
+}
+
+function boundedPagination(options: { numItems: number; cursor: string | null }) {
+  return { cursor: options.cursor, numItems: Math.min(50, Math.max(1, Math.floor(options.numItems))) };
+}
+
+export const getPublicLiveGameSummariesPage = queryGeneric({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const result = await ctx.db.query("dailyGames")
+      .withIndex("by_lastActivityAt", q => q.gt("lastActivityAt", ""))
+      .order("desc").paginate(boundedPagination(args.paginationOpts));
+    return { ...result, page: result.page.map(gameSummary) };
+  },
+});
+
+export const getPublicLivePlayersPage = queryGeneric({
+  args: { dailyGameId: v.string(), paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const result = await ctx.db.query("players")
+      .withIndex("by_dailyGameId", q => q.eq("dailyGameId", args.dailyGameId))
+      .order("desc").paginate(boundedPagination(args.paginationOpts));
+    return { ...result, page: result.page.map(source => toPublicLivePlayerSummaryProjection(recentPlayer(source)))
+      .filter(player => player.turnCount > 0) };
+  },
+});
+
+export const getPlayerTurnsPage = queryGeneric({
+  args: { ...authenticatedArgs, paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+    const player = await findPlayerOrThrow(ctx, args.clerkUserId, args.dailyGameId);
+    const result = await ctx.db.query("playerTurns")
+      .withIndex("by_playerId", q => q.eq("playerId", player.id))
+      .order("desc").paginate(boundedPagination(args.paginationOpts));
+    return { ...result, page: result.page.map(({ kind, record }) => ({ kind, record })) };
+  },
+});
+
+// Public history uses the existing redacted activity projection, never private turn records.
+export const getPublicPlayerActivityPage = queryGeneric({
+  args: { playerId: v.id("players"), paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const player = await ctx.db.get(args.playerId);
+    if (!player) return { page: [], isDone: true, continueCursor: "" };
+    const result = await ctx.db.query("publicActivityEvents")
+      .withIndex("by_playerId", q => q.eq("playerId", player.id))
+      .order("desc").paginate(boundedPagination(args.paginationOpts));
+    return { ...result, page: result.page.map(event => toPublicActivityEvent(event, player._id)) };
+  },
+});
+
+// Run both phases to completion after deploying the schema. Re-running is safe.
+export const migratePlayerHistoryPage = mutationGeneric({
+  args: { backendSecret: v.string(), phase: v.union(v.literal("players"), v.literal("activity")), cursor: v.union(v.string(), v.null()) },
+  handler: async (ctx, args) => {
+    requireBackendSecret(args.backendSecret);
+    if (args.phase === "players") {
+      const result = await ctx.db.query("players").paginate({ cursor: args.cursor, numItems: 1 });
+      for (const player of result.page) await patchPlayerHistory(ctx, player, {});
+      return { isDone: result.isDone, continueCursor: result.continueCursor };
+    }
+    const result = await ctx.db.query("publicActivityEvents").paginate({ cursor: args.cursor, numItems: 50 });
+    for (const event of result.page) {
+      if (event.summaryCounted) continue;
+      const playerId = (await findActivityPlayer(ctx, event.playerId))?.id;
+      await countPublicActivity(ctx, { ...event, playerId });
+      await ctx.db.patch(event._id, { summaryCounted: true, ...(playerId ? { playerId } : {}) });
+    }
+    return { isDone: result.isDone, continueCursor: result.continueCursor };
+  },
+});
+
+async function findActivityPlayer(ctx: any, id?: string) {
+  if (!id) return null;
+  for (const candidate of new Set([id, id.replace(/~~|~c/g, token => token === "~~" ? "~" : ":")])) {
+    const player = await ctx.db.query("players")
+      .withIndex("by_id", (q: any) => q.eq("id", candidate)).first();
+    if (player?.id === candidate) return player;
+  }
+  return null;
+}
+
+export const getPublicLiveGameSummary = queryGeneric({
+  args: { dailyGameId: v.string() },
+  returns: v.union(publicLiveGameSummary, v.null()),
+  handler: async (ctx, args) => {
+    const game = await ctx.db.query("dailyGames")
+      .withIndex("by_dailyGameId", q => q.eq("dailyGameId", args.dailyGameId)).unique();
+    return game ? gameSummary(game) : null;
+  },
+});
+
+function legacyPostChoiceTurns(source: any) {
+  return source.firstPostChoiceAction?.responseText &&
+      !source.firstPostChoiceTurns
+        ? [
+            {
+              ...source.firstPostChoiceAction,
+              turnNumber: 1,
+              responseText: source.firstPostChoiceAction.responseText,
+              sceneTitle:
+                source.firstPostChoiceAction.sceneTitle ??
+                "The World Answers",
+              responseModel:
+                source.firstPostChoiceAction.responseModel ?? "unknown",
+              responseSource:
+                source.firstPostChoiceAction.responseSource ?? "ai",
+              actionKind:
+                source.firstPostChoiceAction.actionKind ??
+                "open_world_action",
+              playerVisibleFacts:
+                source.firstPostChoiceAction.playerVisibleFacts ?? [],
+              storylineContextSourceVersion:
+                source.firstPostChoiceAction
+                  .storylineContextSourceVersion ?? "unknown",
+              resolvedAt:
+                source.firstPostChoiceAction.resolvedAt ??
+                source.firstPostChoiceAction.submittedAt,
+            },
+          ]
+        : [];
 }

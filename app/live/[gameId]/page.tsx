@@ -10,24 +10,26 @@ import {
 import { notFound } from "next/navigation";
 import { HeroBackgroundVideo } from "../../hero-background-video";
 import {
-  getPublicLiveGameSummaries,
-  getPublicLivePlayersForGame,
+  getPublicGameSummary,
+  getPublicPlayersPage,
 } from "@/lib/live-browser";
 
 export const dynamic = "force-dynamic";
 
 export default async function LiveGamePage({
-  params,
+  params, searchParams,
 }: {
   params: Promise<{ gameId: string }>;
+  searchParams: Promise<{ cursor?: string }>;
 }) {
   const { gameId } = await params;
   const dailyGameId = decodeURIComponent(gameId);
-  const [games, players] = await Promise.all([
-    getPublicLiveGameSummaries({ limit: 100 }),
-    getPublicLivePlayersForGame(dailyGameId),
+  const { cursor } = await searchParams;
+  const [game, result] = await Promise.all([
+    getPublicGameSummary(dailyGameId),
+    getPublicPlayersPage(dailyGameId, cursor ?? null),
   ]);
-  const game = games.find((candidate) => candidate.dailyGameId === dailyGameId);
+  const players = result.page;
 
   if (!game && players.length === 0) {
     notFound();
@@ -60,7 +62,7 @@ export default async function LiveGamePage({
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:min-w-80">
-              <Metric label="Players" value={players.length.toString()} />
+              <Metric label="Players" value={(game?.playerCount ?? 0).toString()} />
               <Metric
                 label="Events"
                 value={(game?.activityCount ?? 0).toString()}
@@ -141,6 +143,10 @@ export default async function LiveGamePage({
             </p>
           </div>
         )}
+        <nav aria-label="Player pages" className="flex gap-6 text-sm font-semibold underline">
+          {cursor && <Link href={`/live/${encodeURIComponent(dailyGameId)}`}>Latest players</Link>}
+          {!result.isDone && <Link href={`?cursor=${encodeURIComponent(result.continueCursor)}`}>More players</Link>}
+        </nav>
       </div>
     </main>
   );

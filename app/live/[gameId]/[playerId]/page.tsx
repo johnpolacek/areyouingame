@@ -81,6 +81,9 @@ export default async function LivePlayerPage({
           title="Living Character Sheet"
         />
 
+        <Link className="text-sm font-semibold underline" href={`/live/${encodeURIComponent(dailyGameId)}/${encodeURIComponent(decodedPlayerId)}/history`}>
+          Browse full activity history
+        </Link>
         {player.transcript.length > 0 ? (
           <section className="grid gap-4">
             {player.transcript.map((entry, index) => (

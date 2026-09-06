@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       }
       return Response.json({ player: existingPlayer });
     }
-    const stateVersion = turns?.length ??
+    const stateVersion = turns?.at(-1)?.turnNumber ??
       (existingPlayer.firstPostChoiceAction?.responseText ? 1 : 0);
     if (stateVersion !== expectedStateVersion) {
       return Response.json({ error: "Player state changed. Review the latest scene and try again." }, { status: 409 });

@@ -160,7 +160,7 @@ function validateDeliveredConnectedPathResponse({
 function countSealedPackageVerificationTurns(
   firstConnectedPath?: FirstConnectedPath,
 ): number {
-  return (firstConnectedPath?.turns ?? []).filter(
+  return firstConnectedPath?.sealedPackageVerificationCount ?? (firstConnectedPath?.turns ?? []).filter(
     (turn) =>
       turn.actionKind.includes("inspect") ||
       turn.actionKind.includes("measure") ||

@@ -192,6 +192,7 @@ export type FirstConnectedPath = {
   orbStatus: ConnectedOrbStatus;
   orbLifecycle?: ConnectedOrbLifecycle;
   turnCount: number;
+  sealedPackageVerificationCount?: number;
   turns: FirstConnectedPathTurn[];
   orbDecisionTurns?: FirstOrbDecisionTurn[];
   connectedAsiTurns?: FirstConnectedAsiTurn[];
